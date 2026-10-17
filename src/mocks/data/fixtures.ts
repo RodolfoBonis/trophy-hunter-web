@@ -1,0 +1,193 @@
+import type { GameDetail, Integration, SyncRun } from "@/api/schemas";
+import { ago, DAY, HOUR } from "../http";
+
+/**
+ * Fixtures do modo mock (dev/e2e), no formato do contrato (openapi.yaml). Dados realistas o
+ * suficiente para as telas plain parecerem vivas antes do style tile. Imagens usam os hosts reais
+ * (steamstatic/playstation) — a CSP já os libera; offline, caem no alt/placeholder.
+ */
+
+export const mockIntegrations: Integration[] = [
+  {
+    platform: "steam",
+    status: "connected",
+    account_id: "76561198000000000",
+    display_name: "rbonis",
+    avatar: "https://avatars.steamstatic.com/placeholder_full.jpg",
+    last_synced_at: ago(2 * HOUR),
+  },
+  {
+    platform: "psn",
+    status: "needs_reconnect",
+    account_id: "rb_lab",
+    display_name: "rb_lab",
+    last_synced_at: ago(5 * DAY),
+    last_error: "invalid_grant: o NPSSO expirou. Cole um novo para reconectar.",
+  },
+];
+
+export const mockGames: GameDetail[] = [
+  {
+    id: "11111111-1111-1111-1111-111111111111",
+    platform: "steam",
+    external_id: "1245620",
+    title: "ELDEN RING",
+    cover: "https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/library_600x900.jpg",
+    icon: "https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/capsule_184x69.jpg",
+    has_achievements: true,
+    has_platinum: false,
+    last_played_at: ago(3 * DAY),
+    playtime_minutes: 5400,
+    progress: {
+      total: 42,
+      earned: 28,
+      remaining: 14,
+      completion_pct: 0.667,
+      status: "in_progress",
+      has_platinum: false,
+      platinum_earned: false,
+      base: { total: 42, earned: 28, remaining: 14 },
+    },
+    groups: [
+      {
+        id: "g-elden-base",
+        external_id: "base",
+        name: "Jogo base",
+        is_base: true,
+        trophies: [
+          {
+            id: "t-elden-1",
+            external_id: "ACH_1",
+            name: "Lorde Éldero",
+            description: "Alcance o final 'Lorde Éldero'.",
+            type: "achievement",
+            hidden: false,
+            rarity_pct: 24.1,
+            earned: true,
+            earned_at: ago(3 * DAY),
+            tags: [],
+          },
+          {
+            id: "t-elden-2",
+            external_id: "ACH_2",
+            name: "Mestre das Grandes Runas",
+            description: null,
+            type: "achievement",
+            hidden: true,
+            rarity_pct: 3.2,
+            earned: false,
+            earned_at: null,
+            tags: ["grind"],
+            server_shutdown_risk: false,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "22222222-2222-2222-2222-222222222222",
+    platform: "psn",
+    external_id: "NPWR21555_00",
+    np_service_name: "trophy2",
+    title: "God of War Ragnarök",
+    cover: "https://image.api.playstation.com/vulcan/ap/rnd/placeholder.png",
+    has_achievements: true,
+    has_platinum: true,
+    last_played_at: ago(20 * DAY),
+    progress: {
+      total: 36,
+      earned: 36,
+      remaining: 0,
+      completion_pct: 1,
+      status: "platinum",
+      has_platinum: true,
+      platinum_earned: true,
+      base: { total: 30, earned: 30, remaining: 0 },
+      dlc: { total: 6, earned: 6, remaining: 0 },
+    },
+    groups: [
+      {
+        id: "g-gow-base",
+        external_id: "default",
+        name: "Jogo base",
+        is_base: true,
+        trophies: [
+          {
+            id: "t-gow-1",
+            external_id: "1",
+            name: "Platina de Ragnarök",
+            description: "Conquiste todos os troféus.",
+            type: "platinum",
+            hidden: false,
+            rarity_pct: 29.8,
+            earned: true,
+            earned_at: ago(20 * DAY),
+            tags: [],
+          },
+        ],
+      },
+      {
+        id: "g-gow-valhalla",
+        external_id: "001",
+        name: "Valhalla",
+        is_base: false,
+        trophies: [],
+      },
+    ],
+  },
+  {
+    id: "33333333-3333-3333-3333-333333333333",
+    platform: "steam",
+    external_id: "1145360",
+    title: "Hades",
+    cover: "https://cdn.cloudflare.steamstatic.com/steam/apps/1145360/library_600x900.jpg",
+    has_achievements: true,
+    has_platinum: false,
+    last_played_at: ago(45 * DAY),
+    progress: {
+      total: 49,
+      earned: 12,
+      remaining: 37,
+      completion_pct: 0.245,
+      status: "in_progress",
+    },
+    groups: [{ id: "g-hades-base", external_id: "base", name: "Jogo base", is_base: true, trophies: [] }],
+  },
+];
+
+export const mockSyncRuns: SyncRun[] = [
+  {
+    id: "run-1",
+    platform: "steam",
+    scope: "incremental",
+    trigger: "schedule",
+    status: "ok",
+    started_at: ago(2 * HOUR),
+    finished_at: ago(2 * HOUR - 40_000),
+    items_changed: 7,
+    games_touched: 2,
+  },
+  {
+    id: "run-2",
+    platform: "psn",
+    scope: "full",
+    trigger: "manual",
+    status: "error",
+    started_at: ago(5 * DAY),
+    finished_at: ago(5 * DAY - 5_000),
+    items_changed: 0,
+    games_touched: 0,
+    error: "invalid_grant: NPSSO expirado.",
+  },
+  {
+    id: "run-3",
+    platform: "steam",
+    scope: "full",
+    trigger: "manual",
+    status: "ok",
+    started_at: ago(30 * DAY),
+    finished_at: ago(30 * DAY - 120_000),
+    items_changed: 842,
+    games_touched: 73,
+  },
+];
