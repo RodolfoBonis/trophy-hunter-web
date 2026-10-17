@@ -1,0 +1,98 @@
+/**
+ * Tokens do design system — Trophy Hunter.
+ *
+ * ATENÇÃO: paleta provisória, neutra e escura. As telas finais esperam a aprovação do *style tile*
+ * (paleta/tipografia/refs no plano). Tudo aqui é variável CSS exposta como token do Tailwind v4
+ * (`@theme`), então a paleta aprovada "cai" trocando só estes valores — nenhum componente usa cor
+ * hardcoded. Placeholders de acento/raridade já seguem a direção do plano (ciano/violeta, tiers loot)
+ * para não precisar reescrever classes depois.
+ */
+@theme {
+  /* Superfícies e texto */
+  --color-canvas: #07080d;
+  --color-surface: #11141d;
+  --color-surface-2: #171b27;
+  --color-elevated: #1d2231;
+  --color-border: #262c3a;
+  --color-border-strong: #343b4d;
+  --color-text: #e6e9f0;
+  --color-muted: #9aa3b2;
+  --color-faint: #6b7385;
+
+  /* Acentos (placeholder — direção "console" do plano) */
+  --color-accent: #3df5ff;
+  --color-accent-foreground: #04121a;
+  --color-accent-2: #8b5cf6;
+
+  /* Estados */
+  --color-success: #3ddc97;
+  --color-warning: #f5c542;
+  --color-danger: #ff5c73;
+  --color-danger-foreground: #1a0509;
+
+  /* Plataformas */
+  --color-steam: #66c0f4;
+  --color-psn: #0070d1;
+
+  /* Troféus / raridade loot (ícone + rótulo, nunca só cor) */
+  --color-bronze: #cd7f32;
+  --color-silver: #c4ccd8;
+  --color-gold: #f5c542;
+  --color-platinum: #b8a9ff;
+  --color-rarity-common: #9aa3b2;
+  --color-rarity-uncommon: #3ddc97;
+  --color-rarity-rare: #4aa3ff;
+  --color-rarity-epic: #8b5cf6;
+  --color-rarity-legendary: #ff9f43;
+
+  /* Tipografia (famílias do plano entram com o style tile; por ora stack do sistema) */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-sans);
+  --font-mono: ui-monospace, "SFMono-Regular", "Menlo", monospace;
+
+  /* Raios e sombras */
+  --radius: 0.625rem;
+  --radius-sm: 0.375rem;
+  --radius-lg: 1rem;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Foco sempre visível e consistente (acessibilidade). */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* `--th-motion` desliga transições declarativas quando o usuário pede menos movimento. */
+  :root {
+    --th-motion: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --th-motion: 0;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
