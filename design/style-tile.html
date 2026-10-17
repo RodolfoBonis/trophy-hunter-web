@@ -1,0 +1,1321 @@
+<!doctype html>
+<html lang="pt-BR" data-glow="med">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trophy Hunter — Direção visual v0.1</title>
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Oxanium:wght@500;600;700;800&family=Tomorrow:wght@500;600;700&family=Rajdhani:wght@500;600;700&family=Orbitron:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<style>
+/* ============================== base ============================== */
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--color-bg-0);scroll-behavior:smooth}
+body{
+  margin:0;color:var(--color-text-1);font-family:var(--font-sans);font-size:var(--text-base);
+  line-height:var(--leading-body);-webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(1200px 600px at 85% -10%, rgb(139 92 246 / .16), transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, rgb(61 245 255 / .09), transparent 60%),
+    radial-gradient(1000px 700px at 50% 120%, rgb(0 112 209 / .10), transparent 60%),
+    var(--color-bg-0);
+  background-attachment:fixed;
+  overflow-x:hidden;
+}
+/* grade HUD sutil */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgb(148 163 200 / .035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(148 163 200 / .035) 1px, transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse at 50% 30%, #000 30%, transparent 80%);
+}
+/* scanlines */
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:var(--z-scanlines);
+  background:repeating-linear-gradient(to bottom, rgb(255 255 255 / var(--scanline-opacity)) 0 1px, transparent 1px 3px);
+  mix-blend-mode:overlay;
+}
+main,header,footer{position:relative;z-index:1}
+a{color:var(--color-neon-cyan)}
+:focus-visible{outline:2px solid var(--color-focus);outline-offset:3px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.wrap{max-width:1240px;margin:0 auto;padding:0 var(--space-6)}
+@media (max-width:600px){.wrap{padding:0 var(--space-4)}}
+
+/* ============================== utilitários HUD ============================== */
+.chamfer{--c:var(--chamfer-md);clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c))}
+.panel{
+  --c:var(--chamfer-lg);position:relative;isolation:isolate;padding:var(--space-6);
+  clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c));
+  background:linear-gradient(135deg, rgb(61 245 255 / .55), var(--color-border) 22%, var(--color-border-subtle) 60%, rgb(139 92 246 / .45));
+}
+.panel::before{
+  content:"";position:absolute;inset:1px;z-index:-1;
+  clip-path:polygon(calc(var(--c) - .4px) 0,100% 0,100% calc(100% - var(--c) + .4px),calc(100% - var(--c) + .4px) 100%,0 100%,0 calc(var(--c) - .4px));
+  background:var(--panel-bg, linear-gradient(180deg, var(--color-surface-1), rgb(12 14 22 / .96)));
+}
+.panel.sm{--c:var(--chamfer-md);padding:var(--space-4)}
+.label{font-family:var(--font-display);font-weight:600;font-size:var(--text-caption);letter-spacing:var(--tracking-hud);text-transform:uppercase;color:var(--color-text-3)}
+.mono{font-family:var(--font-mono);font-size:var(--text-caption)}
+.muted{color:var(--color-text-2)}
+.caption{font-size:var(--text-caption);color:var(--color-text-3)}
+.num{font-family:var(--font-numeric);font-variant-numeric:tabular-nums;font-weight:700}
+.grid{display:grid;gap:var(--space-6)}
+.row{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap}
+
+/* ============================== topo ============================== */
+.topbar{
+  position:sticky;top:0;z-index:var(--z-sticky);
+  background:var(--color-glass);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);
+  border-bottom:1px solid var(--color-border-subtle);
+}
+.topbar .wrap{display:flex;align-items:center;gap:var(--space-6);height:64px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:15px;white-space:nowrap}
+.brand svg{width:26px;height:26px}
+.brand b{color:var(--color-neon-cyan);font-weight:700}
+.nav{display:flex;gap:2px;flex:1;overflow:auto;scrollbar-width:none}
+.nav a{font-family:var(--font-display);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-2);text-decoration:none;padding:8px 7px;border-radius:var(--radius-xs);white-space:nowrap}
+.nav a:hover{color:var(--color-text-1);background:rgb(255 255 255 / .04)}
+.controls{display:flex;gap:var(--space-4);align-items:center}
+@media (max-width:1240px){.nav{display:none}.controls{margin-left:auto}}
+@media (max-width:600px){.topbar .wrap{height:auto;padding-block:10px;flex-wrap:wrap;gap:10px}.controls{width:100%;justify-content:space-between}}
+
+.switch{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--color-text-2);cursor:pointer;user-select:none}
+.switch input{appearance:none;width:34px;height:18px;border-radius:999px;background:var(--color-surface-3);border:1px solid var(--color-border);position:relative;cursor:pointer;margin:0}
+.switch input::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--color-text-2);transition:transform var(--dur-fast) var(--ease-out)}
+.switch input:checked{background:color-mix(in oklab,var(--color-neon-cyan) 30%,var(--color-surface-3));border-color:var(--color-neon-cyan)}
+.switch input:checked::after{transform:translateX(16px);background:var(--color-neon-cyan)}
+.seg{display:inline-flex;border:1px solid var(--color-border);border-radius:var(--radius-sm);overflow:hidden}
+.seg button{background:none;border:0;color:var(--color-text-2);font:600 11px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;padding:7px 9px;cursor:pointer}
+.seg .seg-l{font:600 11px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-3);padding:7px 4px 7px 9px;align-self:center}
+.seg button[aria-pressed="true"]{background:color-mix(in oklab,var(--color-neon-cyan) 18%,transparent);color:var(--color-neon-cyan)}
+
+/* ============================== hero ============================== */
+.hero{padding:var(--space-16) 0 var(--space-12)}
+.hero-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:var(--space-10);align-items:center}
+@media (max-width:900px){.hero-grid{grid-template-columns:1fr}}
+.kicker{display:inline-flex;align-items:center;gap:10px}
+.kicker::before{content:"";width:28px;height:2px;background:var(--color-neon-cyan);box-shadow:var(--shadow-glow-cyan)}
+.hero h1{font-family:var(--font-display);font-weight:700;font-size:var(--text-hero);line-height:1.02;letter-spacing:-.01em;margin:var(--space-4) 0 var(--space-5);text-transform:uppercase}
+.hero h1 .outline{color:transparent;-webkit-text-stroke:1.5px var(--color-neon-cyan);text-shadow:0 0 24px color-mix(in oklab,var(--color-neon-cyan) var(--glow-mix),transparent)}
+.hero p.lead{font-size:var(--text-lg);color:var(--color-text-2);max-width:56ch;margin:0 0 var(--space-6)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:600 11px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase;padding:7px 10px;border:1px solid var(--color-border);color:var(--color-text-2);background:rgb(255 255 255 / .02);--c:6px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c))}
+
+.hero-stat{--panel-bg:radial-gradient(400px 260px at 70% 0%, rgb(139 92 246 / .22), transparent 70%), linear-gradient(180deg,var(--color-surface-1),var(--color-bg-1));padding:var(--space-8)}
+.hero-stat .big{font-family:var(--font-numeric);font-variant-numeric:tabular-nums;font-weight:700;font-size:var(--text-hero);line-height:.9;letter-spacing:-.02em}
+.hero-stat .big small{font-size:.4em;color:var(--color-text-3);font-weight:600;margin-left:6px}
+.statline{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3);margin-top:var(--space-6)}
+.statline > div{border-left:2px solid var(--color-border);padding-left:10px}
+.statline .num{font-size:28px;line-height:1;display:block}
+.statline .t-plat .num{background:var(--gradient-platinum-linear);-webkit-background-clip:text;background-clip:text;color:transparent}
+.statline .t-gold{border-color:var(--color-trophy-gold)} .statline .t-gold .num{color:var(--color-trophy-gold)}
+.statline .t-silver{border-color:var(--color-trophy-silver)} .statline .t-silver .num{color:var(--color-trophy-silver)}
+.statline .t-bronze{border-color:var(--color-trophy-bronze)} .statline .t-bronze .num{color:var(--color-trophy-bronze-hi)}
+.statline .t-plat{border-color:var(--color-plat-2)}
+
+/* ============================== seções ============================== */
+section.block{padding:var(--space-12) 0}
+.sec-head{display:flex;align-items:flex-end;gap:var(--space-5);margin-bottom:var(--space-8)}
+.sec-head .idx{font-family:var(--font-numeric);font-weight:700;font-size:56px;line-height:.8;color:transparent;-webkit-text-stroke:1px rgb(61 245 255 / .55)}
+.sec-head h2{font-family:var(--font-display);font-weight:700;font-size:var(--text-h2);line-height:1;margin:0 0 4px;text-transform:uppercase;letter-spacing:.02em}
+.sec-head p{margin:0;color:var(--color-text-2);font-size:var(--text-sm)}
+.sec-head .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--color-border),transparent);margin-bottom:12px;position:relative;min-width:40px}
+.sec-head .rule::after{content:"";position:absolute;right:0;top:-3px;width:7px;height:7px;border:1px solid var(--color-border);transform:rotate(45deg)}
+@media (max-width:600px){.sec-head{flex-direction:column;align-items:flex-start;gap:6px}.sec-head .idx{font-size:34px}.sec-head .rule{display:none}}
+h3.sub{font-family:var(--font-display);font-weight:600;font-size:var(--text-h4);margin:0 0 var(--space-4);letter-spacing:.02em;text-transform:uppercase}
+
+/* ============================== paleta ============================== */
+.pal-grid{grid-template-columns:repeat(4,1fr)}
+@media (max-width:1000px){.pal-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:600px){.pal-grid{grid-template-columns:1fr}}
+.swatches{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.sw{display:flex;flex-direction:column;gap:6px}
+.sw .chip-c{height:52px;border:1px solid var(--color-border-subtle);--c:8px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c))}
+.sw .n{font-size:12px;font-weight:600;line-height:1.2}
+.sw .h{font-family:var(--font-mono);font-size:11px;color:var(--color-text-3);text-transform:uppercase}
+.pal-wide{grid-column:span 2}
+@media (max-width:600px){.pal-wide{grid-column:auto}}
+
+.platforms{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)}
+@media (max-width:600px){.platforms{grid-template-columns:1fr}}
+.plat-card{padding:var(--space-5);--c:12px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c));position:relative;overflow:hidden;min-height:150px}
+.plat-psn{background:linear-gradient(135deg,var(--color-psn) 0%,var(--color-psn-deep) 100%);color:#fff}
+.plat-psn::after{content:"";position:absolute;right:-30px;bottom:-40px;width:180px;height:180px;border-radius:50%;border:24px solid rgb(255 255 255 / .08)}
+.plat-steam{background:linear-gradient(160deg,var(--color-steam-bg-2) 0%,var(--color-steam-bg) 70%);color:#c7d5e0;border-top:2px solid var(--color-steam)}
+.plat-steam::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgb(102 192 244 / .05) 0 2px,transparent 2px 12px)}
+.plat-card h4{margin:0 0 6px;font-family:var(--font-display);font-size:20px;letter-spacing:.04em;text-transform:uppercase}
+.plat-card p{margin:0;font-size:13px;max-width:34ch;position:relative;z-index:1}
+.plat-card .hexes{display:flex;gap:6px;margin-top:14px;position:relative;z-index:1;flex-wrap:wrap}
+.plat-card .hexes span{font-family:var(--font-mono);font-size:11px;padding:3px 6px;background:rgb(0 0 0 / .25);border-radius:2px}
+
+/* badges de plataforma */
+.pbadge{display:inline-flex;align-items:center;gap:6px;font:700 10.5px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase;padding:5px 8px 5px 6px;--c:5px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c))}
+.pbadge svg{width:13px;height:13px}
+.pbadge.psn{background:var(--color-psn);color:#fff}
+.pbadge.steam{background:var(--color-steam-bg);color:var(--color-steam);box-shadow:inset 0 0 0 1px rgb(102 192 244 / .45)}
+
+.contrast-table{width:100%;border-collapse:collapse;font-size:13px}
+.contrast-table th{text-align:left;font:600 11px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--color-text-3);padding:10px 8px;border-bottom:1px solid var(--color-border)}
+.contrast-table td{padding:9px 8px;border-bottom:1px solid var(--color-border-subtle);vertical-align:middle}
+.contrast-table .sample{display:inline-block;padding:4px 10px;border-radius:2px;font-weight:500;border:1px solid var(--color-border-subtle);white-space:nowrap}
+.contrast-table .ratio{font-family:var(--font-numeric);font-weight:700;font-size:17px;font-variant-numeric:tabular-nums}
+.verdict{font:700 10px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;padding:4px 7px;border-radius:2px;white-space:nowrap}
+.verdict.pass{background:rgb(52 211 153 / .14);color:var(--color-success)}
+.verdict.large{background:rgb(251 191 36 / .14);color:var(--color-warning)}
+.verdict.deco{background:rgb(148 163 200 / .12);color:var(--color-text-2)}
+.verdict.fail{background:rgb(248 113 113 / .14);color:var(--color-danger)}
+.table-scroll{overflow-x:auto}
+.contrast-split > *{min-width:0}
+.contrast-split{display:grid;grid-template-columns:1fr 1fr;gap:0 var(--space-8)}
+@media (max-width:1000px){.contrast-split{grid-template-columns:1fr}.contrast-split .table-scroll + .table-scroll thead{display:none}}
+.contrast-table .pair{font-family:var(--font-mono);font-size:11.5px;color:var(--color-text-1);display:block}
+.contrast-table .use{font-size:12px;color:var(--color-text-3)}
+@media (max-width:600px){.panel{padding:var(--space-4)}.verdict{white-space:normal;display:inline-block;line-height:1.3}.contrast-table .sample{padding:4px 6px;font-size:12px}.contrast-table td{padding:8px 4px}}
+
+/* ============================== troféus ============================== */
+.trophy-grid{grid-template-columns:repeat(5,1fr);gap:var(--space-4)}
+@media (max-width:1100px){.trophy-grid{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:600px){.trophy-grid{grid-template-columns:repeat(2,1fr)}}
+.tcard{position:relative;isolation:isolate;padding:var(--space-5) var(--space-4) var(--space-4);text-align:center;--c:14px;
+  clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c));
+  background:linear-gradient(180deg,var(--tc-edge) 0%, var(--color-border-subtle) 70%);overflow:hidden}
+.tcard::before{content:"";position:absolute;inset:1px;z-index:-1;clip-path:inherit;
+  background:radial-gradient(120% 70% at 50% 0%, color-mix(in oklab,var(--tc) 20%,transparent), transparent 65%), var(--color-surface-1)}
+.tcard .glyph{width:84px;height:84px;margin:0 auto var(--space-3);display:block;filter:drop-shadow(0 6px 16px color-mix(in oklab,var(--tc) var(--glow-mix),transparent))}
+.tcard .tname{font-family:var(--font-display);font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:.08em}
+.tcard .tmeta{font-size:12px;color:var(--color-text-3);margin-top:2px}
+.tcard .tag{display:inline-block;margin-top:10px;font:700 10px/1 var(--font-mono);color:var(--tc-text,var(--tc));border:1px solid color-mix(in oklab,var(--tc) 45%,transparent);padding:4px 6px;border-radius:2px}
+.t-bronze{--tc:var(--color-trophy-bronze);--tc-text:var(--color-trophy-bronze-hi);--tc-edge:rgb(205 127 50 / .7)}
+.t-silver{--tc:var(--color-trophy-silver);--tc-edge:rgb(196 204 216 / .7)}
+.t-gold{--tc:var(--color-trophy-gold);--tc-edge:rgb(245 197 66 / .8)}
+.t-plat{--tc:var(--color-plat-2);--tc-text:var(--color-plat-3);--tc-edge:transparent}
+.t-ach{--tc:var(--color-steam);--tc-edge:rgb(102 192 244 / .6)}
+/* platina: borda cônica girando (transform) + shimmer (transform) */
+.t-plat{background:none}
+.t-plat .spin{position:absolute;z-index:-2;left:50%;top:50%;width:200%;aspect-ratio:1;translate:-50% -50%;background:var(--gradient-platinum);animation:spin var(--dur-sheen) linear infinite}
+.t-plat::before{inset:2px;background:radial-gradient(120% 70% at 50% 0%, rgb(184 169 255 / .28), transparent 65%), var(--color-surface-1)}
+.t-plat .shimmer{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.t-plat .shimmer::after{content:"";position:absolute;top:-20%;bottom:-20%;width:40%;left:0;background:linear-gradient(100deg,transparent,rgb(255 255 255 / .16),transparent);transform:translateX(-150%) skewX(-12deg);animation:shimmer 3.2s var(--ease-in-out) infinite}
+.t-plat .tname{background:var(--gradient-platinum-linear);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shimmer{0%{transform:translateX(-150%) skewX(-12deg)}55%,100%{transform:translateX(350%) skewX(-12deg)}}
+.plat-glyph-wrap{position:relative;width:84px;height:84px;margin:0 auto var(--space-3)}
+.plat-glyph-wrap .glyph{margin:0}
+.plat-glyph-wrap::before{content:"";position:absolute;inset:-6px;border-radius:50%;background:var(--gradient-platinum);filter:blur(16px);opacity:.45;animation:spin var(--dur-sheen) linear infinite}
+
+/* ============================== raridade ============================== */
+.rarity-grid{display:flex;flex-wrap:wrap;gap:var(--space-4)}
+.rbadge{position:relative;display:inline-flex;align-items:center;gap:10px;padding:10px 16px 10px 12px;color:var(--rc);font-family:var(--font-display);cursor:default;outline-offset:4px}
+.rbadge .bg{position:absolute;inset:0;--c:9px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c));
+  background:linear-gradient(90deg,color-mix(in oklab,var(--rc) 22%,transparent),color-mix(in oklab,var(--rc) 6%,transparent));box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--rc) 45%,transparent)}
+.rbadge .bg::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--rc)}
+.rbadge .glow{position:absolute;inset:-6px;border-radius:12px;background:radial-gradient(closest-side,color-mix(in oklab,var(--rc) var(--glow-mix),transparent),transparent);filter:blur(10px);opacity:0;transition:opacity var(--dur-base) var(--ease-out);z-index:-1}
+.rbadge:hover .glow,.rbadge:focus-visible .glow{opacity:1}
+.rbadge.rare .glow,.rbadge.epic .glow,.rbadge.legendary .glow{opacity:.35}
+.rbadge.rare:hover .glow,.rbadge.epic:hover .glow,.rbadge.legendary:hover .glow{opacity:1}
+.rbadge svg{position:relative;width:18px;height:18px;flex:none}
+.rbadge .rl{position:relative;font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase;line-height:1}
+.rbadge .rr{position:relative;font:600 12px/1 var(--font-numeric);color:var(--color-text-2);letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.rbadge{isolation:isolate;transition:transform var(--dur-fast) var(--ease-out)}
+.rbadge:hover{transform:translateY(-2px)}
+.r-common{--rc:var(--color-rarity-common)} .r-uncommon{--rc:var(--color-rarity-uncommon)} .r-rare{--rc:var(--color-rarity-rare)} .r-epic{--rc:var(--color-rarity-epic)} .r-legendary{--rc:var(--color-rarity-legendary)}
+.rbadge.mini{padding:5px 9px 5px 7px;gap:6px}
+.rbadge.mini svg{width:12px;height:12px}
+.rbadge.mini .rl{font-size:10.5px}
+.rbadge.mini .rr{font-size:11px}
+.rbadge.mini .bg{--c:5px}
+.rarity-scale{display:grid;grid-template-columns:50fr 30fr 15fr 4fr 1fr;height:10px;margin-top:var(--space-6);gap:2px}
+.rarity-scale span{display:block}
+.rarity-ticks{display:grid;grid-template-columns:50fr 30fr 15fr 4fr 1fr;margin-top:6px;font:600 11px/1 var(--font-numeric);color:var(--color-text-3)}
+
+/* ============================== tipografia ============================== */
+.type-compare{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4)}
+@media (max-width:900px){.type-compare{grid-template-columns:1fr}}
+.font-opt .sample-title{font-weight:700;font-size:40px;line-height:1;text-transform:uppercase;margin:10px 0 6px;letter-spacing:.01em}
+.font-opt .sample-sub{font-size:18px;font-weight:600;color:var(--color-text-2)}
+.font-opt .sample-num{font-size:44px;font-weight:700;line-height:1;margin-top:12px;font-variant-numeric:tabular-nums}
+.font-opt .pick{float:right;font:700 10px/1 var(--font-display);letter-spacing:.1em;padding:5px 7px;border-radius:2px;text-transform:uppercase}
+.pick.rec{background:rgb(61 245 255 / .14);color:var(--color-neon-cyan)}
+.pick.alt{background:rgb(148 163 200 / .12);color:var(--color-text-2)}
+.scale-list{display:flex;flex-direction:column;gap:var(--space-4)}
+.scale-item{display:grid;grid-template-columns:140px 1fr;gap:var(--space-4);align-items:baseline;border-bottom:1px solid var(--color-border-subtle);padding-bottom:var(--space-4)}
+@media (max-width:600px){.scale-item{grid-template-columns:1fr;gap:4px}}
+.num-compare{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)}
+@media (max-width:600px){.num-compare{grid-template-columns:1fr}}
+.npick{font:700 10px/1 var(--font-display);padding:5px 7px;border-radius:2px;text-transform:uppercase;letter-spacing:.1em}
+.num-col{font-size:34px;line-height:1.15;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.stat-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:600px){.stat-tiles{grid-template-columns:1fr 1fr}}
+.stat-tile{display:grid;gap:4px;padding:12px;background:var(--color-surface-2);border-top:2px solid var(--color-border);--c:8px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c))}
+.stat-tile .num{font-size:34px;line-height:1}
+.stat-tile .num small{font-size:.5em;color:var(--color-text-3);margin-left:2px}
+.stat-tile .delta{font-size:12px;color:var(--color-text-2);display:inline-flex;gap:5px;align-items:center}
+.stat-tile .delta.up{color:var(--color-success)}
+.type-split{display:grid;grid-template-columns:1.2fr 1fr;gap:var(--space-6)}
+@media (max-width:900px){.type-split{grid-template-columns:1fr}}
+
+/* ============================== componentes ============================== */
+.comp-grid > *{min-width:0}
+.comp-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--space-6)}
+.span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-7{grid-column:span 7}.span-6{grid-column:span 6}.span-5{grid-column:span 5}.span-4{grid-column:span 4}
+@media (max-width:1000px){.span-8,.span-7,.span-6,.span-5,.span-4{grid-column:span 12}}
+
+/* game card + tilt */
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-6);perspective:900px}
+@media (max-width:900px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:600px){.cards{grid-template-columns:1fr}}
+.gcard{--rx:0deg;--ry:0deg;--gx:50%;--gy:0%;position:relative;transform-style:preserve-3d;transform:rotateX(var(--rx)) rotateY(var(--ry));transition:transform var(--dur-base) var(--ease-out);cursor:pointer;outline:none}
+.gcard:hover,.gcard:focus-visible{transition-duration:var(--dur-instant)}
+.gcard .frame{position:relative;--c:16px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c));background:var(--color-surface-2);overflow:hidden}
+.gcard .edge{position:absolute;inset:-1px;--c:17px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c));background:linear-gradient(140deg,var(--color-neon-cyan),transparent 35%,transparent 70%,var(--color-neon-violet));opacity:.25;transition:opacity var(--dur-fast) var(--ease-out)}
+.gcard:hover .edge,.gcard:focus-visible .edge{opacity:1}
+.gcard .halo{position:absolute;inset:8px;background:linear-gradient(140deg,var(--color-neon-cyan),var(--color-neon-violet));filter:blur(22px);opacity:0;transition:opacity var(--dur-base) var(--ease-out);z-index:-1}
+.gcard:hover .halo,.gcard:focus-visible .halo{opacity:.5}
+:root[data-glow="low"] .gcard:hover .halo{opacity:.28} :root[data-glow="high"] .gcard:hover .halo{opacity:.75}
+.cover{position:relative;aspect-ratio:16/10;overflow:hidden}
+.cover .art{position:absolute;inset:-8%;transform:translate3d(calc(var(--px,0) * -10px),calc(var(--py,0) * -10px),0) scale(1.02);transition:transform var(--dur-base) var(--ease-out)}
+.cover .fx{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgb(7 8 13 / .55) 75%,var(--color-surface-2) 100%)}
+.cover .glare{position:absolute;inset:-50%;background:radial-gradient(circle at var(--gx) var(--gy),rgb(255 255 255 / .22),transparent 35%);opacity:0;transition:opacity var(--dur-fast) var(--ease-out);mix-blend-mode:overlay}
+.gcard:hover .glare{opacity:1}
+.cover .pbadge{position:absolute;top:12px;left:12px}
+.cover .plat-ready{position:absolute;top:12px;right:12px}
+.cover .ctitle{position:absolute;left:16px;bottom:10px;right:16px;font-family:var(--font-display);font-weight:700;font-size:15px;letter-spacing:.32em;text-transform:uppercase;color:rgb(255 255 255 / .78);text-shadow:0 2px 12px rgb(0 0 0 / .7)}
+.art-astro{background:
+  radial-gradient(circle at 72% 38%, #ffcf6b 0 7%, #ff8a3d 8% 12%, transparent 12.5%),
+  radial-gradient(circle at 26% 70%, #6ee7ff 0 3%, transparent 3.5%),
+  radial-gradient(circle at 60% 120%, #2a5bff 0 40%, transparent 40.5%),
+  radial-gradient(900px 300px at 20% 0%, #4f46e5, transparent 60%),
+  linear-gradient(160deg,#0b1a5c,#1d0f3d 60%,#070815)}
+.art-astro::after{content:"";position:absolute;inset:0;background-image:radial-gradient(1.2px 1.2px at 10% 20%,#fff,transparent),radial-gradient(1px 1px at 30% 40%,#fff,transparent),radial-gradient(1.4px 1.4px at 80% 15%,#fff,transparent),radial-gradient(1px 1px at 50% 30%,#cfe,transparent),radial-gradient(1px 1px at 90% 55%,#fff,transparent),radial-gradient(1.2px 1.2px at 15% 50%,#fff,transparent)}
+.art-hollow{background:
+  radial-gradient(circle at 50% 46%, #e8eef6 0 9%, transparent 9.5%),
+  radial-gradient(ellipse 24% 30% at 50% 82%, #0b0f16 0 60%, transparent 61%),
+  conic-gradient(from 200deg at 50% 100%, #0f2a33, #1b4a52, #0f2a33, #081218),
+  linear-gradient(180deg,#0d2a35,#071016)}
+.art-hollow::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 38px,rgb(0 0 0 / .35) 38px 46px),linear-gradient(180deg,transparent 30%,rgb(102 192 244 / .08))}
+.art-elden{background:
+  radial-gradient(ellipse 8% 60% at 50% 18%, #fff3c4 0 30%, #f5c542 50%, transparent 70%),
+  radial-gradient(circle at 50% 22%, rgb(255 214 120 / .6), transparent 30%),
+  linear-gradient(180deg,#3b2a12 0%,#1c160d 55%,#0b0906 100%)}
+.art-elden::after{content:"";position:absolute;left:0;right:0;bottom:0;height:45%;background:linear-gradient(170deg,transparent 30%,#0b0906 31%),linear-gradient(195deg,transparent 40%,#15100a 41%)}
+.gbody{padding:var(--space-4) var(--space-4) var(--space-5);display:grid;grid-template-columns:1fr auto;gap:var(--space-3);align-items:center}
+.gbody h4{margin:0;font-family:var(--font-display);font-weight:700;font-size:19px;line-height:1.15;letter-spacing:.01em}
+.gbody .meta{font-size:12.5px;color:var(--color-text-2);margin-top:4px}
+.gbody .meta .num{font-weight:600;font-size:14px;color:var(--color-text-1)}
+.gbody .tcounts{display:flex;gap:10px;margin-top:10px;font:600 13px/1 var(--font-numeric);font-variant-numeric:tabular-nums;color:var(--color-text-2)}
+.gbody .tcounts span{display:inline-flex;align-items:center;gap:4px}
+.gbody .tcounts svg{width:14px;height:14px}
+
+/* anel */
+.ring{position:relative;width:var(--size,64px);height:var(--size,64px);flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .track{stroke:var(--color-surface-3)}
+.ring .bar{stroke:var(--ring-c,var(--color-neon-cyan));stroke-linecap:butt;filter:drop-shadow(0 0 4px color-mix(in oklab,var(--ring-c,var(--color-neon-cyan)) var(--glow-mix),transparent))}
+.ring .val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-numeric);font-weight:700;font-size:calc(var(--size,64px) * .3);font-variant-numeric:tabular-nums;line-height:1}
+.ring .val small{font-size:.5em;color:var(--color-text-3);margin-left:1px;align-self:center;margin-top:.15em}
+.ring.big{--size:132px}
+.ring.big .val{font-size:40px}
+
+/* barra */
+.pbar{position:relative;height:10px;background:var(--color-surface-3);overflow:hidden;--c:4px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c))}
+.pbar .fill{position:absolute;inset:0;transform-origin:left;transform:scaleX(var(--p,0));background:linear-gradient(90deg,var(--color-neon-violet),var(--color-neon-cyan));transition:transform var(--dur-count) var(--ease-out)}
+.pbar .fill::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 10px,rgb(7 8 13 / .35) 10px 12px)}
+.pbar.plat .fill{background:var(--gradient-platinum-linear)}
+.pbar-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.pbar-head .num{font-size:22px}
+.segbar{display:grid;grid-template-columns:repeat(20,1fr);gap:3px;margin-top:6px}
+.segbar i{height:12px;background:var(--color-surface-3);transform:skewX(-20deg)}
+.segbar i.on{background:var(--color-neon-cyan);box-shadow:0 0 8px color-mix(in oklab,var(--color-neon-cyan) var(--glow-mix),transparent)}
+
+/* linha de troféu */
+.trow{position:relative;display:grid;grid-template-columns:52px 1fr auto;gap:var(--space-4);align-items:center;padding:var(--space-3) var(--space-4);background:var(--color-surface-2);--c:10px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c))}
+.trow + .trow{margin-top:8px}
+.trow::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:2px;background:var(--row-accent,transparent)}
+.trow .ticon{width:52px;height:52px;display:grid;place-items:center;background:var(--color-bg-1);position:relative;--c:8px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c))}
+.trow .ticon svg{width:34px;height:34px}
+.trow .tt{font-weight:600;font-size:15px;line-height:1.3}
+.trow .td{font-size:13px;color:var(--color-text-2);margin-top:2px;line-height:1.4}
+.trow .tm{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:12px;color:var(--color-text-3)}
+.trow .right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.trow.unlocked{--row-accent:var(--color-trophy-gold);background:linear-gradient(90deg,rgb(245 197 66 / .08),transparent 40%),var(--color-surface-2)}
+.trow.locked .ticon svg{opacity:.38;filter:grayscale(1)}
+.trow.locked .ticon .lock{position:absolute;right:4px;bottom:4px;width:16px;height:16px;opacity:1;filter:none}
+.trow.hidden-t .spoil{filter:blur(6px);user-select:none;transition:filter var(--dur-base) var(--ease-out)}
+.trow.hidden-t.revealed .spoil{filter:none}
+.reveal-btn{position:absolute;inset:0;margin:auto;height:fit-content;width:fit-content;display:inline-flex;gap:6px;align-items:center;background:rgb(7 8 13 / .82);border:1px solid var(--color-border-strong);color:var(--color-neon-cyan);font:600 12px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;padding:8px 12px;cursor:pointer}
+.reveal-btn svg{width:14px;height:14px}
+.trow.hidden-t.revealed .reveal-btn{display:none}
+.unlock-date{display:inline-flex;align-items:center;gap:6px;color:var(--color-success);font-weight:600}
+.unlock-date svg{width:13px;height:13px}
+.status-locked{display:inline-flex;align-items:center;gap:5px;color:var(--color-text-3)}
+@media (max-width:600px){
+  .trow{grid-template-columns:44px 1fr;gap:var(--space-3)}
+  .trow .ticon{width:44px;height:44px}
+  .trow .right{grid-column:2;align-items:flex-start;flex-direction:row;flex-wrap:wrap}
+}
+
+/* tela mock + toast */
+.screen{position:relative;aspect-ratio:16/9;overflow:hidden;--c:14px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c));
+  background:radial-gradient(circle at 30% 120%, rgb(245 197 66 / .35), transparent 50%),radial-gradient(circle at 80% 10%, rgb(139 92 246 / .35), transparent 45%),linear-gradient(160deg,#141b33,#0a0c14)}
+.screen .hint{position:absolute;left:20px;bottom:16px;font-family:var(--font-display);font-size:28px;font-weight:700;color:rgb(255 255 255 / .12);letter-spacing:.2em;text-transform:uppercase}
+.toast{position:absolute;top:16px;right:16px;width:min(340px,calc(100% - 32px));display:grid;grid-template-columns:48px 1fr;gap:12px;align-items:center;padding:12px 14px;
+  background:rgb(16 19 30 / .72);backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);
+  border:1px solid rgb(255 255 255 / .1);border-radius:var(--radius-md);box-shadow:0 20px 40px -12px rgb(0 0 0 / .7);z-index:var(--z-toast);
+  transform:translateX(0);opacity:1}
+.toast::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;border-radius:var(--radius-md) var(--radius-md) 0 0;background:linear-gradient(90deg,var(--color-trophy-gold),transparent)}
+.toast .ticon{width:48px;height:48px;display:grid;place-items:center;background:radial-gradient(circle,rgb(245 197 66 / .25),transparent 70%)}
+.toast .ticon svg{width:40px;height:40px}
+.toast .k{font:600 11px/1.2 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--color-trophy-gold)}
+.toast .n{font-weight:600;font-size:15px;margin-top:3px;line-height:1.25}
+.toast .s{font-size:12px;color:var(--color-text-2);margin-top:2px}
+.toast.play{animation:toast-in var(--dur-slow) var(--ease-snap) both}
+.toast.play .ticon svg{animation:pop var(--dur-slow) var(--ease-snap) 120ms both}
+@keyframes toast-in{from{transform:translateX(calc(100% + 24px));opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes pop{from{transform:scale(.4) rotate(-12deg);opacity:0}to{transform:none;opacity:1}}
+
+/* cerimônia */
+.ceremony{position:relative;aspect-ratio:16/9;overflow:hidden;--c:14px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c));
+  background:radial-gradient(circle at 50% 45%, rgb(184 169 255 / .18), transparent 55%),linear-gradient(180deg,#0d1020,#06070c);display:grid;place-items:center}
+.ceremony canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.ceremony .stage{position:relative;text-align:center;display:grid;justify-items:center;gap:6px}
+.ceremony .plat-glyph-wrap{width:96px;height:96px;margin:0}
+.ceremony .plat-glyph-wrap .glyph{width:96px;height:96px}
+.ceremony .k{font:700 12px/1 var(--font-display);letter-spacing:.3em;text-transform:uppercase;color:var(--color-plat-3);margin-top:8px}
+.ceremony .g{font-family:var(--font-display);font-weight:700;font-size:22px;text-transform:uppercase;letter-spacing:.06em}
+.ceremony .rays{position:absolute;left:50%;top:50%;width:520px;height:520px;margin:-260px 0 0 -260px;background:repeating-conic-gradient(from 0deg,rgb(229 240 255 / .07) 0 6deg,transparent 6deg 18deg);border-radius:50%;mask-image:radial-gradient(circle,#000 20%,transparent 65%);opacity:.6;animation:spin 30s linear infinite}
+.ceremony.go .stage{animation:cer-in calc(var(--dur-ceremony) * .45) var(--ease-snap) both}
+.ceremony.go .rays{animation:spin 30s linear infinite, rays-in calc(var(--dur-ceremony) * .5) var(--ease-out) both}
+@keyframes cer-in{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes rays-in{from{opacity:0}to{opacity:.6}}
+
+/* card IA */
+.ai-card{--panel-bg:radial-gradient(500px 200px at 100% 0%, rgb(139 92 246 / .16), transparent 70%),linear-gradient(180deg,var(--color-surface-1),var(--color-bg-1))}
+.ai-head{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-4);flex-wrap:wrap}
+.ai-title{display:flex;gap:12px;align-items:center}
+.ai-title .ai-ico{width:40px;height:40px;display:grid;place-items:center;background:rgb(139 92 246 / .16);color:var(--color-neon-violet-text);--c:8px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c))}
+.ai-title .ai-ico svg{width:22px;height:22px}
+.ai-title h4{margin:0;font-family:var(--font-display);font-size:19px;font-weight:700;letter-spacing:.02em}
+.disclaimer{display:inline-flex;gap:8px;align-items:center;margin:var(--space-4) 0;padding:8px 12px;background:rgb(251 191 36 / .08);border:1px dashed rgb(251 191 36 / .45);color:#fcd77a;font-size:13px;font-weight:500}
+.disclaimer svg{width:16px;height:16px;flex:none}
+.confidence{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.conf-bars{display:flex;gap:3px}
+.conf-bars i{width:18px;height:8px;background:var(--color-surface-3);transform:skewX(-20deg)}
+.conf-bars i.on{background:var(--color-success)}
+.conf-label{font:600 12px/1 var(--font-display);letter-spacing:.08em;text-transform:uppercase;color:var(--color-success)}
+.steps{list-style:none;padding:0;margin:0;counter-reset:s;display:grid;gap:10px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:10px;font-size:14.5px;color:var(--color-text-1);line-height:1.5}
+.steps li::before{content:counter(s,decimal-leading-zero);font-family:var(--font-numeric);font-weight:700;font-size:16px;color:var(--color-neon-cyan);line-height:1.45}
+.steps li em{font-style:normal;color:var(--color-text-2)}
+.ai-foot{display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--color-border-subtle)}
+.typing{display:inline-block;width:8px;height:15px;background:var(--color-neon-cyan);vertical-align:-2px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* botões */
+.btn{--bc:var(--color-neon-cyan);position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--hit-target);padding:0 20px;border:0;cursor:pointer;
+  font:700 13px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--color-text-1);background:none;transition:transform var(--dur-instant) var(--ease-out)}
+.btn svg{width:16px;height:16px}
+.btn:active{transform:scale(.97)}
+.btn .s{position:absolute;inset:0;z-index:-1;--c:9px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c))}
+.btn .gl{position:absolute;inset:0;z-index:-2;background:var(--bc);filter:blur(14px);opacity:0;transition:opacity var(--dur-fast) var(--ease-out)}
+.btn:hover .gl,.btn:focus-visible .gl{opacity:calc(var(--glow-o,.55))}
+:root[data-glow="low"] .btn{--glow-o:.3} :root[data-glow="high"] .btn{--glow-o:.85}
+.btn-primary{color:var(--color-text-on-accent)}
+.btn-primary .s{background:linear-gradient(180deg,#8ffaff,var(--color-neon-cyan))}
+.btn-secondary{color:var(--color-neon-cyan)}
+.btn-secondary .s{background:linear-gradient(var(--color-neon-cyan),var(--color-neon-cyan))}
+.btn-secondary .s::after{content:"";position:absolute;inset:1.5px;--c:8.4px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c));background:var(--color-surface-1)}
+.btn-secondary:hover .s::after{background:color-mix(in oklab,var(--color-neon-cyan) 10%,var(--color-surface-1))}
+.btn-secondary .gl{opacity:0}
+.btn-ghost{color:var(--color-text-2)}
+.btn-ghost:hover{color:var(--color-text-1)}
+.btn-ghost:hover .s{background:rgb(255 255 255 / .06)}
+.btn-ghost .gl{display:none}
+.btn-psn{color:#fff}.btn-psn .s{background:var(--color-psn)}.btn-psn{--bc:var(--color-psn)}
+.btn.sm{min-height:34px;padding:0 14px;font-size:11.5px}
+.btn.fake-focus{outline:2px solid var(--color-focus);outline-offset:3px}
+.btn[disabled]{cursor:not-allowed;color:var(--color-text-disabled)}
+.btn[disabled] .s{background:var(--color-surface-3)}
+
+.field{display:grid;gap:6px;max-width:420px}
+.field label{font:600 12px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--color-text-2)}
+.input{position:relative}
+.input input{width:100%;height:46px;padding:0 14px 0 40px;background:var(--color-bg-1);border:1px solid var(--color-border);color:var(--color-text-1);font:500 14px var(--font-mono);border-radius:var(--radius-xs);transition:border-color var(--dur-fast) var(--ease-out)}
+.input input::placeholder{color:var(--color-text-3)}
+.input input:focus{outline:none;border-color:var(--color-neon-cyan);box-shadow:0 0 0 3px rgb(61 245 255 / .18)}
+.input svg{position:absolute;left:12px;top:50%;width:18px;height:18px;translate:0 -50%;color:var(--color-text-3)}
+.field .help{font-size:12px;color:var(--color-text-3)}
+
+/* skeleton */
+.skel{position:relative;overflow:hidden;background:var(--color-surface-2)}
+.skel::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgb(148 163 200 / .1),transparent);transform:translateX(-100%);animation:skel 1.4s var(--ease-in-out) infinite}
+@keyframes skel{to{transform:translateX(100%)}}
+.skel-card{display:grid;grid-template-columns:96px 1fr;gap:var(--space-4);align-items:center}
+.skel-cover{aspect-ratio:1;--c:10px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c))}
+.skel-line{height:12px;border-radius:2px;margin-bottom:10px}
+
+/* banner */
+.banner{display:grid;grid-template-columns:auto 1fr auto;gap:var(--space-4);align-items:center;padding:var(--space-4) var(--space-5);
+  background:linear-gradient(90deg,rgb(251 191 36 / .13),rgb(251 191 36 / .04));border:1px solid rgb(251 191 36 / .4);position:relative;--c:10px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c))}
+.banner::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgb(251 191 36 / .06) 0 8px,transparent 8px 16px);pointer-events:none}
+.banner .ic{width:36px;height:36px;display:grid;place-items:center;color:var(--color-warning);position:relative}
+.banner .ic svg{width:26px;height:26px}
+.banner strong{display:block;font-family:var(--font-display);font-size:15px;letter-spacing:.04em;text-transform:uppercase;color:#fde68a}
+.banner span{font-size:13.5px;color:var(--color-text-2)}
+@media (max-width:600px){.banner{grid-template-columns:auto 1fr}.banner .btn{grid-column:1/-1}}
+
+/* ============================== mobile vs TV ============================== */
+.devices > *{min-width:0}
+.devices{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--space-10);align-items:start}
+@media (max-width:1000px){.devices{grid-template-columns:minmax(0,1fr)}}
+.phone{width:390px;max-width:100%;border:1px solid var(--color-border);border-radius:38px;padding:12px;background:linear-gradient(160deg,#1a1f2e,#0a0c12);box-shadow:0 30px 60px -20px rgb(0 0 0 / .8),inset 0 0 0 1px rgb(255 255 255 / .04);margin:0 auto}
+.phone .scr{border-radius:28px;overflow:hidden;background:var(--color-bg-0);position:relative}
+.phone .status{display:flex;justify-content:space-between;align-items:center;padding:12px 22px 4px;font:600 13px var(--font-sans)}
+.phone .notch{width:110px;height:28px;border-radius:20px;background:#000;margin:0 auto}
+.phone .appbar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px}
+.phone .appbar h5{margin:0;font-family:var(--font-display);font-size:20px;text-transform:uppercase;letter-spacing:.04em}
+.phone .content{padding:0 12px 16px}
+.mcard{display:grid;grid-template-columns:96px 1fr auto;gap:12px;align-items:center;background:var(--color-surface-2);padding:10px;--c:10px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c));margin-bottom:12px;position:relative}
+.mcard .mc{aspect-ratio:1;position:relative;overflow:hidden;--c:8px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c))}
+.mcard .mc .art{position:absolute;inset:0}
+.mcard h6{margin:0 0 4px;font:700 16px/1.2 var(--font-display)}
+.mcard .meta{font-size:12px;color:var(--color-text-2)}
+.phone .trow{padding:10px 12px;grid-template-columns:44px 1fr;gap:10px}
+.phone .trow .ticon{width:44px;height:44px}
+.phone .trow .ticon svg{width:28px;height:28px}
+.phone .trow .right{grid-column:2;align-items:flex-start;flex-direction:row;flex-wrap:wrap}
+.phone .tabbar{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--color-border-subtle);background:var(--color-glass);backdrop-filter:blur(12px);padding:8px 0 18px}
+.phone .tabbar a{display:grid;justify-items:center;gap:4px;font:600 10px/1 var(--font-display);letter-spacing:.08em;text-transform:uppercase;color:var(--color-text-3);text-decoration:none;min-height:44px;align-content:center}
+.phone .tabbar a svg{width:20px;height:20px}
+.phone .tabbar a.on{color:var(--color-neon-cyan)}
+.tv-preview{--panel-bg:linear-gradient(180deg,#0d1122,#07080d)}
+.tv-row{display:flex;gap:18px;padding:22px 12px 14px}
+.tv-tile{flex:1 1 0;min-width:0;max-width:190px;aspect-ratio:3/4;position:relative;--c:10px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c));overflow:hidden;opacity:.6;transition:transform var(--dur-base) var(--ease-snap),opacity var(--dur-base)}
+.tv-tile .art{position:absolute;inset:0}
+.tv-tile.focus{opacity:1;transform:scale(var(--tv-focus-scale))}
+.tv-wrap-focus{position:relative;flex:1 1 0;min-width:0;max-width:190px}
+.tv-wrap-focus .tv-tile{flex:none;width:100%}
+.tv-wrap-focus::after{content:"";position:absolute;inset:-9px;border:var(--tv-focus-ring) solid var(--color-neon-cyan);--c:14px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c));filter:drop-shadow(0 0 10px var(--color-neon-cyan));pointer-events:none}
+.tv-meta{font-family:var(--font-display);font-size:30px;font-weight:700;text-transform:uppercase;margin-top:14px;letter-spacing:.02em}
+.tok-table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:var(--space-5)}
+.tok-table th,.tok-table td{padding:9px 8px;border-bottom:1px solid var(--color-border-subtle);text-align:left}
+.tok-table th{font:600 11px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--color-text-3)}
+.tok-table td.n{font-family:var(--font-numeric);font-weight:700;font-size:16px;font-variant-numeric:tabular-nums}
+.tok-table code{font-family:var(--font-mono);font-size:12px;color:var(--color-neon-cyan)}
+.gp{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border:1px solid var(--color-border);border-radius:50%;font:700 11px var(--font-display);color:var(--color-text-2)}
+
+/* ============================== movimento ============================== */
+.motion-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:var(--space-6)}
+@media (max-width:1000px){.motion-grid{grid-template-columns:1fr}}
+.ease-demo{display:grid;gap:12px}
+.lane{display:grid;grid-template-columns:150px 1fr;align-items:center;gap:12px}
+@media (max-width:600px){.lane{grid-template-columns:110px 1fr}}
+.lane .track{position:relative;height:28px;border-bottom:1px dashed var(--color-border)}
+.lane .dot{position:absolute;left:0;top:6px;width:16px;height:16px;background:var(--color-neon-cyan);transform:translateX(0) rotate(45deg);box-shadow:var(--shadow-glow-cyan)}
+.lane .track.run .dot{transform:translateX(calc(var(--w) - 16px)) rotate(45deg);transition:transform var(--d) var(--e)}
+.principles{margin:0;padding:0;list-style:none;display:grid;gap:12px}
+.principles li{display:grid;grid-template-columns:22px 1fr;gap:10px;font-size:14.5px;color:var(--color-text-2)}
+.principles li b{color:var(--color-text-1);font-weight:600}
+.principles li::before{content:"";width:8px;height:8px;margin-top:8px;border:1.5px solid var(--color-neon-cyan);transform:rotate(45deg)}
+
+/* ============================== referências ============================== */
+.refs{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-6)}
+@media (max-width:900px){.refs{grid-template-columns:1fr}}
+.ref .rn{font-family:var(--font-numeric);font-weight:700;font-size:15px;color:var(--color-neon-cyan);letter-spacing:.1em}
+.ref h4{font-family:var(--font-display);font-weight:700;font-size:22px;margin:6px 0 10px;text-transform:uppercase;letter-spacing:.02em}
+.ref p{margin:0 0 12px;color:var(--color-text-2);font-size:14px}
+.ref .borrow{font-size:14px;color:var(--color-text-1);border-left:2px solid var(--color-neon-violet);padding-left:10px}
+.ref .borrow b{font:600 11px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--color-neon-violet-text);display:block;margin-bottom:6px}
+.ref .mini{height:90px;margin:-4px 0 14px;position:relative;overflow:hidden;--c:8px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c));background:var(--color-bg-1)}
+
+footer{padding:var(--space-12) 0 var(--space-16);color:var(--color-text-3);font-size:13px;border-top:1px solid var(--color-border-subtle);margin-top:var(--space-12)}
+
+/* ============================== reduced motion ============================== */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;scroll-behavior:auto !important}
+}
+:root[data-motion="reduce"] *,:root[data-motion="reduce"] *::before,:root[data-motion="reduce"] *::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important}
+:root[data-motion="reduce"]{scroll-behavior:auto}
+:root[data-motion="reduce"] .gcard{transform:none !important}
+</style>
+</head>
+<body>
+
+<!-- ====================== SVG sprites ====================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0b27a"/><stop offset=".55" stop-color="#cd7f32"/><stop offset="1" stop-color="#7a4718"/></linearGradient>
+    <linearGradient id="g-silver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#c4ccd8"/><stop offset="1" stop-color="#6b7587"/></linearGradient>
+    <linearGradient id="g-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1b8"/><stop offset=".5" stop-color="#f5c542"/><stop offset="1" stop-color="#a1700f"/></linearGradient>
+    <linearGradient id="g-plat" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e5f0ff"/><stop offset=".35" stop-color="#b8a9ff"/><stop offset=".65" stop-color="#7fe7ff"/><stop offset="1" stop-color="#ffd6f5"/></linearGradient>
+    <linearGradient id="g-ach" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a475e"/><stop offset="1" stop-color="#1b2838"/></linearGradient>
+    <!-- cálice base -->
+    <symbol id="cup" viewBox="0 0 48 48">
+      <path d="M13 7h22v11c0 6.6-4.9 12-11 12S13 24.6 13 18z"/>
+      <path d="M13 10H7v3c0 4.4 3 8 7 8.6M35 10h6v3c0 4.4-3 8-7 8.6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M21.5 30h5l1 6h-7z"/>
+      <path d="M14 42l2.5-6h15l2.5 6z"/>
+    </symbol>
+    <!-- bronze: cálice liso, base simples -->
+    <symbol id="t-bronze" viewBox="0 0 48 48"><g fill="url(#g-bronze)" color="#cd7f32"><use href="#cup"/></g><circle cx="24" cy="17" r="3" fill="#7a4718" opacity=".55"/></symbol>
+    <!-- prata: cálice + duas faixas -->
+    <symbol id="t-silver" viewBox="0 0 48 48"><g fill="url(#g-silver)" color="#c4ccd8"><use href="#cup"/></g><path d="M14 13h20M14.6 19h18.8" stroke="#5b6475" stroke-width="1.6" opacity=".6"/></symbol>
+    <!-- ouro: cálice + estrela -->
+    <symbol id="t-gold" viewBox="0 0 48 48"><g fill="url(#g-gold)" color="#f5c542"><use href="#cup"/></g><path d="M24 11.5l1.9 3.9 4.3.6-3.1 3 .7 4.2L24 21.2l-3.8 2 .7-4.2-3.1-3 4.3-.6z" fill="#8a5a06" opacity=".75"/></symbol>
+    <!-- platina: cálice + diamante + louros -->
+    <symbol id="t-plat" viewBox="0 0 48 48"><g fill="url(#g-plat)" color="#b8a9ff"><use href="#cup"/></g><path d="M24 11l5 6-5 7-5-7z" fill="#ffffff" opacity=".85"/><path d="M19 17h10" stroke="#7b6cd9" stroke-width="1"/><path d="M5 30c2 5 6 8 11 9M43 30c-2 5-6 8-11 9" fill="none" stroke="url(#g-plat)" stroke-width="2" stroke-linecap="round"/></symbol>
+    <!-- conquista steam: moldura quadrada chanfrada + emblema hexagonal -->
+    <symbol id="t-ach" viewBox="0 0 48 48"><path d="M10 4h34v30l-10 10H4V10z" fill="url(#g-ach)" stroke="#66c0f4" stroke-width="2"/><path d="M24 12l9 5v10l-9 5-9-5V17z" fill="none" stroke="#66c0f4" stroke-width="2.4"/><circle cx="24" cy="22" r="3.4" fill="#a4d007"/></symbol>
+    <!-- raridade -->
+    <symbol id="r-common" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="currentColor"/></symbol>
+    <symbol id="r-uncommon" viewBox="0 0 16 16"><path d="M8 1.5L14.5 8 8 14.5 1.5 8z" fill="currentColor"/></symbol>
+    <symbol id="r-rare" viewBox="0 0 16 16"><path d="M8 1.8l6.8 12.2H1.2z" fill="currentColor"/></symbol>
+    <symbol id="r-epic" viewBox="0 0 16 16"><path d="M8 1l6 3.5v7L8 15l-6-3.5v-7z" fill="currentColor"/><path d="M8 5l3 1.8v3.4L8 12l-3-1.8V6.8z" fill="#07080d" opacity=".45"/></symbol>
+    <symbol id="r-legendary" viewBox="0 0 16 16"><path d="M8 .5l1.9 5.6L15.5 8l-5.6 1.9L8 15.5l-1.9-5.6L.5 8l5.6-1.9z" fill="currentColor"/></symbol>
+    <!-- ícones -->
+    <symbol id="i-ps" viewBox="0 0 16 16"><path d="M6 2.2v10.6l2.4.8V4.7c0-.5.2-.8.6-.7.5.2.6.6.6 1.1v3.5c1.5.7 2.7 0 2.7-1.9 0-2-.7-2.8-2.7-3.5C8.6 2.7 7.2 2.3 6 2.2zM9.1 11l3.9-1.4c.4-.2.5-.4.1-.5-.4-.1-1-.1-1.4.1l-2.6.9V9l.2-.1s.7-.3 1.8-.4c1-.1 2.3 0 3.3.4 1.1.4 1.2.9.9 1.3-.3.4-1 .6-1 .6l-5.2 1.9V11zM1.9 10.8c-1.2-.3-1.4-1-.8-1.4.5-.4 1.4-.7 1.4-.7L6 7.5v1.4L3.5 9.8c-.4.2-.5.4-.1.5.4.1 1 .1 1.4-.1l1.2-.4v1.3h-.2c-1.2.2-2.5.1-3.9-.3z" fill="currentColor"/></symbol>
+    <symbol id="i-steam" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="10.6" cy="6.2" r="2" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="5.6" cy="10.4" r="1.5" fill="currentColor"/><path d="M5.6 10.4L9.6 7.4" stroke="currentColor" stroke-width="1.3"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7.5" rx="1" fill="currentColor"/><path d="M5 7V5a3 3 0 016 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 16 16"><path d="M1 8s2.6-5 7-5 7 5 7 5-2.6 5-7 5-7-5-7-5z" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="8" cy="8" r="2.2" fill="currentColor"/></symbol>
+    <symbol id="i-check" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"/></symbol>
+    <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 2.5l10 18H2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 9.5v5" stroke="currentColor" stroke-width="2.2"/><circle cx="12" cy="17.6" r="1.3" fill="currentColor"/></symbol>
+    <symbol id="i-ai" viewBox="0 0 24 24"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8zM18.5 14l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z" fill="currentColor"/></symbol>
+    <symbol id="i-sync" viewBox="0 0 16 16"><path d="M13 6.5A5 5 0 003.5 5M3 9.5A5 5 0 0012.5 11" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 2v3.5h3.5M13 14v-3.5H9.5" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-key" viewBox="0 0 16 16"><circle cx="5" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 8h7M12 8v3M14 8v2" stroke="currentColor" stroke-width="1.5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 16 16"><path d="M4 2.5l9 5.5-9 5.5z" fill="currentColor"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9h-6v-6H9v6H3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-lib" viewBox="0 0 24 24"><path d="M4 4h4v16H4zM10 4h4v16h-4zM16 5l3.8-1 3 15.5-3.8 1z" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 21c1.5-4 4.4-6 8-6s6.5 2 8 6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  </defs>
+</svg>
+
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand"><svg aria-hidden="true"><use href="#t-plat"/></svg><span>Trophy <b>Hunter</b></span></div>
+    <nav class="nav" aria-label="Seções">
+      <a href="#paleta">Paleta</a><a href="#trofeus">Troféus</a><a href="#raridade">Raridade</a><a href="#tipografia">Tipografia</a><a href="#componentes">Componentes</a><a href="#dispositivos">Celular/TV</a><a href="#movimento">Movimento</a><a href="#referencias">Referências</a>
+    </nav>
+    <div class="controls">
+      <label class="switch"><input type="checkbox" id="rm-toggle"> Reduzir movimento</label>
+      <div class="seg" role="group" aria-label="Intensidade do neon">
+        <span class="seg-l">Neon</span><button type="button" data-glow="low" aria-pressed="false">Baixo</button>
+        <button type="button" data-glow="med" aria-pressed="true">Médio</button>
+        <button type="button" data-glow="high" aria-pressed="false">Alto</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- ====================== HERO ====================== -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="label kicker">Style tile · direção visual v0.1 · para aprovação</div>
+      <h1>Caça ao <span class="outline">100%</span><br>em modo console</h1>
+      <p class="lead">Dark de console, cantos chanfrados de HUD, neon fino e só um toque de vidro. A platina é a única coisa que brilha em arco-íris — todo o resto fica sóbrio para ela se destacar.</p>
+      <div class="chips">
+        <span class="chip">PS5 home</span><span class="chip">Steam Big Picture / Deck</span><span class="chip">HUD Destiny 2 · Halo Infinite</span><span class="chip">WCAG AA</span><span class="chip">Reduced-motion</span>
+      </div>
+    </div>
+    <div class="panel hero-stat">
+      <div class="row" style="justify-content:space-between">
+        <span class="label">Progresso geral · 2026</span>
+        <span class="row" style="gap:6px"><span class="pbadge psn"><svg><use href="#i-ps"/></svg>PSN</span><span class="pbadge steam"><svg><use href="#i-steam"/></svg>Steam</span></span>
+      </div>
+      <div class="row" style="justify-content:space-between;align-items:flex-end;margin-top:14px;flex-wrap:nowrap">
+        <div>
+          <div class="big"><span data-count="1847">0</span><small>troféus</small></div>
+          <div class="caption" style="margin-top:6px">+ <span class="num" style="color:var(--color-text-1)">612</span> conquistas Steam · <span class="num" style="color:var(--color-text-1)">23</span> jogos a 100%</div>
+        </div>
+        <div class="ring big" style="--ring-c:var(--color-neon-cyan)" data-ring="72"><svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="8"/><circle class="bar" cx="60" cy="60" r="52" fill="none" stroke-width="8"/></svg><div class="val"><span class="rv">0</span><small>%</small></div></div>
+      </div>
+      <div class="statline">
+        <div class="t-plat"><span class="num" data-count="14">0</span><span class="caption">Platina</span></div>
+        <div class="t-gold"><span class="num" data-count="96">0</span><span class="caption">Ouro</span></div>
+        <div class="t-silver"><span class="num" data-count="318">0</span><span class="caption">Prata</span></div>
+        <div class="t-bronze"><span class="num" data-count="1419">0</span><span class="caption">Bronze</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== 01 PALETA ====================== -->
+<section class="block" id="paleta">
+  <div class="wrap">
+    <div class="sec-head"><span class="idx">01</span><div><h2>Paleta</h2><p>Base quase-preta azulada; neon só como sinal (foco, progresso, ação). Contraste calculado ao vivo.</p></div><span class="rule"></span></div>
+
+    <div class="grid pal-grid">
+      <div class="panel sm">
+        <h3 class="sub">Fundo &amp; superfícies</h3>
+        <div class="swatches">
+          <div class="sw"><div class="chip-c" style="background:var(--color-bg-0)"></div><span class="n">bg-0</span><span class="h">#07080D</span></div>
+          <div class="sw"><div class="chip-c" style="background:var(--color-bg-1)"></div><span class="n">bg-1</span><span class="h">#0B0D15</span></div>
+          <div class="sw"><div class="chip-c" style="background:var(--color-surface-1)"></div><span class="n">surface-1</span><span class="h">#10131E</span></div>
+          <div class="sw"><div class="chip-c" style="background:var(--color-surface-2)"></div><span class="n">surface-2</span><span class="h">#161B2A</span></div>
+          <div class="sw"><div class="chip-c" style="background:var(--color-surface-3)"></div><span class="n">surface-3</span><span class="h">#1F2539</span></div>
+          <div class="sw"><div class="chip-c" style="background:var(--color-glass);backdrop-filter:blur(8px);background-image:linear-gradient(135deg,rgb(61 245 255 / .2),transparent)"></div><span class="n">glass</span><span class="h">rgba(20,24,36,.6)</span></div>
+        </div>
+      </div>
+      <div class="panel sm">
+        <h3 class="sub">Texto &amp; bordas</h3>
+        <div class="swatches">
+          <div class="sw"><div class="chip-c" style="background:var(--color-text-1)"></div><span class="n">text-1</span><span class="h">#EEF2FA</span></div>
+          <div class="sw"><div class="chip-c" style="background:var(--color-text-2)"></div><span class="n">text-2</span><span class="h">#A9B3C7</span></div>
+          <div class="sw"><div class="chip-c" style="background:var(--color-text-3)"></div><span class="n">text-3</span><span class="h">#8590A6</span></div>
+          <div class="sw"><div class="chip-c" style="background:var(--color-text-disabled)"></div><span class="n">disabled</span><span class="h">#4A5368</span></div>
+          <div class="sw"><div class="chip-c" style="background:var(--color-bg-1);box-shadow:inset 0 0 0 1px var(--color-border)"></div><span class="n">border</span><span class="h">slate / 20%</span></div>
+          <div class="sw"><div class="chip-c" style="background:var(--color-bg-1);box-shadow:inset 0 0 0 1px var(--color-border-strong)"></div><span class="n">border-strong</span><span class="h">cyan / 50%</span></div>
+        </div>
+      </div>
+      <div class="panel sm">
+        <h3 class="sub">Neon &amp; semânticas</h3>
+        <div class="swatches">
+          <div class="sw"><div class="chip-c" style="background:var(--color-neon-cyan);box-shadow:var(--shadow-glow-cyan)"></div><span class="n">neon-cyan</span><span class="h">#3DF5FF</span></div>
+          <div class="sw"><div class="chip-c" style="background:var(--color-neon-violet)"></div><span class="n">neon-violet</span><span class="h">#8B5CF6</span></div>
+          <div class="sw"><div class="chip-c" style="background:var(--color-success)"></div><span class="n">success</span><span class="h">#34D399</span></div>
+          <div class="sw"><div class="chip-c" style="background:var(--color-warning)"></div><span class="n">warning</span><span class="h">#FBBF24</span></div>
+          <div class="sw"><div class="chip-c" style="background:var(--color-danger)"></div><span class="n">danger</span><span class="h">#F87171</span></div>
+          <div class="sw"><div class="chip-c" style="background:var(--color-info)"></div><span class="n">info</span><span class="h">#60A5FA</span></div>
+        </div>
+      </div>
+      <div class="panel sm">
+        <h3 class="sub">Plataformas</h3>
+        <div class="platforms" style="grid-template-columns:1fr">
+          <div class="plat-card plat-psn" style="min-height:0">
+            <h4>PlayStation</h4>
+            <p>Azul royal <b>sólido</b>, texto branco. Lido como "fill".</p>
+            <div class="hexes"><span>#0070D1</span><span>#003791</span><span>txt #5AA9FF</span></div>
+          </div>
+          <div class="plat-card plat-steam" style="min-height:0">
+            <h4 style="color:#fff">Steam</h4>
+            <p>Slate <b>escuro</b> + azul-céu em traço/texto. Lido como "outline".</p>
+            <div class="hexes"><span>#1B2838</span><span>#2A475E</span><span>#66C0F4</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:var(--space-6)">
+      <div class="row" style="justify-content:space-between;margin-bottom:var(--space-3)">
+        <h3 class="sub" style="margin:0">Contraste WCAG (calculado em JS a partir dos tokens)</h3>
+        <span class="caption">Corpo ≥ 4.5:1 · texto grande/ícones ≥ 3:1</span>
+      </div>
+      <div class="contrast-split" id="contrast">
+        <div class="table-scroll"><table class="contrast-table"><thead><tr><th>Amostra</th><th>Texto / fundo · uso</th><th>Razão</th><th>Veredito</th></tr></thead><tbody></tbody></table></div>
+        <div class="table-scroll"><table class="contrast-table"><thead><tr><th>Amostra</th><th>Texto / fundo · uso</th><th>Razão</th><th>Veredito</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== 02 TROFÉUS ====================== -->
+<section class="block" id="trofeus">
+  <div class="wrap">
+    <div class="sec-head"><span class="idx">02</span><div><h2>Troféus &amp; conquistas</h2><p>Cada tipo tem forma própria (liso · faixas · estrela · diamante+louros · moldura hexagonal) além da cor e do rótulo.</p></div><span class="rule"></span></div>
+    <div class="grid trophy-grid">
+      <div class="tcard t-bronze"><svg class="glyph" role="img" aria-label="Troféu de bronze"><use href="#t-bronze"/></svg><div class="tname" style="color:var(--color-trophy-bronze-hi)">Bronze</div><div class="tmeta">cálice liso</div><span class="tag">15 pts</span></div>
+      <div class="tcard t-silver"><svg class="glyph" role="img" aria-label="Troféu de prata"><use href="#t-silver"/></svg><div class="tname" style="color:var(--color-trophy-silver)">Prata</div><div class="tmeta">cálice com faixas</div><span class="tag">30 pts</span></div>
+      <div class="tcard t-gold"><svg class="glyph" role="img" aria-label="Troféu de ouro"><use href="#t-gold"/></svg><div class="tname" style="color:var(--color-trophy-gold)">Ouro</div><div class="tmeta">cálice com estrela</div><span class="tag">90 pts</span></div>
+      <div class="tcard t-plat"><span class="spin" aria-hidden="true"></span><span class="shimmer" aria-hidden="true"></span><div class="plat-glyph-wrap"><svg class="glyph" role="img" aria-label="Troféu de platina"><use href="#t-plat"/></svg></div><div class="tname">Platina</div><div class="tmeta">diamante + louros · iridescente</div><span class="tag">300 pts</span></div>
+      <div class="tcard t-ach"><svg class="glyph" role="img" aria-label="Conquista Steam"><use href="#t-ach"/></svg><div class="tname" style="color:var(--color-steam)">Conquista</div><div class="tmeta">Steam · moldura hex</div><span class="tag">sem tier</span></div>
+    </div>
+    <p class="caption" style="margin-top:var(--space-4)">Platina: borda em <span class="mono">conic-gradient</span> girando + faixa de brilho — ambos só <span class="mono">transform</span>. Em movimento reduzido ficam estáticos (gradiente continua visível).</p>
+  </div>
+</section>
+
+<!-- ====================== 03 RARIDADE ====================== -->
+<section class="block" id="raridade">
+  <div class="wrap">
+    <div class="sec-head"><span class="idx">03</span><div><h2>Raridade estilo loot</h2><p>Cor + forma + rótulo + %. Raro para cima tem glow (passe o mouse / foque com Tab).</p></div><span class="rule"></span></div>
+    <div class="panel">
+      <div class="rarity-grid">
+        <span class="rbadge r-common common" tabindex="0"><span class="bg"></span><span class="glow"></span><svg aria-hidden="true"><use href="#r-common"/></svg><span class="rl">Comum</span><span class="rr">≥ 50%</span></span>
+        <span class="rbadge r-uncommon uncommon" tabindex="0"><span class="bg"></span><span class="glow"></span><svg aria-hidden="true"><use href="#r-uncommon"/></svg><span class="rl">Incomum</span><span class="rr">20–50%</span></span>
+        <span class="rbadge r-rare rare" tabindex="0"><span class="bg"></span><span class="glow"></span><svg aria-hidden="true"><use href="#r-rare"/></svg><span class="rl">Raro</span><span class="rr">5–20%</span></span>
+        <span class="rbadge r-epic epic" tabindex="0"><span class="bg"></span><span class="glow"></span><svg aria-hidden="true"><use href="#r-epic"/></svg><span class="rl">Épico</span><span class="rr">1–5%</span></span>
+        <span class="rbadge r-legendary legendary" tabindex="0"><span class="bg"></span><span class="glow"></span><svg aria-hidden="true"><use href="#r-legendary"/></svg><span class="rl">Lendário</span><span class="rr">&lt; 1%</span></span>
+      </div>
+      <div class="rarity-scale" aria-hidden="true">
+        <span style="background:var(--color-rarity-common)"></span><span style="background:var(--color-rarity-uncommon)"></span><span style="background:var(--color-rarity-rare)"></span><span style="background:var(--color-rarity-epic)"></span><span style="background:var(--color-rarity-legendary);box-shadow:0 0 10px var(--color-rarity-legendary)"></span>
+      </div>
+      <div class="rarity-ticks" aria-hidden="true"><span>100%</span><span>50%</span><span>20%</span><span>5%</span><span>1%</span></div>
+      <p class="caption" style="margin:var(--space-4) 0 0">Escala não-linear (a barra acima é proporcional). Variação <b>mini</b> para linhas de troféu:
+        <span class="rbadge mini r-epic epic" style="margin-left:6px;vertical-align:middle"><span class="bg"></span><span class="glow"></span><svg aria-hidden="true"><use href="#r-epic"/></svg><span class="rl">Épico</span><span class="rr">3,1%</span></span>
+        <span class="rbadge mini r-legendary legendary" style="margin-left:6px;vertical-align:middle"><span class="bg"></span><span class="glow"></span><svg aria-hidden="true"><use href="#r-legendary"/></svg><span class="rl">Lendário</span><span class="rr">0,4%</span></span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== 04 TIPOGRAFIA ====================== -->
+<section class="block" id="tipografia">
+  <div class="wrap">
+    <div class="sec-head"><span class="idx">04</span><div><h2>Tipografia</h2><p>Display técnico p/ títulos, numérica tabular p/ stats, Inter p/ leitura longa (guias de IA).</p></div><span class="rule"></span></div>
+
+    <h3 class="sub">Display — lado a lado</h3>
+    <div class="type-compare">
+      <div class="panel sm font-opt">
+        <span class="pick rec">Proposto</span><span class="label">Chakra Petch</span>
+        <div class="sample-title" style="font-family:'Chakra Petch'">Próxima Platina</div>
+        <div class="sample-sub" style="font-family:'Chakra Petch'">Astro Bot · 43/45 troféus</div>
+        <div class="sample-num" style="font-family:'Chakra Petch'">96% 1.847</div>
+        <p class="caption" style="margin:10px 0 0">Cortes angulares tipo HUD, ótima em caixa-alta, acentos PT-BR completos. Mais "tático".</p>
+      </div>
+      <div class="panel sm font-opt">
+        <span class="pick alt">Alternativa A</span><span class="label">Oxanium</span>
+        <div class="sample-title" style="font-family:'Oxanium'">Próxima Platina</div>
+        <div class="sample-sub" style="font-family:'Oxanium'">Astro Bot · 43/45 troféus</div>
+        <div class="sample-num" style="font-family:'Oxanium'">96% 1.847</div>
+        <p class="caption" style="margin:10px 0 0">Mais arredondada e "sci-fi console"; peso 800 dá títulos de capa mais fortes.</p>
+      </div>
+      <div class="panel sm font-opt">
+        <span class="pick alt">Alternativa B</span><span class="label">Tomorrow</span>
+        <div class="sample-title" style="font-family:'Tomorrow'">Próxima Platina</div>
+        <div class="sample-sub" style="font-family:'Tomorrow'">Astro Bot · 43/45 troféus</div>
+        <div class="sample-num" style="font-family:'Tomorrow'">96% 1.847</div>
+        <p class="caption" style="margin:10px 0 0">Geométrica e limpa, mais próxima do PS5; menos personalidade gamer.</p>
+      </div>
+    </div>
+
+    <div class="type-split" style="margin-top:var(--space-8)">
+      <div class="panel">
+        <h3 class="sub">Escala</h3>
+        <div class="scale-list">
+          <div class="scale-item"><span class="label">Hero · 96</span><span style="font:700 var(--text-hero)/0.95 var(--font-display);text-transform:uppercase">Platina</span></div>
+          <div class="scale-item"><span class="label">H1 · 56</span><span style="font:700 var(--text-h1)/1 var(--font-display);text-transform:uppercase">Biblioteca</span></div>
+          <div class="scale-item"><span class="label">H2 · 36</span><span style="font:700 var(--text-h2)/1.1 var(--font-display)">O que fazer hoje</span></div>
+          <div class="scale-item"><span class="label">H3 · 24</span><span style="font:600 var(--text-h3)/1.2 var(--font-display)">Troféus que faltam</span></div>
+          <div class="scale-item"><span class="label">Stat · 72</span><span class="num" style="font-size:var(--text-stat);line-height:1">43<span style="color:var(--color-text-3)">/45</span></span></div>
+          <div class="scale-item"><span class="label">Corpo · 16 Inter</span><span>Derrote o chefe final sem usar itens de cura. O troféu é concedido mesmo no NG+, então dá para farmar no fim.</span></div>
+          <div class="scale-item"><span class="label">Secundário · 14</span><span class="muted" style="font-size:var(--text-sm)">Sincronizado há 4 min · PSN e Steam</span></div>
+          <div class="scale-item" style="border:0;padding:0"><span class="label">Legenda · 12</span><span class="caption">Rótulos HUD em Chakra Petch caixa-alta, tracking 0.14em</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3 class="sub">Numérica tabular</h3>
+        <p class="caption" style="margin-top:-6px">Dígitos de largura igual: colunas não "dançam" no count-up.</p>
+        <div class="num-compare">
+          <div><div class="row" style="justify-content:space-between;margin-bottom:8px"><span class="label">Rajdhani</span><span class="pick rec npick">Proposto</span></div>
+            <div class="num-col" style="font-family:'Rajdhani'">1.847<br>111<br>88,8%<br>0,4%</div></div>
+          <div><div class="row" style="justify-content:space-between;margin-bottom:8px"><span class="label">Orbitron</span><span class="pick alt npick">Alternativa</span></div>
+            <div class="num-col" style="font-family:'Orbitron';font-size:27px;line-height:1.45">1.847<br>111<br>88,8%<br>0,4%</div></div>
+        </div>
+        <p class="caption" style="margin:var(--space-4) 0 0">Rajdhani: condensada, cabe em anéis pequenos e em cards de celular. Orbitron: mais icônica, mas larga demais para tabelas — melhor só em hero.</p>
+        <hr style="border:0;border-top:1px solid var(--color-border-subtle);margin:var(--space-5) 0">
+        <div class="label">Inter · corpo</div>
+        <p style="margin:8px 0 0;font-size:15px">Guias de IA são texto longo: Inter 16/1.55, máx. 68 caracteres por linha, <b>600</b> para ênfase. Nada de display em parágrafos.</p>
+        <hr style="border:0;border-top:1px solid var(--color-border-subtle);margin:var(--space-5) 0">
+        <div class="label" style="margin-bottom:10px">Bloco de stats · dashboard</div>
+        <div class="stat-tiles">
+          <div class="stat-tile"><span class="caption">Horas jogadas</span><span class="num">1.284<small>h</small></span><span class="delta up">+32h este mês</span></div>
+          <div class="stat-tile"><span class="caption">Platinas 2026</span><span class="num" style="background:var(--gradient-platinum-linear);-webkit-background-clip:text;background-clip:text;color:transparent">14</span><span class="delta up">+3 vs 2025</span></div>
+          <div class="stat-tile"><span class="caption">Raridade média</span><span class="num">7,9<small>%</small></span><span class="delta"><svg width="11" height="11" style="color:var(--color-rarity-rare)"><use href="#r-rare"/></svg> Raro</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== 05 COMPONENTES ====================== -->
+<section class="block" id="componentes">
+  <div class="wrap">
+    <div class="sec-head"><span class="idx">05</span><div><h2>Componentes</h2><p>Amostras vivas: passe o mouse nos cards (tilt/parallax), clique nos botões para reproduzir.</p></div><span class="rule"></span></div>
+
+    <h3 class="sub">Card de jogo</h3>
+    <div class="cards" id="cards">
+      <article class="gcard" tabindex="0" aria-label="Astro Bot, PlayStation 5, 96% concluído">
+        <div class="halo"></div><div class="edge"></div>
+        <div class="frame">
+          <div class="cover"><div class="art art-astro"></div><div class="fx"></div><div class="glare"></div>
+            <span class="pbadge psn"><svg aria-hidden="true"><use href="#i-ps"/></svg>PS5</span>
+            <span class="rbadge mini r-legendary legendary plat-ready"><span class="bg" style="background:rgb(7 8 13 / .75)"></span><svg aria-hidden="true"><use href="#r-legendary"/></svg><span class="rl">Falta 2</span></span>
+            <span class="ctitle">Astro Bot</span></div>
+          <div class="gbody">
+            <div><h4>Astro Bot</h4><div class="meta"><span class="num">43</span>/45 troféus · última: hoje</div>
+              <div class="tcounts"><span><svg><use href="#t-plat"/></svg>0/1</span><span><svg><use href="#t-gold"/></svg>4/5</span><span><svg><use href="#t-silver"/></svg>12/12</span><span><svg><use href="#t-bronze"/></svg>27/27</span></div></div>
+            <div class="ring" data-ring="96"><svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="10"/><circle class="bar" cx="60" cy="60" r="52" fill="none" stroke-width="10"/></svg><div class="val"><span class="rv">0</span><small>%</small></div></div>
+          </div>
+        </div>
+      </article>
+      <article class="gcard" tabindex="0" aria-label="Hollow Knight, Steam, 68% concluído">
+        <div class="halo"></div><div class="edge"></div>
+        <div class="frame">
+          <div class="cover"><div class="art art-hollow"></div><div class="fx"></div><div class="glare"></div>
+            <span class="pbadge steam"><svg aria-hidden="true"><use href="#i-steam"/></svg>Steam</span>
+            <span class="ctitle">Hollow Knight</span></div>
+          <div class="gbody">
+            <div><h4>Hollow Knight</h4><div class="meta"><span class="num">43</span>/63 conquistas · há 3 dias</div>
+              <div class="tcounts"><span><svg><use href="#t-ach"/></svg>43/63</span><span style="color:var(--color-rarity-epic)"><svg viewBox="0 0 16 16" style="color:var(--color-rarity-epic)"><use href="#r-epic"/></svg>9 épicas</span></div></div>
+            <div class="ring" data-ring="68" style="--ring-c:var(--color-steam)"><svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="10"/><circle class="bar" cx="60" cy="60" r="52" fill="none" stroke-width="10"/></svg><div class="val"><span class="rv">0</span><small>%</small></div></div>
+          </div>
+        </div>
+      </article>
+      <article class="gcard" tabindex="0" aria-label="Elden Ring, PlayStation 5, platinado">
+        <div class="halo"></div><div class="edge"></div>
+        <div class="frame">
+          <div class="cover"><div class="art art-elden"></div><div class="fx"></div><div class="glare"></div>
+            <span class="pbadge psn"><svg aria-hidden="true"><use href="#i-ps"/></svg>PS5</span>
+            <span class="ctitle">Elden Ring</span></div>
+          <div class="gbody">
+            <div><h4>Elden Ring</h4><div class="meta"><span class="num">42</span>/42 · platinado em 03 set 2026</div>
+              <div class="tcounts"><span style="color:var(--color-plat-3)"><svg><use href="#t-plat"/></svg>Platina</span></div></div>
+            <div class="ring" data-ring="100" style="--ring-c:var(--color-plat-2)"><svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="10"/><circle class="bar" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke="url(#g-plat)" style="stroke:url(#g-plat)"/></svg><div class="val"><span class="rv">0</span><small>%</small></div></div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="comp-grid" style="margin-top:var(--space-8)">
+      <!-- progresso -->
+      <div class="panel span-5">
+        <div class="row" style="justify-content:space-between;margin-bottom:var(--space-4)"><h3 class="sub" style="margin:0">Progresso</h3><button class="btn btn-ghost sm" type="button" id="replay-progress"><span class="s"></span><svg><use href="#i-sync"/></svg>Reproduzir</button></div>
+        <div class="pbar-head"><span class="label">Rumo à platina</span><span class="num"><span data-count="43">0</span><span style="color:var(--color-text-3)">/45</span></span></div>
+        <div class="pbar" data-bar="0.955"><div class="fill"></div></div>
+        <div class="pbar-head" style="margin-top:var(--space-5)"><span class="label">100% (base + DLC)</span><span class="num"><span data-count="61">0</span><span style="color:var(--color-text-3)">%</span></span></div>
+        <div class="pbar plat" data-bar="0.61"><div class="fill"></div></div>
+        <div class="pbar-head" style="margin-top:var(--space-5)"><span class="label">Meta semanal · segmentada</span><span class="num">13<span style="color:var(--color-text-3)">/20</span></span></div>
+        <div class="segbar" aria-label="13 de 20"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="row" style="margin-top:var(--space-6);gap:var(--space-6)">
+          <div class="ring" style="--size:84px" data-ring="38"><svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="9"/><circle class="bar" cx="60" cy="60" r="52" fill="none" stroke-width="9"/></svg><div class="val"><span class="rv">0</span><small>%</small></div></div>
+          <div class="ring" style="--size:84px;--ring-c:var(--color-trophy-gold)" data-ring="80"><svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="9"/><circle class="bar" cx="60" cy="60" r="52" fill="none" stroke-width="9"/></svg><div class="val"><span class="rv">0</span><small>%</small></div></div>
+          <p class="caption" style="flex:1;min-width:140px;margin:0">Barra: <span class="mono">scaleX</span>. Anel: <span class="mono">stroke-dashoffset</span> (exceção barata, só SVG). Número conta junto, 900ms.</p>
+        </div>
+      </div>
+
+      <!-- linhas de troféu -->
+      <div class="panel span-7">
+        <h3 class="sub">Linha de troféu — estados</h3>
+        <div class="trow unlocked">
+          <div class="ticon"><svg role="img" aria-label="Ouro"><use href="#t-gold"/></svg></div>
+          <div><div class="tt">Mestre da Lâmina</div><div class="td">Vença 50 duelos sem receber dano.</div>
+            <div class="tm"><span class="unlock-date"><svg><use href="#i-check"/></svg>Desbloqueado em 12 out 2026 · 21:47</span></div></div>
+          <div class="right"><span class="rbadge mini r-rare rare"><span class="bg"></span><span class="glow"></span><svg aria-hidden="true"><use href="#r-rare"/></svg><span class="rl">Raro</span><span class="rr">8,4%</span></span></div>
+        </div>
+        <div class="trow locked">
+          <div class="ticon"><svg role="img" aria-label="Prata"><use href="#t-silver"/></svg><svg class="lock" style="color:var(--color-text-2)" aria-hidden="true"><use href="#i-lock"/></svg></div>
+          <div><div class="tt">Colecionador Incansável</div><div class="td">Encontre todas as 120 peças de memória.</div>
+            <div class="tm"><span class="status-locked"><svg width="12" height="12"><use href="#i-lock"/></svg>Bloqueado</span><span>· 87/120</span></div></div>
+          <div class="right"><span class="rbadge mini r-epic epic"><span class="bg"></span><span class="glow"></span><svg aria-hidden="true"><use href="#r-epic"/></svg><span class="rl">Épico</span><span class="rr">3,1%</span></span><button class="btn btn-secondary sm" type="button"><span class="s"></span><span class="gl"></span><svg><use href="#i-ai"/></svg>Guia IA</button></div>
+        </div>
+        <div class="trow hidden-t" id="hidden-row">
+          <div class="ticon"><svg role="img" aria-label="Ouro, oculto"><use href="#t-gold"/></svg></div>
+          <div style="position:relative">
+            <div class="spoil" aria-hidden="true"><div class="tt">O Rei Nunca Morreu</div><div class="td">Descubra a verdadeira identidade do Rei Pálido no epílogo.</div></div>
+            <div class="tm"><span class="status-locked"><svg width="12" height="12"><use href="#i-eye"/></svg>Troféu oculto · pode conter spoiler</span></div>
+            <button class="reveal-btn" type="button" aria-controls="hidden-row" id="reveal"><svg><use href="#i-eye"/></svg>Clique para revelar</button>
+          </div>
+          <div class="right"><span class="rbadge mini r-legendary legendary"><span class="bg"></span><span class="glow"></span><svg aria-hidden="true"><use href="#r-legendary"/></svg><span class="rl">Lendário</span><span class="rr">0,4%</span></span></div>
+        </div>
+      </div>
+
+      <!-- toast -->
+      <div class="panel span-6">
+        <div class="row" style="justify-content:space-between;margin-bottom:var(--space-4)"><h3 class="sub" style="margin:0">Toast "Troféu desbloqueado"</h3><button class="btn btn-secondary sm" type="button" id="replay-toast"><span class="s"></span><span class="gl"></span><svg><use href="#i-play"/></svg>Reproduzir</button></div>
+        <div class="screen">
+          <span class="hint">Seu jogo</span>
+          <div class="toast" id="toast" role="status" aria-live="polite">
+            <div class="ticon"><svg aria-hidden="true"><use href="#t-gold"/></svg></div>
+            <div><div class="k">Troféu desbloqueado · Ouro</div><div class="n">Mestre da Lâmina</div><div class="s">Astro Bot · 8,4% dos jogadores · Raro</div></div>
+          </div>
+        </div>
+        <p class="caption" style="margin:var(--space-3) 0 0">Canto superior direito como no PS5. Entra com <span class="mono">--ease-snap</span> 380ms; vidro só aqui. Som opcional, desligado por padrão.</p>
+      </div>
+
+      <!-- cerimônia -->
+      <div class="panel span-6">
+        <div class="row" style="justify-content:space-between;margin-bottom:var(--space-4)"><h3 class="sub" style="margin:0">Cerimônia de platina</h3><button class="btn btn-primary sm" type="button" id="fire"><span class="s"></span><span class="gl"></span><svg><use href="#i-play"/></svg>Disparar</button></div>
+        <div class="ceremony" id="ceremony">
+          <div class="rays" aria-hidden="true"></div>
+          <canvas id="confetti" aria-hidden="true"></canvas>
+          <div class="stage" role="status" aria-live="polite">
+            <div class="plat-glyph-wrap"><svg class="glyph" aria-hidden="true"><use href="#t-plat"/></svg></div>
+            <div class="k">Platina conquistada</div>
+            <div class="g">Elden Ring</div>
+            <div class="caption">Sua 14ª platina · 2,1% dos jogadores</div>
+          </div>
+        </div>
+        <p class="caption" style="margin:var(--space-3) 0 0">Partículas em canvas nas cores da platina, ≤ 1,8 s, sem loop. Movimento reduzido: sem partículas, só fade do troféu.</p>
+      </div>
+
+      <!-- IA -->
+      <div class="panel ai-card span-7">
+        <div class="ai-head">
+          <div class="ai-title"><span class="ai-ico"><svg><use href="#i-ai"/></svg></span><div><span class="label" style="color:var(--color-neon-violet-text)">Guia de IA</span><h4>Colecionador Incansável</h4></div></div>
+          <div class="confidence" aria-label="Confiança alta, 3 de 4">
+            <div class="conf-bars"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+            <span class="conf-label">Confiança alta · 3/4</span>
+          </div>
+        </div>
+        <div class="disclaimer" role="note"><svg><use href="#i-warn"/></svg>Sugestão de IA — pode conter erros. Confira nas fontes antes de gastar horas.</div>
+        <ol class="steps">
+          <li><span>Termine a história principal primeiro — <em>12 peças só aparecem após o capítulo 6</em>.</span></li>
+          <li><span>Compre o mapa do Cartógrafo em cada área: as peças restantes ficam marcadas com um losango.</span></li>
+          <li><span>As 3 peças do Abismo exigem o pulo duplo; volte com ele antes do chefe final.<span class="typing" aria-hidden="true"></span></span></li>
+        </ol>
+        <div class="ai-foot">
+          <span class="caption">Gerado 14 out · fontes: PSNProfiles, PowerPyx (busca) · spoiler guard ativo</span>
+          <div class="row" style="gap:8px"><button class="btn btn-ghost sm" type="button"><span class="s"></span>Editar</button><button class="btn btn-secondary sm" type="button"><span class="s"></span><span class="gl"></span><svg><use href="#i-sync"/></svg>Regenerar</button></div>
+        </div>
+      </div>
+
+      <!-- controles -->
+      <div class="panel span-5">
+        <h3 class="sub">Botões &amp; foco</h3>
+        <div class="row" style="gap:var(--space-4)">
+          <button class="btn btn-primary" type="button"><span class="s"></span><span class="gl"></span>Sincronizar</button>
+          <button class="btn btn-secondary" type="button"><span class="s"></span><span class="gl"></span>Ver guia</button>
+          <button class="btn btn-ghost" type="button"><span class="s"></span>Cancelar</button>
+        </div>
+        <div class="row" style="gap:var(--space-4);margin-top:var(--space-4)">
+          <button class="btn btn-primary fake-focus" type="button" tabindex="-1"><span class="s"></span><span class="gl" style="opacity:.55"></span>Foco visível</button>
+          <button class="btn btn-primary" type="button" disabled><span class="s"></span>Desabilitado</button>
+        </div>
+        <p class="caption" style="margin:var(--space-3) 0 var(--space-5)">Anel de foco ciano 2px + offset 3px (4px em TV). Alvos ≥ 44px.</p>
+        <div class="field">
+          <label for="npsso">Token NPSSO</label>
+          <div class="input"><svg aria-hidden="true"><use href="#i-key"/></svg><input id="npsso" placeholder="cole aqui os 64 caracteres" autocomplete="off"></div>
+          <span class="help">Guardado criptografado. Nunca aparece em logs.</span>
+        </div>
+      </div>
+
+      <div class="panel span-7">
+        <h3 class="sub">Banner de reconexão</h3>
+        <div class="banner" role="alert">
+          <span class="ic"><svg><use href="#i-warn"/></svg></span>
+          <div><strong>Reconectar PSN</strong><span>Sua sessão da PlayStation expirou há 2 h. Troféus novos não estão sendo sincronizados.</span></div>
+          <button class="btn btn-psn sm" type="button"><span class="s"></span><span class="gl"></span><svg><use href="#i-ps"/></svg>Reconectar</button>
+        </div>
+      </div>
+      <div class="panel span-5">
+        <h3 class="sub">Skeleton</h3>
+        <div class="skel-card" aria-busy="true" aria-label="Carregando">
+          <div class="skel skel-cover"></div>
+          <div><div class="skel skel-line" style="width:70%"></div><div class="skel skel-line" style="width:45%"></div><div class="skel skel-line" style="width:85%;height:8px;margin:0"></div></div>
+        </div>
+        <p class="caption" style="margin:var(--space-3) 0 0">Mesma geometria do conteúdo final (sem layout shift). Shimmer = <span class="mono">translateX</span>; estático em movimento reduzido.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== 06 CELULAR × TV ====================== -->
+<section class="block" id="dispositivos">
+  <div class="wrap">
+    <div class="sec-head"><span class="idx">06</span><div><h2>Celular × TV</h2><p>Mobile-first em 390px; modo 10-foot multiplica tipografia/alvos e navega por foco (D-pad/gamepad).</p></div><span class="rule"></span></div>
+    <div class="devices">
+      <div class="phone" aria-label="Prévia em 390px">
+        <div class="scr">
+          <div class="status"><span>21:47</span><span class="notch"></span><span>5G</span></div>
+          <div class="appbar"><h5>Próxima platina</h5><span class="pbadge psn"><svg><use href="#i-ps"/></svg>PSN</span></div>
+          <div class="content">
+            <div class="mcard">
+              <div class="mc"><div class="art art-astro"></div></div>
+              <div><h6>Astro Bot</h6><div class="meta"><span class="num" style="color:var(--color-text-1)">43</span>/45 · faltam 2 ouros</div>
+                <div class="pbar" data-bar="0.955" style="margin-top:8px;height:6px"><div class="fill"></div></div></div>
+              <div class="ring" style="--size:50px" data-ring="96"><svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="11"/><circle class="bar" cx="60" cy="60" r="52" fill="none" stroke-width="11"/></svg><div class="val"><span class="rv">0</span></div></div>
+            </div>
+            <div class="trow locked">
+              <div class="ticon"><svg role="img" aria-label="Ouro"><use href="#t-gold"/></svg><svg class="lock" style="color:var(--color-text-2)" aria-hidden="true"><use href="#i-lock"/></svg></div>
+              <div><div class="tt">Sem Arranhões</div><div class="td">Termine um nível sem levar dano.</div></div>
+              <div class="right"><span class="rbadge mini r-epic epic"><span class="bg"></span><svg aria-hidden="true"><use href="#r-epic"/></svg><span class="rl">Épico</span><span class="rr">2,7%</span></span><button class="btn btn-secondary sm" type="button"><span class="s"></span><svg><use href="#i-ai"/></svg>Guia</button></div>
+            </div>
+            <div class="trow unlocked">
+              <div class="ticon"><svg role="img" aria-label="Prata"><use href="#t-silver"/></svg></div>
+              <div><div class="tt">Resgate em Massa</div><div class="tm" style="margin-top:2px"><span class="unlock-date"><svg><use href="#i-check"/></svg>Hoje · 21:30</span></div></div>
+            </div>
+          </div>
+          <nav class="tabbar" aria-label="Navegação inferior">
+            <a href="#" class="on"><svg><use href="#i-home"/></svg>Hoje</a><a href="#"><svg><use href="#i-lib"/></svg>Jogos</a><a href="#"><svg><use href="#i-target"/></svg>Metas</a><a href="#"><svg><use href="#i-user"/></svg>Perfil</a>
+          </nav>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel tv-preview">
+          <div class="row" style="justify-content:space-between"><span class="label">Modo TV · 10-foot · prévia 1:3</span><span class="caption"><span class="gp">◀</span> <span class="gp">▶</span> mover · <span class="gp">A</span> abrir · <span class="gp">Y</span> guia IA</span></div>
+          <div class="tv-row" aria-hidden="true">
+            <div class="tv-tile"><div class="art art-hollow"></div></div>
+            <div class="tv-wrap-focus"><div class="tv-tile focus"><div class="art art-astro"></div></div></div>
+            <div class="tv-tile"><div class="art art-elden"></div></div>
+            <div class="tv-tile"><div class="art art-hollow" style="filter:hue-rotate(140deg)"></div></div>
+          </div>
+          <div class="tv-meta">Astro Bot <span class="num" style="color:var(--color-neon-cyan);font-size:26px">96%</span></div>
+          <div class="caption">Foco = escala 1.06 + moldura chanfrada 4px + glow; o resto da fileira cai para 60% de opacidade.</div>
+        </div>
+        <table class="tok-table">
+          <thead><tr><th>Token</th><th>Celular</th><th>Desktop</th><th>TV (10-foot)</th></tr></thead>
+          <tbody>
+            <tr><td><code>--text-base</code></td><td class="n">16</td><td class="n">16</td><td class="n">24</td></tr>
+            <tr><td><code>--text-h1</code></td><td class="n">32</td><td class="n">56</td><td class="n">84</td></tr>
+            <tr><td><code>--hit-target</code></td><td class="n">44</td><td class="n">40</td><td class="n">64</td></tr>
+            <tr><td><code>--tv-focus-ring</code></td><td class="n">2</td><td class="n">2</td><td class="n">4</td></tr>
+            <tr><td><code>--tv-focus-scale</code></td><td class="n">—</td><td class="n">1.03</td><td class="n">1.06</td></tr>
+            <tr><td><code>--tv-safe-area</code></td><td class="n">0</td><td class="n">0</td><td class="n">5vw</td></tr>
+            <tr><td>Card de jogo (largura)</td><td class="n">100%</td><td class="n">280</td><td class="n">420</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== 07 MOVIMENTO ====================== -->
+<section class="block" id="movimento">
+  <div class="wrap">
+    <div class="sec-head"><span class="idx">07</span><div><h2>Movimento</h2><p>Rápido, físico, nunca decorativo demais. Ligue "Reduzir movimento" no topo para ver o fallback.</p></div><span class="rule"></span></div>
+    <div class="motion-grid">
+      <div class="panel">
+        <div class="row" style="justify-content:space-between;margin-bottom:var(--space-4)"><h3 class="sub" style="margin:0">Durações &amp; curvas</h3><button class="btn btn-secondary sm" type="button" id="run-ease"><span class="s"></span><span class="gl"></span><svg><use href="#i-play"/></svg>Reproduzir</button></div>
+        <div class="ease-demo" id="ease-demo">
+          <div class="lane"><span><span class="mono" style="color:var(--color-neon-cyan)">ease-out</span><br><span class="caption">entradas · 220ms</span></span><div class="track" style="--d:var(--dur-base);--e:var(--ease-out)"><span class="dot"></span></div></div>
+          <div class="lane"><span><span class="mono" style="color:var(--color-neon-cyan)">ease-snap</span><br><span class="caption">toast/foco · 380ms</span></span><div class="track" style="--d:var(--dur-slow);--e:var(--ease-snap)"><span class="dot"></span></div></div>
+          <div class="lane"><span><span class="mono" style="color:var(--color-neon-cyan)">ease-in-out</span><br><span class="caption">deslocar · 380ms</span></span><div class="track" style="--d:var(--dur-slow);--e:var(--ease-in-out)"><span class="dot"></span></div></div>
+          <div class="lane"><span><span class="mono" style="color:var(--color-neon-cyan)">ease-exit</span><br><span class="caption">saídas · 140ms</span></span><div class="track" style="--d:var(--dur-fast);--e:var(--ease-exit)"><span class="dot"></span></div></div>
+        </div>
+        <table class="tok-table">
+          <thead><tr><th>Token</th><th>Valor</th><th>Uso</th></tr></thead>
+          <tbody>
+            <tr><td><code>--dur-instant</code></td><td class="n">80ms</td><td>press, toggle</td></tr>
+            <tr><td><code>--dur-fast</code></td><td class="n">140ms</td><td>hover, foco</td></tr>
+            <tr><td><code>--dur-base</code></td><td class="n">220ms</td><td>entrada de componentes</td></tr>
+            <tr><td><code>--dur-slow</code></td><td class="n">380ms</td><td>toast, painéis, shared element</td></tr>
+            <tr><td><code>--dur-count</code></td><td class="n">900ms</td><td>count-up de números/anéis</td></tr>
+            <tr><td><code>--dur-ceremony</code></td><td class="n">1800ms</td><td>cerimônia de platina (teto 2s)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h3 class="sub">Princípios</h3>
+        <ul class="principles">
+          <li><span><b>Só transform e opacity.</b> Glow aparece mudando a opacidade de uma camada já borrada — nunca animando <span class="mono">box-shadow</span>/<span class="mono">filter</span>. Exceção única: <span class="mono">stroke-dashoffset</span> dos anéis SVG.</span></li>
+          <li><span><b>Movimento explica estado.</b> Toast entra do canto onde fica; barra cresce da origem; card "levanta" em direção ao ponteiro.</span></li>
+          <li><span><b>Uma celebração por vez.</b> Cerimônia de platina é o único momento "barulhento" — ≤ 1,8 s, sem loop, pulável.</span></li>
+          <li><span><b>Loops só onde há significado.</b> Brilho da platina e skeleton. Nada pulsa à toa.</span></li>
+          <li><span><b>prefers-reduced-motion respeitado</b> via tokens: durações viram 0, tilt/partículas/loops desligam, conteúdo continua idêntico. O toggle do topo simula isso (<span class="mono">data-motion="reduce"</span>).</span></li>
+          <li><span><b>60 fps em celular médio.</b> <span class="mono">will-change</span> só durante a interação; partículas ≤ 140, canvas com DPR limitado a 2.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== 08 REFERÊNCIAS ====================== -->
+<section class="block" id="referencias">
+  <div class="wrap">
+    <div class="sec-head"><span class="idx">08</span><div><h2>Referências</h2><p>Só o que pegamos emprestado de cada uma — sem copiar assets.</p></div><span class="rule"></span></div>
+    <div class="refs">
+      <article class="panel ref">
+        <div class="mini" aria-hidden="true" style="background:radial-gradient(circle at 75% 30%,rgb(0 112 209 / .55),transparent 60%),linear-gradient(160deg,#0b1430,#06070c)">
+          <div style="position:absolute;left:12px;bottom:12px;display:flex;gap:6px"><i style="width:34px;height:34px;border-radius:6px;background:#2a5bff;outline:2px solid #fff;outline-offset:2px"></i><i style="width:28px;height:28px;margin-top:6px;border-radius:5px;background:#3b3f55"></i><i style="width:28px;height:28px;margin-top:6px;border-radius:5px;background:#3b3f55"></i><i style="width:28px;height:28px;margin-top:6px;border-radius:5px;background:#3b3f55"></i></div>
+        </div>
+        <span class="rn">REF 01</span><h4>PS5 home</h4>
+        <p>Fileira de tiles, arte de capa que vira hero de fundo, toasts discretos no canto.</p>
+        <div class="borrow"><b>O que pegamos</b>Arte do jogo em foco toma o fundo da tela; troféus/toasts com hierarquia limpa e muito respiro.</div>
+      </article>
+      <article class="panel ref">
+        <div class="mini" aria-hidden="true" style="background:linear-gradient(180deg,#2a475e,#1b2838)">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:30%;background:rgb(0 0 0 / .3);display:grid;gap:6px;padding:12px;align-content:start"><i style="height:6px;background:#66c0f4;width:80%"></i><i style="height:6px;background:#c7d5e0;opacity:.4;width:60%"></i><i style="height:6px;background:#c7d5e0;opacity:.4;width:70%"></i></div>
+          <div style="position:absolute;left:36%;top:14px;right:12px;bottom:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px"><i style="background:#3d6a8a"></i><i style="background:#3d6a8a;outline:2px solid #66c0f4"></i><i style="background:#3d6a8a"></i><i style="background:#3d6a8a"></i></div>
+        </div>
+        <span class="rn">REF 02</span><h4>Steam Big Picture / Deck</h4>
+        <p>UI desenhada para gamepad: tudo é alcançável por foco, com ícones de botão na tela.</p>
+        <div class="borrow"><b>O que pegamos</b>Navegação por foco (D-pad/gamepad), dicas de botão no rodapé e o modo TV como cidadão de primeira classe.</div>
+      </article>
+      <article class="panel ref">
+        <div class="mini" aria-hidden="true" style="background:radial-gradient(circle at 30% 60%,rgb(61 245 255 / .18),transparent 55%),#080a10">
+          <div style="position:absolute;inset:12px;border:1px solid rgb(61 245 255 / .5);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)"></div>
+          <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgb(255 255 255 / .05) 0 1px,transparent 1px 3px)"></div>
+          <div style="position:absolute;left:24px;top:22px;font:700 12px var(--font-display);letter-spacing:.3em;color:#3df5ff">// LOADOUT</div>
+        </div>
+        <span class="rn">REF 03</span><h4>Destiny 2 · Halo Infinite</h4>
+        <p>Menus HUD: painéis finos com cantos cortados, tipografia técnica em caixa-alta, raridade por cor.</p>
+        <div class="borrow"><b>O que pegamos</b>Cantos chanfrados, rótulos HUD com tracking largo, scanlines sutis e raridade loot (cinza→laranja).</div>
+      </article>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap row" style="justify-content:space-between">
+    <span>Trophy Hunter · style tile v0.1 · tokens em <span class="mono">design/tokens.css</span></span>
+    <span>Nenhum asset de terceiros — capas são gradientes CSS, glifos são SVG próprios.</span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  const sysReduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const reduced = () => sysReduce.matches || root.dataset.motion === 'reduce';
+
+  /* ---------- toggles ---------- */
+  const rm = document.getElementById('rm-toggle');
+  rm.checked = sysReduce.matches;
+  if (sysReduce.matches) root.dataset.motion = 'reduce';
+  rm.addEventListener('change', () => {
+    if (rm.checked) root.dataset.motion = 'reduce'; else delete root.dataset.motion;
+    resetTilt(); runCounts();
+  });
+  document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+    root.dataset.glow = b.dataset.glow;
+    document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  }));
+
+  /* ---------- contraste WCAG ---------- */
+  const css = n => getComputedStyle(root).getPropertyValue(n).trim();
+  const hexToRgb = h => { h = h.replace('#',''); if (h.length === 3) h = [...h].map(c => c + c).join(''); return [0,2,4].map(i => parseInt(h.slice(i, i + 2), 16)); };
+  const lum = rgb => { const [r,g,b] = rgb.map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126*r + 0.7152*g + 0.0722*b; };
+  const ratio = (a, b) => { const [l1, l2] = [lum(hexToRgb(a)), lum(hexToRgb(b))].sort((x, y) => y - x); return (l1 + 0.05) / (l2 + 0.05); };
+  // [fg, bg, uso, tipo] — tipo: body (≥4.5), large (≥3), deco (sem exigência de leitura)
+  const pairs = [
+    ['--color-text-1','--color-bg-0','Títulos e corpo','body'],
+    ['--color-text-1','--color-surface-2','Corpo em cards','body'],
+    ['--color-text-2','--color-bg-0','Corpo secundário','body'],
+    ['--color-text-2','--color-surface-2','Secundário em cards','body'],
+    ['--color-text-3','--color-surface-2','Legendas / metadados','body'],
+    ['--color-text-3','--color-surface-3','Legenda em hover','body'],
+    ['--color-neon-cyan','--color-bg-0','Links, valores, foco','body'],
+    ['--color-text-on-accent','--color-neon-cyan','Texto no botão primário','body'],
+    ['#ffffff','--color-psn','Texto em fill PSN','body'],
+    ['--color-psn-text','--color-surface-2','Texto azul PSN','body'],
+    ['--color-steam','--color-steam-bg','Texto Steam em slate','body'],
+    ['--color-neon-violet-text','--color-surface-1','Rótulo IA','body'],
+    ['--color-trophy-gold','--color-surface-2','Rótulo ouro','body'],
+    ['--color-trophy-bronze-hi','--color-surface-2','Rótulo bronze','body'],
+    ['--color-rarity-common','--color-surface-2','Raridade comum','body'],
+    ['--color-rarity-rare','--color-surface-2','Raridade raro','large'],
+    ['--color-rarity-epic','--color-surface-2','Raridade épico','body'],
+    ['--color-rarity-legendary','--color-surface-2','Raridade lendário','body'],
+    ['--color-warning','--color-surface-1','Aviso','body'],
+    ['--color-danger','--color-surface-1','Erro','body'],
+    ['--color-neon-violet','--color-bg-0','Violeta puro (só glow/fill)','deco'],
+    ['--color-psn','--color-bg-0','Azul PSN puro (só fill)','deco'],
+    ['--color-text-disabled','--color-surface-2','Desabilitado','deco'],
+  ];
+  const val = n => n.startsWith('#') ? n : css(n);
+  const rowHtml = ([fg, bg, use, kind]) => {
+    const f = val(fg), b = val(bg), r = ratio(f, b);
+    let v;
+    if (kind === 'deco') v = `<span class="verdict deco">Decorativo${r >= 3 ? ' · ≥3' : ' · não p/ texto'}</span>`;
+    else if (r >= 4.5) v = `<span class="verdict pass">AA corpo${r >= 7 ? ' · AAA' : ''}</span>`;
+    else if (r >= 3) v = `<span class="verdict large">Só texto grande</span>`;
+    else v = `<span class="verdict fail">Falha</span>`;
+    const short = s => s.startsWith('#') ? s : s.replace('--color-','');
+    return `<tr><td><span class="sample" style="color:${f};background:${b}">Aa 87%</span></td><td><span class="pair">${short(fg)} / ${short(bg)}</span><span class="use">${use}</span></td><td class="ratio">${r.toFixed(2)}</td><td>${v}</td></tr>`;
+  };
+  const half = Math.ceil(pairs.length / 2);
+  const bodies = document.querySelectorAll('#contrast tbody');
+  bodies[0].innerHTML = pairs.slice(0, half).map(rowHtml).join('');
+  bodies[1].innerHTML = pairs.slice(half).map(rowHtml).join('');
+
+  /* ---------- count-up, anéis, barras ---------- */
+  const C = 2 * Math.PI * 52;
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  function animate(dur, fn) {
+    if (reduced()) { fn(1); return; }
+    const t0 = performance.now();
+    const step = now => { const t = Math.min(1, (now - t0) / dur); fn(ease(t)); if (t < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
+  const fmt = n => n.toLocaleString('pt-BR');
+  function runCounts(scope = document) {
+    scope.querySelectorAll('[data-count]').forEach(el => { const to = +el.dataset.count; animate(900, p => el.textContent = fmt(Math.round(to * p))); });
+    scope.querySelectorAll('[data-ring]').forEach(r => {
+      const to = +r.dataset.ring, bar = r.querySelector('.bar'), v = r.querySelector('.rv');
+      bar.style.strokeDasharray = C;
+      animate(900, p => { bar.style.strokeDashoffset = C * (1 - (to / 100) * p); v.textContent = Math.round(to * p); });
+    });
+    scope.querySelectorAll('[data-bar]').forEach(b => {
+      const f = b.querySelector('.fill');
+      f.style.transition = 'none'; f.style.setProperty('--p', 0); void f.offsetWidth; f.style.transition = '';
+      requestAnimationFrame(() => f.style.setProperty('--p', b.dataset.bar));
+    });
+  }
+  runCounts();
+  document.getElementById('replay-progress').addEventListener('click', e => runCounts(e.currentTarget.closest('.panel')));
+
+  /* ---------- tilt / parallax ---------- */
+  const cards = [...document.querySelectorAll('.gcard')];
+  function resetTilt() { cards.forEach(c => { c.style.removeProperty('--rx'); c.style.removeProperty('--ry'); c.style.removeProperty('--px'); c.style.removeProperty('--py'); }); }
+  cards.forEach(card => {
+    card.addEventListener('pointermove', e => {
+      if (reduced() || e.pointerType === 'touch') return;
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+      card.style.setProperty('--ry', (x * 12).toFixed(2) + 'deg');
+      card.style.setProperty('--rx', (-y * 10).toFixed(2) + 'deg');
+      card.style.setProperty('--px', x.toFixed(3));
+      card.style.setProperty('--py', y.toFixed(3));
+      card.style.setProperty('--gx', ((x + .5) * 100).toFixed(1) + '%');
+      card.style.setProperty('--gy', ((y + .5) * 100).toFixed(1) + '%');
+    });
+    card.addEventListener('pointerleave', () => { ['--rx','--ry','--px','--py'].forEach(p => card.style.removeProperty(p)); });
+  });
+
+  /* ---------- spoiler ---------- */
+  const row = document.getElementById('hidden-row');
+  document.getElementById('reveal').addEventListener('click', () => { row.classList.add('revealed'); row.querySelector('.spoil').removeAttribute('aria-hidden'); });
+
+  /* ---------- toast ---------- */
+  const toast = document.getElementById('toast');
+  document.getElementById('replay-toast').addEventListener('click', () => { toast.classList.remove('play'); void toast.offsetWidth; toast.classList.add('play'); });
+  toast.classList.add('play');
+
+  /* ---------- easing demo ---------- */
+  document.getElementById('run-ease').addEventListener('click', () => {
+    document.querySelectorAll('#ease-demo .track').forEach(t => {
+      t.style.setProperty('--w', t.clientWidth + 'px');
+      if (t.classList.contains('run')) { t.style.transition = 'none'; t.classList.remove('run'); void t.offsetWidth; }
+      requestAnimationFrame(() => t.classList.add('run'));
+    });
+  });
+
+  /* ---------- cerimônia de platina ---------- */
+  const cer = document.getElementById('ceremony');
+  const cv = document.getElementById('confetti');
+  const ctx = cv.getContext('2d');
+  const colors = ['#e5f0ff','#b8a9ff','#7fe7ff','#ffd6f5','#ffffff','#3df5ff'];
+  let raf = 0;
+  function burst() {
+    cancelAnimationFrame(raf);
+    cer.classList.remove('go'); void cer.offsetWidth; cer.classList.add('go');
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    const W = cv.clientWidth, H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    if (reduced()) return;
+    const N = 140, cx = W / 2, cy = H * .42, DUR = 1800;
+    const ps = Array.from({ length: N }, (_, i) => {
+      const a = Math.random() * Math.PI * 2, s = 2 + Math.random() * 6.5;
+      return { x: cx, y: cy, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 2.5, r: Math.random() * Math.PI, vr: (Math.random() - .5) * .3,
+               w: 3 + Math.random() * 5, h: 2 + Math.random() * 3, c: colors[i % colors.length], star: Math.random() < .25 };
+    });
+    const t0 = performance.now();
+    const frame = now => {
+      const t = (now - t0) / DUR;
+      ctx.clearRect(0, 0, W, H);
+      if (t >= 1) return;
+      ps.forEach(p => {
+        p.vx *= .985; p.vy = p.vy * .985 + .12; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        ctx.save(); ctx.globalAlpha = Math.max(0, 1 - Math.pow(t, 2)); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c;
+        if (p.star) { ctx.beginPath(); for (let k = 0; k < 4; k++) { ctx.rotate(Math.PI / 2); ctx.lineTo(0, -5); ctx.lineTo(1.2, -1.2); } ctx.fill(); }
+        else ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      });
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+  }
+  document.getElementById('fire').addEventListener('click', burst);
+})();
+</script>
+</body>
+</html>

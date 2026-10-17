@@ -1,0 +1,175 @@
+/* =============================================================================
+   Trophy Hunter — design tokens (rascunho v0.1)
+   -----------------------------------------------------------------------------
+   Nomes seguem os namespaces do Tailwind v4 (--color-*, --font-*, --text-*,
+   --radius-*, --shadow-*, --ease-*, --spacing, --breakpoint-*) para que este
+   bloco possa ser colado num `@theme { ... }` sem renomear.
+   Tokens fora dos namespaces do Tailwind (chamfer, duração, z-index, glow,
+   escala TV) ficam com prefixo próprio e viram utilities/variáveis comuns.
+   ========================================================================== */
+
+:root {
+  /* ---------- Superfícies (dark "console") ---------- */
+  --color-bg-0: #07080d;        /* fundo da página */
+  --color-bg-1: #0b0d15;        /* faixas/seções afundadas */
+  --color-surface-1: #10131e;   /* painel base */
+  --color-surface-2: #161b2a;   /* card / linha */
+  --color-surface-3: #1f2539;   /* hover / elevado */
+  --color-glass: rgb(20 24 36 / 0.6);  /* glass — usar com parcimônia (toast, barra fixa) */
+  --color-scrim: rgb(4 5 9 / 0.72);
+
+  /* ---------- Bordas ---------- */
+  --color-border-subtle: rgb(148 163 200 / 0.10);
+  --color-border: rgb(148 163 200 / 0.20);
+  --color-border-strong: rgb(61 245 255 / 0.50);
+
+  /* ---------- Texto ---------- */
+  --color-text-1: #eef2fa;      /* títulos, corpo principal */
+  --color-text-2: #a9b3c7;      /* corpo secundário */
+  --color-text-3: #8590a6;      /* legendas, metadados (≥4.5:1 em surface-2) */
+  --color-text-disabled: #4a5368; /* só desabilitado/decorativo — NÃO para leitura */
+  --color-text-on-accent: #04121a;
+
+  /* ---------- Neon ---------- */
+  --color-neon-cyan: #3df5ff;   /* acento primário, foco, progresso */
+  --color-neon-violet: #8b5cf6; /* acento secundário (glow/fill) */
+  --color-neon-violet-text: #b39dff; /* violeta legível como texto */
+  --color-focus: #3df5ff;
+
+  /* ---------- Plataformas ---------- */
+  --color-psn: #0070d1;         /* fill sólido (texto branco por cima) */
+  --color-psn-deep: #003791;
+  --color-psn-text: #5aa9ff;    /* azul PSN legível como texto em dark */
+  --color-steam-bg: #1b2838;    /* slate Steam */
+  --color-steam-bg-2: #2a475e;
+  --color-steam: #66c0f4;       /* azul-céu Steam (texto/stroke) */
+  --color-steam-green: #a4d007; /* "jogar/perfeito" Steam — detalhe, não texto longo */
+
+  /* ---------- Semânticas ---------- */
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-info: #60a5fa;
+
+  /* ---------- Troféus ---------- */
+  --color-trophy-bronze: #cd7f32;
+  --color-trophy-bronze-hi: #f0b27a;
+  --color-trophy-silver: #c4ccd8;
+  --color-trophy-silver-hi: #f4f7fb;
+  --color-trophy-gold: #f5c542;
+  --color-trophy-gold-hi: #fff1b8;
+  --color-plat-1: #e5f0ff;
+  --color-plat-2: #b8a9ff;
+  --color-plat-3: #7fe7ff;
+  --color-plat-4: #ffd6f5;
+  --gradient-platinum: conic-gradient(from 0deg,
+      var(--color-plat-1), var(--color-plat-2), var(--color-plat-3),
+      var(--color-plat-4), var(--color-plat-1));
+  --gradient-platinum-linear: linear-gradient(120deg,
+      var(--color-plat-1) 0%, var(--color-plat-2) 30%, var(--color-plat-3) 60%,
+      var(--color-plat-4) 85%, var(--color-plat-1) 100%);
+  --color-achievement: #66c0f4; /* conquista Steam: moldura slate + azul-céu */
+
+  /* ---------- Raridade (loot) ---------- */
+  --color-rarity-common: #9aa4b2;    /* ≥ 50%   — círculo */
+  --color-rarity-uncommon: #4ade80;  /* 20–50%  — losango */
+  --color-rarity-rare: #4c9bff;      /* 5–20%   — triângulo */
+  --color-rarity-epic: #b57bff;      /* 1–5%    — hexágono */
+  --color-rarity-legendary: #ff9f3d; /* < 1%    — estrela */
+
+  /* ---------- Tipografia ---------- */
+  --font-display: "Chakra Petch", "Oxanium", system-ui, sans-serif;
+  --font-numeric: "Rajdhani", "Chakra Petch", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+  /* escala fluida (mobile → desktop). TV multiplica por --tv-scale */
+  --text-caption: 0.75rem;                              /* 12 */
+  --text-sm: 0.875rem;                                  /* 14 */
+  --text-base: 1rem;                                    /* 16 */
+  --text-lg: 1.125rem;                                  /* 18 */
+  --text-h4: clamp(1.125rem, 1rem + 0.4vw, 1.25rem);    /* 18→20 */
+  --text-h3: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);    /* 20→24 */
+  --text-h2: clamp(1.5rem, 1.2rem + 1.2vw, 2.25rem);    /* 24→36 */
+  --text-h1: clamp(2rem, 1.4rem + 2.6vw, 3.5rem);       /* 32→56 */
+  --text-stat: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);   /* 40→72 números grandes */
+  --text-hero: clamp(3rem, 1.8rem + 5vw, 6rem);         /* 48→96 */
+  --tracking-hud: 0.14em;   /* rótulos em caixa-alta */
+  --tracking-display: 0.01em;
+  --leading-tight: 1.05;
+  --leading-body: 1.55;
+
+  /* ---------- Espaço (base 4px) ---------- */
+  --spacing: 0.25rem;
+  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
+  --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
+  --space-12: 3rem; --space-16: 4rem; --space-24: 6rem;
+
+  /* ---------- Raios e chanfros ---------- */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+  --chamfer-sm: 6px;   /* botões, badges */
+  --chamfer-md: 12px;  /* cards, linhas */
+  --chamfer-lg: 20px;  /* painéis, hero */
+
+  /* ---------- Glow / sombras ---------- */
+  --glow-mix: 38%;      /* intensidade do neon: 22% baixo · 38% médio · 60% alto */
+  --shadow-panel: 0 18px 40px -18px rgb(0 0 0 / 0.8);
+  --shadow-glow-cyan: 0 0 18px color-mix(in oklab, var(--color-neon-cyan) var(--glow-mix), transparent);
+  --shadow-glow-violet: 0 0 22px color-mix(in oklab, var(--color-neon-violet) var(--glow-mix), transparent);
+  --shadow-glow-gold: 0 0 20px color-mix(in oklab, var(--color-trophy-gold) var(--glow-mix), transparent);
+  --scanline-opacity: 0.045;
+
+  /* ---------- Movimento ---------- */
+  --dur-instant: 80ms;    /* press, toggles */
+  --dur-fast: 140ms;      /* hover, foco */
+  --dur-base: 220ms;      /* entrada de componentes */
+  --dur-slow: 380ms;      /* toast, painéis */
+  --dur-count: 900ms;     /* count-up de números/anéis */
+  --dur-ceremony: 1800ms; /* cerimônia de platina (teto 2s) */
+  --dur-sheen: 6s;        /* brilho iridescente da platina (loop) */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);       /* padrão: entradas */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);    /* deslocamentos */
+  --ease-snap: cubic-bezier(0.3, 1.45, 0.5, 1);     /* overshoot curto: toast, foco TV */
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);          /* saídas */
+
+  /* ---------- Camadas ---------- */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 100;
+  --z-overlay: 1000;
+  --z-toast: 1100;
+  --z-ceremony: 1200;
+  --z-scanlines: 9000;
+
+  /* ---------- Breakpoints / TV ---------- */
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-tv: 120rem;   /* ≥1920 e/ou modo TV explícito */
+  --tv-scale: 1.5;           /* tipografia/alvos multiplicados no modo 10-foot */
+  --tv-safe-area: 5vw;       /* overscan */
+  --tv-focus-ring: 4px;
+  --tv-focus-scale: 1.06;
+  --hit-target: 44px;        /* 64px em TV */
+}
+
+/* Movimento reduzido: o sistema OU o toggle do app (data-motion="reduce") */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-instant: 0ms; --dur-fast: 0ms; --dur-base: 0ms; --dur-slow: 0ms;
+    --dur-count: 0ms; --dur-ceremony: 0ms;
+  }
+}
+:root[data-motion="reduce"] {
+  --dur-instant: 0ms; --dur-fast: 0ms; --dur-base: 0ms; --dur-slow: 0ms;
+  --dur-count: 0ms; --dur-ceremony: 0ms;
+}
+
+/* Intensidade de neon (escolha aberta para o usuário) */
+:root[data-glow="low"]  { --glow-mix: 22%; --scanline-opacity: 0.025; }
+:root[data-glow="high"] { --glow-mix: 60%; --scanline-opacity: 0.07; }
