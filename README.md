@@ -107,4 +107,4 @@ Em dev usamos os `VITE_*` (`.env.local` / `.env.mock`).
   `arc-trophy-hunter-web`).
 - Release (`.github/workflows/image-release.yaml`): tag `v*` → build/push no ECR
   `718446585908.dkr.ecr.sa-east-1.amazonaws.com/rodolfobonis/trophy-hunter-web` e bump da tag em
-  `RodolfoBonis/k3s-apps` → `apps/trophy-hunter/values-web-prod.yaml` (ArgoCD sincroniza).
+  `RodolfoBonis/k3s-apps` → `apps/trophy-hunter-web/values-prod.yaml` (ArgoCD sincroniza).
