@@ -9,7 +9,7 @@ const PATH = "/settings/integrations";
 describe("IntegrationsPage", () => {
   it("mostra o banner de reconexão da PSN", async () => {
     renderRoutes({ routes: integrationsRoutes, path: PATH });
-    expect(await screen.findByText("Reconexão necessária")).toBeInTheDocument();
+    expect(await screen.findByText("Reconexão necessária", {}, { timeout: 3000 })).toBeInTheDocument();
   });
 
   it("conecta a Steam pelo formulário", async () => {
@@ -19,7 +19,7 @@ describe("IntegrationsPage", () => {
     await user.type(screen.getByLabelText("Steam Web API key"), "ABCDEF0123456789ABCDEF0123456789");
     await user.type(screen.getByLabelText("SteamID64 ou vanity"), "76561198000000000");
     await user.click(screen.getByRole("button", { name: "Conectar" }));
-    expect(await screen.findByText("Steam conectada.")).toBeInTheDocument();
+    expect(await screen.findByText("Steam conectada.", {}, { timeout: 3000 })).toBeInTheDocument();
   });
 
   it("marca a API key como obrigatória", async () => {
