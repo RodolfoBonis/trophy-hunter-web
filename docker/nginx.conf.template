@@ -11,8 +11,10 @@ server {
     gzip_min_length 1024;
 
     # CSP: self + API + a origem do Keycloak (connect-src/frame-src p/ login e silent renew); imagens dos
+    # CDNs de Steam/PSN em img-src E connect-src (o service worker busca as imagens com fetch(), que obedece
+    # ao connect-src — sem isso o cache de capas bloqueia todas as imagens). Lista em CSP_IMAGE_HOSTS.
     # CDNs de Steam/PSN; data:/blob: p/ capas em cache do SW. frame-ancestors none (não embutível).
-    set $csp "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.steamstatic.com https://*.playstation.net https://*.playstation.com; font-src 'self' data:; connect-src ${CSP_CONNECT_SRC}; frame-src ${CSP_FRAME_SRC}; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' ${CSP_FRAME_SRC}; object-src 'none'";
+    set $csp "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: ${CSP_IMAGE_HOSTS}; font-src 'self' data:; connect-src ${CSP_CONNECT_SRC}; frame-src ${CSP_FRAME_SRC}; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' ${CSP_FRAME_SRC}; object-src 'none'";
 
     location = /healthz {
         access_log off;

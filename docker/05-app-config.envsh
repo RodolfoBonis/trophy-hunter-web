@@ -50,7 +50,12 @@ JS
 
 AUTH_ORIGIN="$(origin "$OIDC_AUTHORITY")"
 # connect-src: self + origem da API + Keycloak (discovery, token, silent renew via iframe).
-export CSP_CONNECT_SRC="'self' $(origin "$API_BASE_URL") $AUTH_ORIGIN"
+# Hosts de imagem de jogos/troféus (capas, ícones de conquistas, avatares). Mantenha em sincronia com
+# IMAGE_HOSTS em src/sw/service-worker.ts.
+export CSP_IMAGE_HOSTS="https://*.steamstatic.com https://*.steampowered.com https://*.akamaihd.net https://*.playstation.net https://*.playstation.com"
+# connect-src: self + origem da API + Keycloak (discovery, token, silent renew via iframe) + hosts de
+# imagem (o service worker faz fetch() das capas para o cache, e fetch() no SW obedece ao connect-src).
+export CSP_CONNECT_SRC="'self' $(origin "$API_BASE_URL") $AUTH_ORIGIN $CSP_IMAGE_HOSTS"
 export CSP_FRAME_SRC="$AUTH_ORIGIN"
 # Só estas variáveis são substituídas no template (o resto, como $uri, fica para o nginx).
 export NGINX_ENVSUBST_FILTER='^CSP_'

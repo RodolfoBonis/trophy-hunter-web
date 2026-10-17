@@ -89,6 +89,7 @@ jobs:
           curl -fsS http://localhost:8080/config.js | grep -q 'trophy-hunter-web'
           curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/library | grep -q 200
           curl -fsSI http://localhost:8080/ | grep -qi 'content-security-policy'
+          curl -fsSI http://localhost:8080/ | grep -i 'content-security-policy' | grep -q 'connect-src[^;]*steamstatic'
           curl -fsS http://localhost:8080/config.js | grep -q 'apiBase: "https://api.rodolfodebonis.com.br/trophy"'
           curl -fsSI http://localhost:8080/ | grep -i 'content-security-policy' | grep -q 'connect-src .*https://api.rodolfodebonis.com.br '
           docker rm -f web

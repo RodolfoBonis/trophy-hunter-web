@@ -26,8 +26,9 @@ clientsClaim();
 // (rota do gateway, ex. api.rodolfodebonis.com.br/trophy/v1/...) ou em /api/v1 no dev local.
 registerRoute(({ url }) => /\/(api\/)?v1\//.test(url.pathname), new NetworkOnly());
 
-// Imagens de jogos (capas, ícones, avatares) dos CDNs da Steam/PSN.
-const IMAGE_HOSTS = /(\.steamstatic\.com|\.playstation\.net|\.playstation\.com)$/;
+// Imagens de jogos (capas, ícones de conquistas, avatares) dos CDNs da Steam/PSN. Mantenha em sincronia
+// com CSP_IMAGE_HOSTS (docker/05-app-config.envsh): o fetch() do SW obedece ao connect-src da CSP.
+const IMAGE_HOSTS = /(\.steamstatic\.com|\.steampowered\.com|\.akamaihd\.net|\.playstation\.net|\.playstation\.com)$/;
 registerRoute(
   ({ url, request }) => request.destination === "image" && IMAGE_HOSTS.test(url.hostname),
   new CacheFirst({
