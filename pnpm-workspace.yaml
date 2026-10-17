@@ -1,0 +1,7 @@
+# Repo de pacote único; o arquivo existe para as configurações do pnpm 11.
+packages:
+  - "."
+allowBuilds:
+  esbuild: true
+  msw: true
+  "@tailwindcss/oxide": true
