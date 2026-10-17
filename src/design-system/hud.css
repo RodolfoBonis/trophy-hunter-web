@@ -537,3 +537,11 @@ h3.sub{font-family:var(--font-display);font-weight:600;font-size:var(--text-h4);
     .game-hero-ring .val { font-size: 40px; }
   }
 }
+
+@layer components {
+  /* Linha de raridade da statline: borda e número na cor do tier (forma = glifo, não só cor). */
+  .statline.rarity-line > div { border-color: var(--rc); }
+  .statline.rarity-line .num { color: var(--rc); }
+  .statline.rarity-line .num small { font-size: .55em; color: var(--color-text-3); font-weight: 600; }
+  .statline.rarity-line .caption svg { color: var(--rc); }
+}

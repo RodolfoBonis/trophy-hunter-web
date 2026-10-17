@@ -167,13 +167,23 @@ export const gameSchema = z.object({
 });
 export type Game = z.infer<typeof gameSchema>;
 
-/** Troféus ganhos/total por tipo (PSN) e conquistas raras ganhas (< 5%) — contadores do card. */
+/** Troféus GANHOS por tier de raridade (lendário < 1%, épico 1–5%, raro 5–20%, incomum 20–50%, comum ≥ 50%). */
+export const rarityEarnedSchema = z.object({
+  legendary: z.number().int(),
+  epic: z.number().int(),
+  rare: z.number().int(),
+  uncommon: z.number().int(),
+  common: z.number().int(),
+});
+export type RarityEarned = z.infer<typeof rarityEarnedSchema>;
+
+/** Troféus ganhos/total por tipo (PSN) e ganhos por tier de raridade — contadores do card. */
 export const typeCountsSchema = z.object({
   platinum: typeCountSchema,
   gold: typeCountSchema,
   silver: typeCountSchema,
   bronze: typeCountSchema,
-  rare_earned: z.number().int(),
+  rarity: rarityEarnedSchema,
 });
 export type TypeCounts = z.infer<typeof typeCountsSchema>;
 

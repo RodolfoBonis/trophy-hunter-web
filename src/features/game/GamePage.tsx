@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import type { GameAccount, GameDetail, Platform, Trophy, TrophyType } from "@/api/schemas";
 import { GameCover } from "@/design-system/components/GameCover";
@@ -172,38 +172,72 @@ function AccountSwitcher({ accounts, currentGameId, platform }: { accounts: Game
   );
 }
 
-/** Statline do hero (tile `.statline`): por tipo no PSN; totais + raras na Steam. */
+/** Tiers de raridade (cortes do style tile), do mais raro ao mais comum. */
+const RARITY_TIERS = [
+  { key: "legendary", label: "Lendárias", range: "< 1%", lo: 0, hi: 1 },
+  { key: "epic", label: "Épicas", range: "1–5%", lo: 1, hi: 5 },
+  { key: "rare", label: "Raras", range: "5–20%", lo: 5, hi: 20 },
+  { key: "uncommon", label: "Incomuns", range: "20–50%", lo: 20, hi: 50 },
+  { key: "common", label: "Comuns", range: "≥ 50%", lo: 50, hi: Infinity },
+] as const;
+
+/**
+ * Statline do hero (tile `.statline`). Raridade para as duas plataformas: troféus ganhos/total em
+ * cada tier (lendário → comum), com a cor e o glifo do tier. No PSN, antes, a linha por tipo
+ * (platina/ouro/prata/bronze). "Conquistas" e "Faltam" já aparecem abaixo do título.
+ */
 function StatLine({ game }: { game: GameDetail }) {
-  const items: { cls: string; label: ReactNode; value: ReactNode }[] = [];
+  const all = game.groups.flatMap((g) => g.trophies).filter((t) => t.rarity_pct != null);
+  const tiers = RARITY_TIERS.map((tier) => {
+    const inTier = all.filter((t) => t.rarity_pct! >= tier.lo && t.rarity_pct! < tier.hi);
+    return { ...tier, total: inTier.length, earned: inTier.filter((t) => t.earned).length };
+  }).filter((t) => t.total > 0);
+
   const by = game.progress.by_type ?? {};
-  if (game.platform === "psn") {
-    for (const [type, cls] of [
-      ["platinum", "t-plat"],
-      ["gold", "t-gold"],
-      ["silver", "t-silver"],
-      ["bronze", "t-bronze"],
-    ] as const) {
-      const c = by[type];
-      if (c && c.total > 0) items.push({ cls, label: TYPE_LABEL[type], value: `${c.earned}/${c.total}` });
-    }
-  } else {
-    const all = game.groups.flatMap((g) => g.trophies);
-    const rare = all.filter((t) => t.earned && (t.rarity_pct ?? 100) < 5).length;
-    const legendary = all.filter((t) => t.earned && (t.rarity_pct ?? 100) < 1).length;
-    items.push({ cls: "", label: "Conquistas", value: `${game.progress.earned}/${game.progress.total}` });
-    items.push({ cls: "", label: "Faltam", value: game.progress.remaining });
-    items.push({ cls: "t-gold", label: "Raras (< 5%)", value: rare });
-    items.push({ cls: "t-plat", label: "Lendárias (< 1%)", value: legendary });
-  }
-  if (items.length === 0) return null;
+  const types =
+    game.platform === "psn"
+      ? (
+          [
+            ["platinum", "t-plat"],
+            ["gold", "t-gold"],
+            ["silver", "t-silver"],
+            ["bronze", "t-bronze"],
+          ] as const
+        ).filter(([type]) => (by[type]?.total ?? 0) > 0)
+      : [];
+
   return (
-    <div className="statline">
-      {items.map((it, i) => (
-        <div key={i} className={it.cls}>
-          <span className="num">{it.value}</span>
-          <span className="caption">{it.label}</span>
+    <div className="flex flex-col gap-4">
+      {types.length > 0 && (
+        <div className="statline !mt-0">
+          {types.map(([type, cls]) => (
+            <div key={type} className={cls}>
+              <span className="num">
+                {by[type]!.earned}/{by[type]!.total}
+              </span>
+              <span className="caption">{TYPE_LABEL[type]}</span>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
+      {tiers.length > 0 && (
+        <div className="statline rarity-line !mt-0" aria-label="Conquistas por raridade (ganhas/total)">
+          {tiers.map((t) => (
+            <div key={t.key} style={{ ["--rc" as string]: `var(--color-rarity-${t.key})` }}>
+              <span className="num">
+                {t.earned}
+                <small>/{t.total}</small>
+              </span>
+              <span className="caption inline-flex items-center gap-1">
+                <svg width={11} height={11} aria-hidden>
+                  <use href={`#r-${t.key}`} />
+                </svg>
+                {t.label} <span className="opacity-70">{t.range}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

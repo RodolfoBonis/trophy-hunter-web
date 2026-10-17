@@ -197,13 +197,32 @@ function TypeCounters({
         <Glyph id="t-ach" />
         {earned}/{total}
       </span>
-      {counts.rare_earned > 0 && (
-        <span style={{ color: "var(--color-rarity-epic)" }}>
-          <Glyph id="r-epic" />
-          {counts.rare_earned} {counts.rare_earned === 1 ? "rara" : "raras"}
-        </span>
-      )}
+      <TopTier rarity={counts.rarity} />
     </>
+  );
+}
+
+/** Tiers do mais raro ao menos raro, com rótulos no singular/plural (mesmos cortes do style tile). */
+const TIERS = [
+  ["legendary", "lendária", "lendárias"],
+  ["epic", "épica", "épicas"],
+  ["rare", "rara", "raras"],
+] as const;
+
+/**
+ * Destaque de raridade do card (como o "9 épicas" do tile): o tier MAIS ALTO em que o jogador tem
+ * troféus ganhos, na cor e com o glifo do tier. Só raro ou acima (comum/incomum não são destaque).
+ */
+function TopTier({ rarity }: { rarity: TypeCounts["rarity"] }) {
+  const top = TIERS.find(([key]) => rarity[key] > 0);
+  if (!top) return null;
+  const [key, one, many] = top;
+  const n = rarity[key];
+  return (
+    <span style={{ color: `var(--color-rarity-${key})` }} title="Tier de raridade mais alto entre as suas conquistas">
+      <Glyph id={`r-${key}`} />
+      {n} {n === 1 ? one : many}
+    </span>
   );
 }
 

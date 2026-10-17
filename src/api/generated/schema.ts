@@ -298,6 +298,14 @@ export interface components {
             status: components["schemas"]["GameStatus"];
             total: number;
         };
+        /** @description Troféus GANHOS por tier — lendário < 1%, épico 1–5%, raro 5–20%, incomum 20–50%, comum ≥ 50%. */
+        RarityEarned: {
+            common: number;
+            epic: number;
+            legendary: number;
+            rare: number;
+            uncommon: number;
+        };
         SyncRequest: {
             /** @default incremental */
             scope: components["schemas"]["SyncScope"];
@@ -372,12 +380,12 @@ export interface components {
             earned: number;
             total: number;
         };
-        /** @description Troféus ganhos/total por tipo (PSN) e conquistas raras ganhas (< 5%) — contadores do card. */
+        /** @description Troféus ganhos/total por tipo (PSN) e ganhos por tier de raridade — contadores do card. */
         TypeCounts: {
             bronze: components["schemas"]["TypeCount"];
             gold: components["schemas"]["TypeCount"];
             platinum: components["schemas"]["TypeCount"];
-            rare_earned: number;
+            rarity: components["schemas"]["RarityEarned"];
             silver: components["schemas"]["TypeCount"];
         };
         UpdateIntegrationRequest: {

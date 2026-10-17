@@ -56,7 +56,11 @@ function countsOf(row: MockGameRow) {
     gold: tc("gold"),
     silver: tc("silver"),
     bronze: tc("bronze"),
-    rare_earned: trophies.filter((t) => t.earned && (t.rarity_pct ?? 100) < 5).length || (row.platform === "steam" ? 3 : 0),
+    rarity: (() => {
+      const earned = trophies.filter((t) => t.earned && t.rarity_pct != null).map((t) => t.rarity_pct!);
+      const n = (lo: number, hi: number) => earned.filter((p) => p >= lo && p < hi).length;
+      return { legendary: n(0, 1), epic: n(1, 5), rare: n(5, 20), uncommon: n(20, 50), common: n(50, 101) };
+    })(),
   };
 }
 
