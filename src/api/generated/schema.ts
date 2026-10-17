@@ -227,6 +227,7 @@ export interface components {
         /** @description Um item por jogo (platform + external_id). Game/progress são da conta MAIS AVANÇADA (id = game_id dela); accounts lista todas as contas que possuem o jogo, mais avançada primeiro. */
         GameListItem: components["schemas"]["Game"] & {
             accounts: components["schemas"]["GameAccount"][];
+            counts: components["schemas"]["TypeCounts"];
             /**
              * Format: date-time
              * @description Desbloqueio mais recente (conta best).
@@ -370,6 +371,14 @@ export interface components {
         TypeCount: {
             earned: number;
             total: number;
+        };
+        /** @description Troféus ganhos/total por tipo (PSN) e conquistas raras ganhas (< 5%) — contadores do card. */
+        TypeCounts: {
+            bronze: components["schemas"]["TypeCount"];
+            gold: components["schemas"]["TypeCount"];
+            platinum: components["schemas"]["TypeCount"];
+            rare_earned: number;
+            silver: components["schemas"]["TypeCount"];
         };
         UpdateIntegrationRequest: {
             /** @description Nova Steam Web API key (validada contra a conta). */

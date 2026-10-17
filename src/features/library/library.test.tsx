@@ -9,7 +9,7 @@ describe("LibraryPage", () => {
     renderRoutes({ routes: libraryRoutes, path: "/library" });
     expect(await screen.findByRole("link", { name: /^ELDEN RING,/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^God of War Ragnarök,/ })).toBeInTheDocument();
-    expect(screen.getByText("3")).toBeInTheDocument(); // contador "3 jogos"
+    expect(screen.getByText(/^3 jogos/)).toBeInTheDocument();
   });
 
   it("mostra UM card por jogo, pela conta mais avançada, com o total de contas", async () => {
@@ -33,7 +33,7 @@ describe("LibraryPage — rolagem infinita", () => {
       renderRoutes({ routes: libraryRoutes, path: "/library" });
       await screen.findByRole("link", { name: /^Jogo 001,/ }, { timeout: 3000 });
       expect(screen.getAllByRole("link", { name: /^Jogo \d+,/ })).toHaveLength(60);
-      expect(screen.getByText("130")).toBeInTheDocument();
+      expect(screen.getByText(/^130 jogos/)).toBeInTheDocument();
       await user.click(screen.getByRole("button", { name: "Carregar mais" }));
       expect(await screen.findByRole("link", { name: /^Jogo 120,/ }, { timeout: 3000 })).toBeInTheDocument();
       await user.click(screen.getByRole("button", { name: "Carregar mais" }));

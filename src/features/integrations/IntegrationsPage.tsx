@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { isApiError } from "@/api/errors";
 import type { Integration, IntegrationStatus, SyncRun } from "@/api/schemas";
 import { Banner } from "@/design-system/components/Banner";
+import { SectionHead } from "@/design-system/components/SectionHead";
 import { Panel } from "@/design-system/components/Panel";
 import { PlatformBadge } from "@/design-system/components/PlatformBadge";
 import { ProgressBar } from "@/design-system/components/ProgressBar";
@@ -312,16 +313,19 @@ export default function IntegrationsPage() {
   const runningFor = (id: string) => runs.data?.find((r) => r.integration_id === id && r.status === "running");
   const hasSteamAccount = query.data?.some((i) => i.platform === "steam") ?? false;
   return (
-    <section className="flex max-w-2xl flex-col gap-5">
+    <section className="flex flex-col gap-6">
+      <SectionHead idx="05" title="Contas" subtitle="Contas da Steam e da PSN conectadas ao Trophy Hunter." />
       {query.isPending && <Skeleton className="h-40 w-full" />}
       {query.isError && (
         <p role="alert" className="text-sm text-danger">
           Não foi possível carregar as integrações.
         </p>
       )}
-      {query.data?.map((integration) => (
-        <IntegrationCard key={integration.id} integration={integration} runningRun={runningFor(integration.id)} />
-      ))}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {query.data?.map((integration) => (
+          <IntegrationCard key={integration.id} integration={integration} runningRun={runningFor(integration.id)} />
+        ))}
+      </div>
       {query.data && <ConnectSteamForm hasSteamAccount={hasSteamAccount} />}
     </section>
   );

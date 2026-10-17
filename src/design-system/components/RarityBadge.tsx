@@ -1,40 +1,43 @@
-import { formatRarityPct, rarityInfo } from "@/lib/rarity";
+import type { ReactNode } from "react";
+import { formatRarityPct, rarityInfo, type RarityTier } from "@/lib/rarity";
 import { cn } from "@/lib/utils";
 
 /**
- * Badge de raridade loot: cor + forma + rótulo + % (nunca só cor). `pct` = % de jogadores que têm.
- * A borda esquerda e o glifo carregam a cor do tier.
+ * Badge de raridade loot do style tile (`.rbadge` em hud.css): cor + forma (glifo) + rótulo + %
+ * (nunca só cor). Tiers raro/épico/lendário têm glow permanente que acende no hover/foco.
+ * `pct` = % de jogadores que têm. `tier`/`label`/`detail` permitem usos fora do % (ex.: "Falta 2").
  */
-export function RarityBadge({ pct, mini = false, className }: { pct: number; mini?: boolean; className?: string }) {
-  const info = rarityInfo(pct);
+export function RarityBadge({
+  pct,
+  tier,
+  label,
+  detail,
+  mini = false,
+  className,
+}: {
+  pct?: number;
+  tier?: RarityTier;
+  label?: ReactNode;
+  detail?: ReactNode;
+  mini?: boolean;
+  className?: string;
+}) {
+  const info = rarityInfo(pct ?? 100);
+  const t = tier ?? info.tier;
+  const glyph = `#r-${t}`;
   return (
-    <span
-      className={cn(
-        "relative inline-flex items-center gap-2 font-display",
-        mini ? "gap-1.5 py-1 pl-2 pr-2.5" : "gap-2.5 py-2 pl-3 pr-4",
-        className,
-      )}
-      style={{ color: info.colorVar }}
-    >
-      <span
-        className="chamfer-sm absolute inset-0 -z-10"
-        style={{
-          background: `linear-gradient(90deg, color-mix(in oklab, ${info.colorVar} 22%, transparent), color-mix(in oklab, ${info.colorVar} 6%, transparent))`,
-          boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${info.colorVar} 45%, transparent)`,
-        }}
-      />
-      <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: info.colorVar }} aria-hidden />
-      <svg width={mini ? 12 : 16} height={mini ? 12 : 16} aria-hidden className="relative shrink-0">
-        <use href={info.glyph} />
+    <span className={cn("rbadge", `r-${t}`, t, mini && "mini", className)}>
+      <span className="bg" />
+      <span className="glow" aria-hidden />
+      <svg aria-hidden>
+        <use href={glyph} />
       </svg>
-      <span
-        className={cn("relative font-bold uppercase leading-none tracking-[0.12em]", mini ? "text-[10.5px]" : "text-sm")}
-      >
-        {info.label}
-      </span>
-      <span className="relative font-numeric font-semibold tabular-nums text-text-2" style={{ fontSize: mini ? 11 : 12 }}>
-        {formatRarityPct(pct)}
-      </span>
+      <span className="rl">{label ?? (tier ? tierLabel(t) : info.label)}</span>
+      {(detail ?? pct) !== undefined && <span className="rr">{detail ?? formatRarityPct(pct ?? 0)}</span>}
     </span>
   );
+}
+
+function tierLabel(t: RarityTier): string {
+  return { common: "Comum", uncommon: "Incomum", rare: "Raro", epic: "Épico", legendary: "Lendário" }[t];
 }

@@ -44,6 +44,27 @@ function manyGames(): MockGameRow[] {
   }));
 }
 
+/** Contadores do card (como a API): por tipo e raras ganhas (< 5%). */
+function countsOf(row: MockGameRow) {
+  const trophies = row.groups.flatMap((g) => g.trophies);
+  const tc = (type: string) => ({
+    total: trophies.filter((t) => t.type === type).length,
+    earned: trophies.filter((t) => t.type === type && t.earned).length,
+  });
+  return {
+    platinum: tc("platinum"),
+    gold: tc("gold"),
+    silver: tc("silver"),
+    bronze: tc("bronze"),
+    rare_earned: trophies.filter((t) => t.earned && (t.rarity_pct ?? 100) < 5).length || (row.platform === "steam" ? 3 : 0),
+  };
+}
+
+function lastUnlockOf(row: MockGameRow): string | null {
+  const dates = row.groups.flatMap((g) => g.trophies).map((t) => t.earned_at).filter((d): d is string => Boolean(d));
+  return dates.sort().at(-1) ?? row.last_played_at ?? null;
+}
+
 export const handlers: HttpHandler[] = [
   /* Perfil */
   http.get(`${API}/me`, () => HttpResponse.json({ subject: "mock-user", name: "Rodolfo de Bonis", email: "rodolfo@rb.lab" })),
@@ -66,10 +87,15 @@ export const handlers: HttpHandler[] = [
     for (const row of [...rows].sort(moreAdvancedFirst)) {
       if (!best.has(gameKey(row))) best.set(gameKey(row), row);
     }
-    let items = [...best.values()].map(({ groups: _g, integration_id: _i, account_label: _l, ...rest }) => ({
-      ...rest,
-      accounts: accountsOf(rest as MockGameRow, only),
-    }));
+    let items = [...best.values()].map((row) => {
+      const { groups: _g, integration_id: _i, account_label: _l, ...rest } = row;
+      return {
+        ...rest,
+        counts: countsOf(row),
+        last_unlock_at: lastUnlockOf(row),
+        accounts: accountsOf(row, only),
+      };
+    });
     if (platform) items = items.filter((g) => g.platform === platform);
     if (q) items = items.filter((g) => g.title.toLowerCase().includes(q));
     const total = items.length;

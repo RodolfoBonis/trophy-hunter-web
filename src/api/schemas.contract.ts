@@ -20,6 +20,7 @@ import type {
   Trophy,
   TrophyGroup,
   TypeCount,
+  TypeCounts,
   User,
 } from "./schemas";
 
@@ -39,6 +40,7 @@ export type ContractChecks = [
   AssertNever<MissingKeys<Gen["ProgressDetail"], ProgressDetail>>,
   AssertNever<MissingKeys<Gen["ProgressBucket"], ProgressBucket>>,
   AssertNever<MissingKeys<Gen["TypeCount"], TypeCount>>,
+  AssertNever<MissingKeys<Gen["TypeCounts"], TypeCounts>>,
   AssertNever<MissingKeys<Gen["Game"], Game>>,
   AssertNever<MissingKeys<Gen["GameAccount"], GameAccount>>,
   AssertNever<MissingKeys<Gen["GameListItem"], GameListItem>>,

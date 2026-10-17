@@ -2,7 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { useRouteError } from "react-router";
 import { APP_ROLE, useSession } from "@/auth/session";
 import { clearLoginRedirectMark } from "@/auth/redirectGuard";
-import { Button } from "@/design-system/components/ui/button";
+import { Button, buttonClasses } from "@/design-system/components/ui/button";
 import { reportError } from "@/lib/observability";
 
 function FullScreen({ title, description, children }: { title: string; description?: string; children?: ReactNode }) {
@@ -90,9 +90,11 @@ export function NotFoundScreen() {
     <div className="p-6">
       <h2 className="text-base font-semibold text-text">Página não encontrada</h2>
       <p className="mt-1 text-sm text-muted">O endereço não existe no app.</p>
-      <Button className="mt-4" size="sm" variant="secondary" asChild>
-        <a href="/">Ir para o dashboard</a>
-      </Button>
+      <a href="/" className={`${buttonClasses("secondary", "sm")} mt-4 no-underline`}>
+        <span className="s" aria-hidden />
+        <span className="gl" aria-hidden />
+        Ir para o início
+      </a>
     </div>
   );
 }

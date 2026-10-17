@@ -1,14 +1,11 @@
-import { ArrowLeft, Check, Eye, Lock } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router";
-import type { GameAccount, Platform, Trophy, TrophyType } from "@/api/schemas";
+import type { GameAccount, GameDetail, Platform, Trophy, TrophyType } from "@/api/schemas";
 import { GameCover } from "@/design-system/components/GameCover";
 import { PlatformBadge } from "@/design-system/components/PlatformBadge";
-import { Panel } from "@/design-system/components/Panel";
 import { ProgressRing } from "@/design-system/components/ProgressRing";
 import { RarityBadge } from "@/design-system/components/RarityBadge";
 import { TrophyIcon } from "@/design-system/components/TrophyIcon";
-import { Skeleton } from "@/design-system/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useGame } from "./queries";
 
@@ -20,135 +17,131 @@ const TYPE_LABEL: Record<TrophyType, string> = {
   achievement: "Conquista",
 };
 
+type Show = "all" | "missing" | "earned";
+type Order = "default" | "rarity" | "recent";
+
+function Glyph({ id, size }: { id: string; size?: number }) {
+  return (
+    <svg width={size} height={size} aria-hidden>
+      <use href={`#${id}`} />
+    </svg>
+  );
+}
+
+/** Data de desbloqueio como no tile: "12 out 2026 · 21:47". */
+function unlockedAt(iso: string): string {
+  const d = new Date(iso);
+  const date = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }).replace(".", "");
+  const time = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return `${date} · ${time}`;
+}
+
 /**
- * Ícone REAL da conquista/troféu (Steam/PSN) com o glifo do tipo no canto. Bloqueado: ícone de
- * bloqueio da plataforma (icon_locked) ou o ícone dessaturado + cadeado. Sem ícone (ou 404) → glifo.
- * Com o spoiler guard ativo, o ícone também fica borrado (alguns ícones entregam o segredo).
+ * Ícone da linha (`.ticon` do tile): o ícone REAL da conquista/troféu com o glifo do tipo no canto;
+ * bloqueado → ícone de bloqueio da plataforma (ou o ícone dessaturado) + cadeado; sem ícone → glifo.
  */
 function TrophyArt({ trophy, spoiler }: { trophy: Trophy; spoiler: boolean }) {
   const [broken, setBroken] = useState(false);
-  const earned = trophy.earned;
-  const src = earned ? trophy.icon : trophy.icon_locked || trophy.icon;
-  const desaturate = !earned && !trophy.icon_locked;
+  const src = trophy.earned ? trophy.icon : trophy.icon_locked || trophy.icon;
+  const showImg = Boolean(src) && !broken;
   return (
-    <div className="chamfer-sm relative grid size-[52px] place-items-center overflow-hidden bg-bg-1">
-      {src && !broken ? (
-        <img
-          src={src}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          onError={() => setBroken(true)}
-          className={cn(
-            "size-full object-cover transition-[filter] duration-[var(--dur-base)]",
-            desaturate && "opacity-50 grayscale",
-            spoiler && "blur-[5px]",
-          )}
-        />
+    <div className="ticon">
+      {showImg ? (
+        <>
+          <img
+            src={src}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            onError={() => setBroken(true)}
+            className={cn("ticon-img", !trophy.earned && !trophy.icon_locked && "dim", spoiler && "spoiled")}
+          />
+          <span className="ticon-type">
+            <TrophyIcon type={trophy.type} size={14} />
+          </span>
+        </>
       ) : (
-        <span className={cn(!earned && "opacity-40 grayscale")}>
-          <TrophyIcon type={trophy.type} size={34} />
-        </span>
+        <TrophyIcon type={trophy.type} size={34} />
       )}
-      {src && !broken && (
-        <span className="absolute left-0.5 top-0.5 rounded-sm bg-bg-0/80 p-px" aria-hidden>
-          <TrophyIcon type={trophy.type} size={14} />
-        </span>
+      {!trophy.earned && (
+        <svg className="lock" style={{ color: "var(--color-text-2)" }} aria-hidden>
+          <use href="#i-lock" />
+        </svg>
       )}
-      {!earned && <Lock className="absolute bottom-1 right-1 size-3.5 text-text-1 drop-shadow" aria-hidden />}
     </div>
   );
 }
 
+/** Linha de troféu do style tile (`.trow`): obtido / bloqueado / oculto (spoiler guard). */
 function TrophyRow({ trophy }: { trophy: Trophy }) {
   const [revealed, setRevealed] = useState(false);
-  const earned = trophy.earned;
-  // Spoiler guard: troféu oculto e não conquistado fica borrado até clique explícito.
-  const spoiler = trophy.hidden && !earned && !revealed;
+  const hidden = trophy.hidden && !trophy.earned;
+  const spoiler = hidden && !revealed;
+  const progress =
+    trophy.progress != null && trophy.target != null && !trophy.earned ? ` · ${trophy.progress}/${trophy.target}` : "";
+
+  const status = trophy.earned ? (
+    <span className="unlock-date">
+      <Glyph id="i-check" />
+      {trophy.earned_at ? `Desbloqueado em ${unlockedAt(trophy.earned_at)}` : "Desbloqueado"}
+    </span>
+  ) : hidden ? (
+    <span className="status-locked">
+      <Glyph id="i-eye" size={12} />
+      {trophy.type === "achievement" ? "Conquista oculta" : "Troféu oculto"} · pode conter spoiler
+    </span>
+  ) : (
+    <span className="status-locked">
+      <Glyph id="i-lock" size={12} />
+      Bloqueado{progress}
+    </span>
+  );
 
   return (
-    <li
-      className={cn(
-        "chamfer-md relative grid grid-cols-[52px_1fr] items-center gap-3 bg-surface-2 px-4 py-3 sm:grid-cols-[52px_1fr_auto] sm:gap-4",
-        earned && "bg-[linear-gradient(90deg,rgb(245_197_66/0.08),transparent_40%),var(--color-surface-2)]",
-      )}
-    >
-      {earned && <span className="absolute inset-y-2.5 left-0 w-[2px] bg-trophy-gold" aria-hidden />}
+    <li className={cn("trow", trophy.earned ? "unlocked" : "locked", hidden && "hidden-t", revealed && "revealed")}>
       <TrophyArt trophy={trophy} spoiler={spoiler} />
-
       <div className="relative min-w-0">
-        {/* Spoiler guard: todo o bloco (nome, descrição, tipo, tags) borra junto; raridade e
-            estado "bloqueado" seguem visíveis. Ao revelar, o blur sai com animação (reduced-motion
-            zera a duração). */}
-        <div
-          aria-hidden={spoiler}
-          className={cn(
-            "transition-[filter] duration-[var(--dur-base)] ease-[var(--ease-out)]",
-            spoiler && "pointer-events-none select-none blur-[7px]",
-          )}
-        >
-          <p className="text-[15px] font-semibold leading-snug text-text-1">{trophy.name}</p>
-          {trophy.description && (
-            <p className="mt-0.5 text-[13px] leading-snug text-text-2">{trophy.description}</p>
-          )}
-          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-caption text-text-3">
-            <span className="hud-label">{TYPE_LABEL[trophy.type]}</span>
-            {(trophy.tags ?? []).map((t) => (
-              <span key={t} className="chamfer-sm bg-surface-3 px-1.5 py-0.5 text-[11px] text-text-2">
-                {t}
-              </span>
-            ))}
-          </div>
-        </div>
-        {spoiler && (
-          <button
-            type="button"
-            onClick={() => setRevealed(true)}
-            className="chamfer-sm absolute inset-0 m-auto inline-flex h-fit w-fit items-center gap-1.5 border border-border-strong bg-bg-0/85 px-3 py-2 font-display text-[12px] font-semibold uppercase tracking-[0.1em] text-neon-cyan"
-          >
-            <Eye className="size-3.5" aria-hidden /> Clique para revelar
-          </button>
-        )}
-      </div>
-
-      <div className="col-start-2 flex flex-row flex-wrap items-center gap-2 sm:col-start-auto sm:flex-col sm:items-end sm:gap-1.5">
-        {earned ? (
-          <span className="inline-flex items-center gap-1.5 font-semibold text-success">
-            <Check className="size-3.5" aria-hidden />
-            {trophy.earned_at ? new Date(trophy.earned_at).toLocaleDateString("pt-BR") : "Desbloqueado"}
-          </span>
+        {hidden ? (
+          <>
+            <div className="spoil" aria-hidden={spoiler}>
+              <div className="tt">{trophy.name}</div>
+              {trophy.description && <div className="td">{trophy.description}</div>}
+            </div>
+            <div className="tm">{status}</div>
+            {spoiler && (
+              <button className="reveal-btn" type="button" onClick={() => setRevealed(true)}>
+                <Glyph id="i-eye" />
+                Clique para revelar
+              </button>
+            )}
+          </>
         ) : (
-          <span className="inline-flex items-center gap-1.5 text-text-3">
-            <Lock className="size-3.5" aria-hidden /> Bloqueado
-          </span>
+          <>
+            <div className="tt">{trophy.name}</div>
+            {trophy.description && <div className="td">{trophy.description}</div>}
+            <div className="tm">
+              {status}
+              {(trophy.tags ?? []).map((t) => (
+                <span key={t} className="chip !px-1.5 !py-1">
+                  {t}
+                </span>
+              ))}
+            </div>
+          </>
         )}
-        {trophy.rarity_pct != null && <RarityBadge pct={trophy.rarity_pct} mini />}
       </div>
-
+      <div className="right">{trophy.rarity_pct != null && <RarityBadge pct={trophy.rarity_pct} mini />}</div>
     </li>
   );
 }
 
-/**
- * Contas que possuem o jogo, lado a lado (≥ lg: cards com anel; < lg: abas compactas). Cada conta é
- * uma linha do jogo na API: selecionar navega para /games/{game_id} daquela conta (URL compartilhável).
- * A conta da página atual fica marcada (aria-current), não só por cor.
- */
-function AccountSwitcher({
-  accounts,
-  currentGameId,
-  platform,
-}: {
-  accounts: GameAccount[];
-  currentGameId: string;
-  platform: Platform;
-}) {
+/** Contas com o jogo, lado a lado; a atual marcada com aria-current (não só cor). */
+function AccountSwitcher({ accounts, currentGameId, platform }: { accounts: GameAccount[]; currentGameId: string; platform: Platform }) {
   if (accounts.length < 2) return null;
-  const color = platform === "steam" ? "var(--color-steam)" : "var(--color-neon-cyan)";
   return (
     <nav aria-label="Contas com este jogo" className="flex flex-col gap-2">
-      <h3 className="hud-label">Contas ({accounts.length}) · mais avançada primeiro</h3>
-      <ul className="flex gap-2 overflow-x-auto lg:grid lg:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] lg:overflow-visible">
+      <span className="label">Contas ({accounts.length}) · mais avançada primeiro</span>
+      <ul className="m-0 flex list-none gap-3 overflow-x-auto p-0 pb-1">
         {accounts.map((a, i) => {
           const current = a.game_id === currentGameId;
           const pct = Math.round(a.progress.completion_pct * 100);
@@ -158,21 +151,16 @@ function AccountSwitcher({
                 to={`/games/${a.game_id}`}
                 replace
                 aria-current={current ? "page" : undefined}
-                className={cn(
-                  "chamfer-sm flex items-center gap-3 border bg-surface-2 px-3 py-2 transition-colors duration-[var(--dur-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan",
-                  current ? "border-neon-cyan text-text-1" : "border-transparent text-text-2 hover:text-text-1",
-                )}
+                className={cn("panel sm flex min-w-[220px] items-center gap-3 no-underline", !current && "opacity-70 hover:opacity-100")}
               >
-                <span className="hidden lg:block">
-                  <ProgressRing value={pct} size={44} strokeWidth={8} color={color} />
-                </span>
-                <span className="flex flex-col">
-                  <span className="font-display text-sm font-semibold uppercase tracking-[0.04em]">
+                <ProgressRing value={pct} size={44} color={platform === "steam" ? "var(--color-steam)" : undefined} />
+                <span className="flex min-w-0 flex-col">
+                  <span className="font-display text-sm font-bold uppercase tracking-[0.04em] text-text-1">
                     {a.label}
                     {i === 0 && <span className="ml-2 text-[10px] text-neon-cyan">★ melhor</span>}
                   </span>
-                  <span className="font-numeric text-xs tabular-nums text-text-3">
-                    {a.progress.earned}/{a.progress.total} · {pct}%
+                  <span className="caption tabular-nums">
+                    {a.progress.earned}/{a.progress.total} · {pct}%{current ? " · aberta" : ""}
                   </span>
                 </span>
               </Link>
@@ -184,106 +172,186 @@ function AccountSwitcher({
   );
 }
 
-/** Página do jogo — HUD. Cabeçalho com anel + troféus agrupados (base vs DLC) e spoiler guard. */
+/** Statline do hero (tile `.statline`): por tipo no PSN; totais + raras na Steam. */
+function StatLine({ game }: { game: GameDetail }) {
+  const items: { cls: string; label: ReactNode; value: ReactNode }[] = [];
+  const by = game.progress.by_type ?? {};
+  if (game.platform === "psn") {
+    for (const [type, cls] of [
+      ["platinum", "t-plat"],
+      ["gold", "t-gold"],
+      ["silver", "t-silver"],
+      ["bronze", "t-bronze"],
+    ] as const) {
+      const c = by[type];
+      if (c && c.total > 0) items.push({ cls, label: TYPE_LABEL[type], value: `${c.earned}/${c.total}` });
+    }
+  } else {
+    const all = game.groups.flatMap((g) => g.trophies);
+    const rare = all.filter((t) => t.earned && (t.rarity_pct ?? 100) < 5).length;
+    const legendary = all.filter((t) => t.earned && (t.rarity_pct ?? 100) < 1).length;
+    items.push({ cls: "", label: "Conquistas", value: `${game.progress.earned}/${game.progress.total}` });
+    items.push({ cls: "", label: "Faltam", value: game.progress.remaining });
+    items.push({ cls: "t-gold", label: "Raras (< 5%)", value: rare });
+    items.push({ cls: "t-plat", label: "Lendárias (< 1%)", value: legendary });
+  }
+  if (items.length === 0) return null;
+  return (
+    <div className="statline">
+      {items.map((it, i) => (
+        <div key={i} className={it.cls}>
+          <span className="num">{it.value}</span>
+          <span className="caption">{it.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const SHOW: [Show, string][] = [
+  ["all", "Todos"],
+  ["missing", "Faltando"],
+  ["earned", "Obtidos"],
+];
+const ORDER: [Order, string][] = [
+  ["default", "Padrão"],
+  ["rarity", "Mais comuns"],
+  ["recent", "Recentes"],
+];
+
+/** Página do jogo — hero do tile, contas lado a lado, filtros e linhas de troféu `.trow`. */
 export default function GamePage() {
   const { gameId = "" } = useParams();
   const query = useGame(gameId);
+  const [show, setShow] = useState<Show>("all");
+  const [order, setOrder] = useState<Order>("default");
+
+  const groups = useMemo(() => {
+    if (!query.data) return [];
+    return query.data.groups.map((g) => {
+      let ts = g.trophies.filter((t) => (show === "all" ? true : show === "earned" ? t.earned : !t.earned));
+      if (order === "rarity") ts = [...ts].sort((a, b) => (b.rarity_pct ?? -1) - (a.rarity_pct ?? -1));
+      if (order === "recent") ts = [...ts].sort((a, b) => (b.earned_at ?? "").localeCompare(a.earned_at ?? ""));
+      return { ...g, shown: ts };
+    });
+  }, [query.data, show, order]);
+
+  if (query.isPending) {
+    return (
+      <div className="flex flex-col gap-4" aria-busy="true">
+        <div className="skel chamfer-md h-56 w-full" />
+        <div className="skel chamfer-sm h-16 w-full" />
+        <div className="skel chamfer-sm h-16 w-full" />
+      </div>
+    );
+  }
+  if (query.isError || !query.data) {
+    return (
+      <p role="alert" className="text-sm text-danger">
+        Não foi possível carregar o jogo.
+      </p>
+    );
+  }
+
+  const game = query.data;
+  const isPsn = game.platform === "psn";
+  const complete = game.progress.total > 0 && game.progress.earned === game.progress.total;
+  const shownCount = groups.reduce((n, g) => n + g.shown.length, 0);
 
   return (
-    <section className="flex flex-col gap-5">
-      <Link to="/library" className="inline-flex items-center gap-1 text-sm text-text-2 hover:text-text-1">
-        <ArrowLeft className="size-4" aria-hidden /> Biblioteca
+    <section className="flex flex-col gap-6">
+      <Link to="/library" className="label inline-flex w-fit items-center gap-2 no-underline hover:!text-text-1">
+        ← Biblioteca
       </Link>
 
-      {query.isPending && <Skeleton className="h-28 w-full" />}
-      {query.isError && (
-        <p role="alert" className="text-sm text-danger">
-          Não foi possível carregar o jogo.
-        </p>
-      )}
-
-      {query.data && (
-        <>
-          <Panel className="relative isolate flex flex-wrap items-center justify-between gap-5 overflow-hidden">
-            {/* Fundo hero: a arte horizontal desfocada e escurecida (mesma família visual do card). */}
-            <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
-              <div className="absolute inset-[-10%] scale-110 opacity-45 blur-2xl saturate-150">
-                <GameCover
-                  variant="hero"
-                  cover={query.data.cover}
-                  hero={query.data.hero}
-                  title={query.data.title}
-                  platform={query.data.platform}
-                  externalId={query.data.external_id}
-                />
-              </div>
-              <div className="absolute inset-0 bg-[linear-gradient(90deg,var(--color-surface-1)_20%,color-mix(in_oklab,var(--color-surface-1)_70%,transparent))]" />
+      <div className="panel hero-stat relative overflow-hidden !p-0">
+        {/* Arte desfocada ao fundo (mesma família do card). */}
+        <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
+          <div className="absolute inset-[-12%] opacity-40 blur-2xl saturate-150">
+            <GameCover variant="hero" cover={game.cover} hero={game.hero} title={game.title} platform={game.platform} externalId={game.external_id} />
+          </div>
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,var(--color-bg-1)_25%,color-mix(in_oklab,var(--color-bg-1)_60%,transparent))]" />
+        </div>
+        <div className="grid items-center gap-6 p-6 md:grid-cols-[auto_1fr_auto] md:p-8">
+          <div
+            className="chamfer-md hidden w-56 overflow-hidden shadow-[0_12px_40px_rgb(0_0_0/0.5)] md:block"
+            style={{ aspectRatio: "16 / 10", viewTransitionName: `game-art-${game.id}` }}
+          >
+            <GameCover variant="hero" cover={game.cover} hero={game.hero} title={game.title} platform={game.platform} externalId={game.external_id} />
+          </div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <PlatformBadge platform={game.platform} />
+              {game.accounts.length > 1 && <span className="chip">Conta: {game.account_label}</span>}
+              {complete && <span className="chip !text-[var(--color-plat-3)]">{isPsn ? "Platinado" : "100%"}</span>}
             </div>
-            <div className="flex items-center gap-5">
-              <div
-                className="chamfer-sm hidden w-44 shrink-0 overflow-hidden shadow-[0_8px_30px_rgb(0_0_0/0.45)] sm:block"
-                style={{ aspectRatio: "16 / 10", viewTransitionName: `game-art-${query.data.id}` }}
-              >
-                <GameCover
-                  variant="hero"
-                  cover={query.data.cover}
-                  hero={query.data.hero}
-                  title={query.data.title}
-                  platform={query.data.platform}
-                  externalId={query.data.external_id}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <PlatformBadge platform={query.data.platform} />
-                  {query.data.accounts.length > 1 && (
-                    <span className="hud-label text-text-2">Conta: {query.data.account_label}</span>
-                  )}
-                </div>
-                <h2 className="font-display text-h3 font-bold uppercase tracking-[0.02em] text-text-1">
-                  {query.data.title}
-                </h2>
-                <p className="font-numeric text-sm tabular-nums text-text-2">
-                  {query.data.progress.earned}/{query.data.progress.total} troféus
-                  {query.data.progress.platinum_earned ? " · Platinado" : ""}
-                </p>
-              </div>
-            </div>
-            <ProgressRing
-              value={Math.round(query.data.progress.completion_pct * 100)}
-              size={112}
-              strokeWidth={10}
-              platinum={query.data.progress.platinum_earned}
-              color={query.data.platform === "steam" ? "var(--color-steam)" : "var(--color-neon-cyan)"}
-            />
-          </Panel>
-
-          <AccountSwitcher
-            accounts={query.data.accounts}
-            currentGameId={query.data.id}
-            platform={query.data.platform}
+            <h2 className="mt-3 font-display text-h2 font-bold uppercase leading-none tracking-[0.02em] text-text-1">{game.title}</h2>
+            <p className="muted mt-2">
+              <span className="num text-text-1">{game.progress.earned}</span>/{game.progress.total} {isPsn ? "troféus" : "conquistas"}
+              {game.progress.remaining > 0 ? ` · faltam ${game.progress.remaining}` : ""}
+              {game.progress.dlc && game.progress.dlc.total > 0 ? ` · ${game.progress.dlc.total} em DLC` : ""}
+            </p>
+            <StatLine game={game} />
+          </div>
+          <ProgressRing
+            value={game.progress.completion_pct * 100}
+            size={132}
+            platinum={complete}
+            color={isPsn ? undefined : "var(--color-steam)"}
+            className="big justify-self-center"
           />
+        </div>
+      </div>
 
-          {query.data.groups.map((group) => {
-            if (group.trophies.length === 0) return null;
-            return (
-              <div key={group.id} className="flex flex-col gap-2">
-                <h3 className="hud-label">
-                  {group.name} {group.is_base ? "" : "· DLC"}
-                </h3>
-                <ul className="flex flex-col gap-2">
-                  {group.trophies.map((t) => (
-                    <TrophyRow key={t.id} trophy={t} />
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
+      <AccountSwitcher accounts={game.accounts} currentGameId={game.id} platform={game.platform} />
 
-          {query.data.groups.every((g) => g.trophies.length === 0) && (
-            <p className="text-sm text-text-2">Nenhum troféu sincronizado ainda para este jogo.</p>
-          )}
-        </>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="seg" role="group" aria-label="Mostrar">
+          <span className="seg-l" aria-hidden>
+            Mostrar
+          </span>
+          {SHOW.map(([v, l]) => (
+            <button key={v} type="button" aria-pressed={show === v} onClick={() => setShow(v)}>
+              {l}
+            </button>
+          ))}
+        </div>
+        <div className="seg" role="group" aria-label="Ordenar">
+          <span className="seg-l" aria-hidden>
+            Ordenar
+          </span>
+          {ORDER.map(([v, l]) => (
+            <button key={v} type="button" aria-pressed={order === v} onClick={() => setOrder(v)}>
+              {l}
+            </button>
+          ))}
+        </div>
+        <span className="caption ml-auto tabular-nums">{shownCount} exibidos</span>
+      </div>
+
+      {groups.map((group) => {
+        if (group.trophies.length === 0 || group.shown.length === 0) return null;
+        const earned = group.trophies.filter((t) => t.earned).length;
+        return (
+          <div key={group.id} className="flex flex-col gap-3">
+            <h3 className="sub !mb-0 flex items-baseline gap-3">
+              {group.is_base ? "Jogo base" : group.name}
+              {!group.is_base && <span className="chip">DLC</span>}
+              <span className="caption tabular-nums">
+                {earned}/{group.trophies.length}
+              </span>
+            </h3>
+            <ul className="m-0 list-none p-0">
+              {group.shown.map((t) => (
+                <TrophyRow key={t.id} trophy={t} />
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+
+      {game.groups.every((g) => g.trophies.length === 0) && (
+        <p className="text-sm text-text-2">Nenhum troféu sincronizado ainda para este jogo.</p>
       )}
     </section>
   );

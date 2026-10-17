@@ -1,114 +1,148 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import type { Platform } from "@/api/schemas";
+import type { GamesQuery } from "@/api/endpoints";
+import type { GameStatus, Platform } from "@/api/schemas";
 import { GameCard } from "@/design-system/components/GameCard";
-import { Button } from "@/design-system/components/ui/button";
-import { Input } from "@/design-system/components/ui/input";
-import { Skeleton } from "@/design-system/components/ui/skeleton";
+import { SectionHead } from "@/design-system/components/SectionHead";
+import { HudButton } from "@/design-system/components/HudButton";
 import { useIntegrations } from "@/features/integrations/queries";
-import { cn } from "@/lib/utils";
 import { LIBRARY_PAGE_SIZE, useLibrary } from "./queries";
 
-function FilterChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+type Sort = NonNullable<GamesQuery["sort"]>;
+
+const STATUS: { value: GameStatus | undefined; label: string }[] = [
+  { value: undefined, label: "Todos" },
+  { value: "completed", label: "Platinados / 100%" },
+  { value: "almost", label: "Quase lá" },
+  { value: "in_progress", label: "Em andamento" },
+  { value: "not_started", label: "Sem progresso" },
+  { value: "abandoned", label: "Abandonados" },
+];
+
+const SORTS: { value: Sort; label: string }[] = [
+  { value: "last_played", label: "Recentes" },
+  { value: "completion", label: "% concluído" },
+  { value: "remaining", label: "Faltam menos" },
+  { value: "rarity", label: "Raridade" },
+  { value: "title", label: "A–Z" },
+];
+
+const PLATFORMS: { value: Platform | undefined; label: string }[] = [
+  { value: undefined, label: "Todas" },
+  { value: "steam", label: "Steam" },
+  { value: "psn", label: "PSN" },
+];
+
+/** Grupo segmentado do style tile (`.seg`): rótulo + botões com aria-pressed. */
+function Seg<T>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: { value: T; label: ReactNode }[];
+  value: T;
+  onChange: (v: T) => void;
+}) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        "chamfer-sm px-3 py-1.5 font-display text-[11px] font-semibold uppercase tracking-[0.1em] transition-colors duration-[var(--dur-fast)]",
-        active
-          ? "bg-[color-mix(in_oklab,var(--color-neon-cyan)_18%,transparent)] text-neon-cyan"
-          : "bg-surface-2 text-text-3 hover:text-text-1",
-      )}
-    >
-      {children}
-    </button>
+    <div className="seg" role="group" aria-label={label}>
+      <span className="seg-l" aria-hidden>
+        {label}
+      </span>
+      {options.map((o) => (
+        <button key={String(o.value ?? "all")} type="button" aria-pressed={o.value === value} onClick={() => onChange(o.value)}>
+          {o.label}
+        </button>
+      ))}
+    </div>
   );
 }
 
-/**
- * O jogo existe em várias contas: o card mostra a mais avançada (best); o chip diz quantas contas e
- * qual é a melhor (texto, não só cor).
- */
-function AccountsChip({ best, count }: { best: string; count: number }) {
-  return (
-    <span
-      className="chamfer-sm bg-surface-2 px-1.5 py-0.5 font-display text-[10px] font-semibold uppercase tracking-[0.08em] text-neon-cyan"
-      title={`${count} contas — mostrando a mais avançada: ${best}`}
-    >
-      {best} · {count} contas
-    </span>
-  );
-}
-
-/** Biblioteca — grade de cards HUD ligada à API. Capa chanfrada, badge de plataforma e anel de %. */
+/** Biblioteca — cards do style tile, filtros, ordenação e rolagem infinita. */
 export default function LibraryPage() {
   const [q, setQ] = useState("");
   const [platform, setPlatform] = useState<Platform | undefined>();
-  const [account, setAccount] = useState<string>("");
+  const [status, setStatus] = useState<GameStatus | undefined>();
+  const [sort, setSort] = useState<Sort>("last_played");
+  const [account, setAccount] = useState("");
+  const [withoutAch, setWithoutAch] = useState(false);
   const integrations = useIntegrations();
-  const query = useLibrary({ q: q || undefined, platform, integration_id: account || undefined });
-  const games = query.data?.pages.flatMap((p) => p.items) ?? [];
-  const total = query.data?.pages[0]?.total;
-  // Só faz sentido filtrar por conta quando existe mais de uma.
   const accounts = integrations.data ?? [];
 
+  const query = useLibrary({
+    q: q || undefined,
+    platform,
+    status,
+    sort,
+    integration_id: account || undefined,
+    has_achievements: withoutAch ? "all" : "true",
+  });
+  const games = query.data?.pages.flatMap((p) => p.items) ?? [];
+  const total = query.data?.pages[0]?.total;
+
   return (
-    <section className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center gap-3">
-        <Input
-          type="search"
-          placeholder="Buscar jogo…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          aria-label="Buscar jogo"
-          className="max-w-xs"
-        />
-        <div className="flex gap-1.5" role="group" aria-label="Filtrar por plataforma">
-          <FilterChip active={platform === undefined} onClick={() => setPlatform(undefined)}>
-            Todas
-          </FilterChip>
-          <FilterChip active={platform === "steam"} onClick={() => setPlatform("steam")}>
-            Steam
-          </FilterChip>
-          <FilterChip active={platform === "psn"} onClick={() => setPlatform("psn")}>
-            PSN
-          </FilterChip>
+    <section className="flex flex-col gap-6">
+      <SectionHead
+        idx="02"
+        title="Biblioteca"
+        subtitle={
+          total === undefined ? "Seus jogos, conquistas e troféus." : `${total} ${total === 1 ? "jogo" : "jogos"}`
+        }
+      />
+
+      <div className="panel sm flex flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="input min-w-[220px] flex-1">
+            <svg aria-hidden>
+              <use href="#i-target" />
+            </svg>
+            <input
+              type="search"
+              placeholder="Buscar jogo…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              aria-label="Buscar jogo"
+            />
+          </div>
+          <Seg label="Plataforma" options={PLATFORMS} value={platform} onChange={setPlatform} />
+          {accounts.length > 1 && (
+            <label className="seg items-center">
+              <span className="seg-l">Conta</span>
+              <select
+                value={account}
+                onChange={(e) => setAccount(e.target.value)}
+                className="h-full cursor-pointer bg-transparent py-[7px] pl-1 pr-2 font-display text-[11px] font-semibold uppercase tracking-[0.1em] text-neon-cyan outline-none"
+              >
+                <option value="">Todas</option>
+                {accounts.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
         </div>
-        {total !== undefined && (
-          <span className="ml-auto font-numeric text-sm tabular-nums text-text-2" aria-live="polite">
-            <span className="font-semibold text-text-1">{total}</span> {total === 1 ? "jogo" : "jogos"}
-          </span>
-        )}
-        {accounts.length > 1 && (
-          <label className="flex items-center gap-2">
-            <span className="hud-label text-text-3">Conta</span>
-            <select
-              value={account}
-              onChange={(e) => setAccount(e.target.value)}
-              className="chamfer-sm h-9 bg-surface-2 px-3 font-display text-[11px] font-semibold uppercase tracking-[0.1em] text-text-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
-            >
-              <option value="">Todas</option>
-              {accounts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.label}
-                </option>
-              ))}
-            </select>
+        <div className="flex flex-wrap items-center gap-3">
+          <Seg label="Status" options={STATUS} value={status} onChange={setStatus} />
+          <Seg label="Ordenar" options={SORTS} value={sort} onChange={setSort} />
+          <label className="switch ml-auto">
+            <input type="checkbox" checked={withoutAch} onChange={(e) => setWithoutAch(e.target.checked)} />
+            Mostrar jogos sem conquistas
           </label>
-        )}
+        </div>
       </div>
 
       {query.isPending && (
-        <ul className="gcard-grid" aria-busy="true" aria-label="Carregando biblioteca">
+        <div className="cards-grid" aria-busy="true" aria-label="Carregando biblioteca">
           {Array.from({ length: 6 }).map((_, i) => (
-            <li key={i} className="flex flex-col gap-3">
-              <Skeleton className="aspect-[16/10] w-full" />
-              <Skeleton className="h-4 w-2/3" />
-              <Skeleton className="h-3 w-1/3" />
-            </li>
+            <div key={i} className="flex flex-col gap-3">
+              <div className="skel aspect-[16/10] w-full" />
+              <div className="skel skel-line w-2/3" />
+              <div className="skel skel-line w-1/3" />
+            </div>
           ))}
-        </ul>
+        </div>
       )}
 
       {query.isError && (
@@ -118,34 +152,44 @@ export default function LibraryPage() {
       )}
 
       {query.data && games.length === 0 && (
-        <p className="text-sm text-text-2">Nenhum jogo ainda. Conecte uma integração e sincronize.</p>
+        <p className="text-sm text-text-2">
+          {q || status || platform || account
+            ? "Nenhum jogo com esses filtros."
+            : "Nenhum jogo ainda. Conecte uma integração e sincronize."}
+        </p>
       )}
 
       {games.length > 0 && (
         <>
-          <ul className="gcard-grid">
+          <ul className="cards-grid">
             {games.map((game, i) => {
-              const pct = game.progress.completion_pct * 100;
               const best = game.accounts[0];
+              const complete = game.progress.total > 0 && game.progress.earned === game.progress.total;
               return (
-                <li key={game.id}>
+                <li key={game.id} className="gcard-in" style={{ ["--i" as string]: Math.min(i % LIBRARY_PAGE_SIZE, 12) }}>
                   <GameCard
                     to={`/games/${game.id}`}
-                    index={i % LIBRARY_PAGE_SIZE}
                     title={game.title}
                     platform={game.platform}
                     externalId={game.external_id}
                     cover={game.cover}
                     hero={game.hero}
-                    pct={pct}
+                    pct={game.progress.completion_pct * 100}
                     earned={game.progress.earned}
                     total={game.progress.total}
-                    platinum={game.progress.platinum_earned ?? false}
+                    complete={complete}
+                    counts={game.counts}
+                    lastUnlockAt={game.last_unlock_at}
+                    abandoned={game.abandoned ?? false}
                     transitionName={`game-art-${game.id}`}
-                    meta={game.last_unlock_at ? <> · última: {lastUnlock(game.last_unlock_at)}</> : null}
-                    footer={
+                    extra={
                       game.accounts.length > 1 && best ? (
-                        <AccountsChip best={best.label} count={game.accounts.length} />
+                        <span className="text-neon-cyan" title={`${game.accounts.length} contas — mostrando a mais avançada`}>
+                          <svg width={14} height={14} aria-hidden>
+                            <use href="#i-user" />
+                          </svg>
+                          {best.label} · {game.accounts.length} contas
+                        </span>
                       ) : null
                     }
                   />
@@ -158,15 +202,6 @@ export default function LibraryPage() {
       )}
     </section>
   );
-}
-
-/** "hoje", "ontem", "há 3 dias" ou a data. */
-function lastUnlock(iso: string): string {
-  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-  if (days <= 0) return "hoje";
-  if (days === 1) return "ontem";
-  if (days < 30) return `há ${days} dias`;
-  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 /**
@@ -193,9 +228,9 @@ function LoadMore({ query }: { query: ReturnType<typeof useLibrary> }) {
   if (!hasNextPage) return null;
   return (
     <div ref={sentinel} className="flex justify-center py-4">
-      <Button variant="secondary" onClick={() => void fetchNextPage()} disabled={isFetchingNextPage}>
+      <HudButton variant="secondary" onClick={() => void fetchNextPage()} disabled={isFetchingNextPage}>
         {isFetchingNextPage ? "Carregando…" : "Carregar mais"}
-      </Button>
+      </HudButton>
     </div>
   );
 }

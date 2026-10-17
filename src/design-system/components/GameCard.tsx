@@ -1,15 +1,18 @@
 import { useRef, type PointerEvent, type ReactNode } from "react";
 import { Link } from "react-router";
-import type { Platform } from "@/api/schemas";
+import type { Platform, TypeCounts } from "@/api/schemas";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { cn } from "@/lib/utils";
 import { GameCover } from "./GameCover";
 import { PlatformBadge } from "./PlatformBadge";
 import { ProgressRing } from "./ProgressRing";
+import { RarityBadge } from "./RarityBadge";
 
-/** Inclinação máxima (graus) do tilt — mesmos valores do style tile. */
+/** Inclinação máxima — mesmos valores do style tile (tilt/parallax). */
 const TILT_Y = 12;
 const TILT_X = 10;
+/** Até quantos troféus faltando o card ganha o selo "Falta N". */
+const ALMOST_THERE = 3;
 
 export interface GameCardProps {
   to: string;
@@ -22,23 +25,22 @@ export interface GameCardProps {
   pct: number;
   earned: number;
   total: number;
-  platinum?: boolean;
-  /** Linha de meta extra (ex.: "última: hoje"). */
-  meta?: ReactNode;
-  /** Chips/contadores abaixo da meta (ex.: contas). */
-  footer?: ReactNode;
-  /** Badge no canto superior direito da capa. */
-  corner?: ReactNode;
-  /** Índice na grade, para a entrada em cascata. */
-  index?: number;
-  /** Nome da view transition (shared element card → página do jogo). */
+  /** Platinado (PSN) ou 100% (Steam). */
+  complete?: boolean;
+  counts?: TypeCounts;
+  lastUnlockAt?: string | null;
+  abandoned?: boolean;
+  /** Conteúdo extra na linha de contadores (ex.: chip de contas). */
+  extra?: ReactNode;
+  /** Nome da view transition (arte compartilhada card → página do jogo). */
   transitionName?: string;
 }
 
 /**
- * Card de jogo do style tile: moldura chanfrada com borda em gradiente, halo no hover/foco, tilt e
- * parallax guiados pelo ponteiro, reflexo especular e anel com count-up. O tilt escreve CSS vars direto
- * no elemento (sem re-render) e é desligado em touch e com reduced-motion.
+ * Card de jogo do style tile — mesma marcação e classes (`.gcard` em hud.css): halo, borda em
+ * gradiente, moldura chanfrada, capa 16:10 com parallax e reflexo, corpo com título, meta, contadores
+ * e anel. O CARD INTEIRO inclina com o ponteiro (CSS vars no próprio elemento, sem re-render); tilt
+ * desligado em toque e com reduced-motion.
  */
 export function GameCard({
   to,
@@ -50,37 +52,48 @@ export function GameCard({
   pct,
   earned,
   total,
-  platinum = false,
-  meta,
-  footer,
-  corner,
-  index = 0,
+  complete = false,
+  counts,
+  lastUnlockAt,
+  abandoned = false,
+  extra,
   transitionName,
 }: GameCardProps) {
   const ref = useRef<HTMLAnchorElement>(null);
   const reduced = useReducedMotion();
+  const isPsn = platform === "psn";
+  const remaining = total - earned;
 
   function onPointerMove(e: PointerEvent<HTMLAnchorElement>) {
-    const el = ref.current;
-    if (!el || reduced || e.pointerType !== "mouse") return;
-    const r = el.getBoundingClientRect();
+    const card = ref.current;
+    if (!card || reduced || e.pointerType === "touch") return;
+    const r = card.getBoundingClientRect();
     const x = (e.clientX - r.left) / r.width - 0.5;
     const y = (e.clientY - r.top) / r.height - 0.5;
-    el.style.setProperty("--ry", `${(x * TILT_Y).toFixed(2)}deg`);
-    el.style.setProperty("--rx", `${(-y * TILT_X).toFixed(2)}deg`);
-    el.style.setProperty("--px", x.toFixed(3));
-    el.style.setProperty("--py", y.toFixed(3));
-    el.style.setProperty("--gx", `${((x + 0.5) * 100).toFixed(1)}%`);
-    el.style.setProperty("--gy", `${((y + 0.5) * 100).toFixed(1)}%`);
+    card.style.setProperty("--ry", `${(x * TILT_Y).toFixed(2)}deg`);
+    card.style.setProperty("--rx", `${(-y * TILT_X).toFixed(2)}deg`);
+    card.style.setProperty("--px", x.toFixed(3));
+    card.style.setProperty("--py", y.toFixed(3));
+    card.style.setProperty("--gx", `${((x + 0.5) * 100).toFixed(1)}%`);
+    card.style.setProperty("--gy", `${((y + 0.5) * 100).toFixed(1)}%`);
   }
 
   function onPointerLeave() {
-    const el = ref.current;
-    if (!el) return;
-    for (const p of ["--rx", "--ry", "--px", "--py"]) el.style.removeProperty(p);
+    const card = ref.current;
+    if (!card) return;
+    for (const p of ["--rx", "--ry", "--px", "--py"]) card.style.removeProperty(p);
   }
 
-  const ringColor = platform === "steam" ? "var(--color-steam)" : "var(--color-neon-cyan)";
+  const unit = isPsn ? "troféus" : "conquistas";
+  const when = lastUnlockAt ? relativeDay(lastUnlockAt) : null;
+  const metaTail = complete
+    ? ` · ${isPsn ? "platinado" : "100%"}${lastUnlockAt ? ` em ${fullDate(lastUnlockAt)}` : ""}`
+    : abandoned
+      ? " · abandonado"
+      : when
+        ? ` · última: ${when}`
+        : "";
+
   return (
     <Link
       ref={ref}
@@ -88,9 +101,8 @@ export function GameCard({
       viewTransition
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
-      aria-label={`${title}, ${platform === "steam" ? "Steam" : "PlayStation"}, ${Math.round(pct)}% concluído${platinum ? ", platinado" : ""}`}
-      className={cn("gcard gcard-enter", platinum && "is-plat")}
-      style={{ ["--i" as string]: Math.min(index, 12) }}
+      className={cn("gcard", complete && "is-plat")}
+      aria-label={`${title}, ${isPsn ? "PlayStation" : "Steam"}, ${complete ? (isPsn ? "platinado" : "100% concluído") : `${Math.round(pct)}% concluído`}`}
     >
       <div className="halo" aria-hidden />
       <div className="edge" aria-hidden />
@@ -101,27 +113,117 @@ export function GameCard({
           </div>
           <div className="fx" aria-hidden />
           <div className="glare" aria-hidden />
-          <span className="pbadge">
-            <PlatformBadge platform={platform} />
-          </span>
-          {corner && <span className="corner">{corner}</span>}
+          <PlatformBadge platform={platform} />
+          {!complete && !abandoned && remaining > 0 && remaining <= ALMOST_THERE && (
+            <RarityBadge
+              mini
+              tier="legendary"
+              label={`Falta ${remaining}`}
+              detail={null}
+              className="plat-ready [&_.bg]:!bg-[rgb(7_8_13/0.75)]"
+            />
+          )}
           <span className="ctitle" aria-hidden>
             {title}
           </span>
         </div>
         <div className="gbody">
           <div className="min-w-0">
-            <h3 title={title}>{title}</h3>
+            <h4 className="truncate" title={title}>
+              {title}
+            </h4>
             <div className="meta">
-              <span className="num">{earned}</span>/{total} {platform === "steam" ? "conquistas" : "troféus"}
-              {platinum ? " · platinado" : ""}
-              {meta}
+              <span className="num">{earned}</span>/{total}
+              {complete ? "" : ` ${unit}`}
+              {metaTail}
             </div>
-            {footer && <div className="tcounts">{footer}</div>}
+            <div className="tcounts">
+              {counts && <TypeCounters counts={counts} platform={platform} earned={earned} total={total} complete={complete} />}
+              {extra}
+            </div>
           </div>
-          <ProgressRing value={pct} size={64} strokeWidth={10} platinum={platinum} color={ringColor} />
+          <ProgressRing value={pct} platinum={complete} color={isPsn ? undefined : "var(--color-steam)"} />
         </div>
       </div>
     </Link>
   );
+}
+
+/** Contadores do card (como no tile): PSN por tipo; Steam total + raras ganhas. */
+function TypeCounters({
+  counts,
+  platform,
+  earned,
+  total,
+  complete,
+}: {
+  counts: TypeCounts;
+  platform: Platform;
+  earned: number;
+  total: number;
+  complete: boolean;
+}) {
+  if (platform === "psn") {
+    if (complete) {
+      return (
+        <span style={{ color: "var(--color-plat-3)" }}>
+          <Glyph id="t-plat" />
+          Platina
+        </span>
+      );
+    }
+    const types = [
+      ["platinum", "t-plat", counts.platinum],
+      ["gold", "t-gold", counts.gold],
+      ["silver", "t-silver", counts.silver],
+      ["bronze", "t-bronze", counts.bronze],
+    ] as const;
+    return (
+      <>
+        {types
+          .filter(([, , c]) => c.total > 0)
+          .map(([key, glyph, c]) => (
+            <span key={key} aria-label={`${key}: ${c.earned} de ${c.total}`}>
+              <Glyph id={glyph} />
+              {c.earned}/{c.total}
+            </span>
+          ))}
+      </>
+    );
+  }
+  return (
+    <>
+      <span aria-label={`${earned} de ${total} conquistas`}>
+        <Glyph id="t-ach" />
+        {earned}/{total}
+      </span>
+      {counts.rare_earned > 0 && (
+        <span style={{ color: "var(--color-rarity-epic)" }}>
+          <Glyph id="r-epic" />
+          {counts.rare_earned} {counts.rare_earned === 1 ? "rara" : "raras"}
+        </span>
+      )}
+    </>
+  );
+}
+
+function Glyph({ id }: { id: string }) {
+  return (
+    <svg width={14} height={14} aria-hidden>
+      <use href={`#${id}`} />
+    </svg>
+  );
+}
+
+/** "hoje", "ontem", "há 3 dias" ou data curta. */
+function relativeDay(iso: string): string {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (days <= 0) return "hoje";
+  if (days === 1) return "ontem";
+  if (days < 30) return `há ${days} dias`;
+  return fullDate(iso);
+}
+
+function fullDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }).replace(".", "");
 }

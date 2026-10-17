@@ -4,43 +4,43 @@ import { cn } from "@/lib/utils";
 
 const R = 52;
 const CIRC = 2 * Math.PI * R;
+const DUR = 900; // mesma duração do count-up do style tile
 
 /**
- * Anel de progresso HUD (SVG). Conta o número e preenche o arco; respeita reduced-motion (mostra o
- * valor final na hora). `platinum` usa o gradiente iridescente no traço.
+ * Anel de progresso do style tile (`.hring` em hud.css): arco e número contam juntos de 0 até o
+ * valor (ease-out cúbico, 900ms). Reduced-motion: valor final na hora. `platinum` usa o gradiente
+ * iridescente (#g-plat do Sprite).
  */
 export function ProgressRing({
   value,
   size = 64,
-  strokeWidth = 8,
-  color = "var(--color-neon-cyan)",
+  strokeWidth = 10,
+  color,
   platinum = false,
   className,
 }: {
   value: number;
   size?: number;
   strokeWidth?: number;
+  /** Cor do arco (default: ciano; Steam usa --color-steam). */
   color?: string;
   platinum?: boolean;
   className?: string;
 }) {
   const reduced = useReducedMotion();
-  const [display, setDisplay] = useState(reduced ? value : 0);
-  const raf = useRef<number | undefined>(undefined);
   const target = Math.max(0, Math.min(100, value));
+  const [p, setP] = useState(reduced ? 1 : 0);
+  const raf = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     if (reduced) {
-      setDisplay(target);
+      setP(1);
       return;
     }
     const start = performance.now();
-    const from = 0;
-    const DUR = 900;
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / DUR);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setDisplay(from + (target - from) * eased);
+      setP(1 - Math.pow(1 - t, 3));
       if (t < 1) raf.current = requestAnimationFrame(tick);
     };
     raf.current = requestAnimationFrame(tick);
@@ -49,36 +49,32 @@ export function ProgressRing({
     };
   }, [target, reduced]);
 
-  const offset = CIRC * (1 - display / 100);
-  const stroke = platinum ? "url(#g-plat)" : color;
-
+  const shown = target * p;
+  const ringColor = platinum ? "var(--color-plat-2)" : color;
   return (
     <div
-      className={cn("relative shrink-0", className)}
-      style={{ width: size, height: size }}
+      className={cn("hring", className)}
+      style={{ ["--size" as string]: `${size}px`, ...(ringColor ? { ["--ring-c" as string]: ringColor } : {}) }}
       role="img"
       aria-label={`${Math.round(target)}% concluído`}
     >
-      <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
-        <circle cx="60" cy="60" r={R} fill="none" strokeWidth={strokeWidth} className="stroke-surface-3" />
+      <svg viewBox="0 0 120 120" aria-hidden>
+        <circle className="track" cx="60" cy="60" r={R} fill="none" strokeWidth={strokeWidth} />
         <circle
+          className="bar"
           cx="60"
           cy="60"
           r={R}
           fill="none"
           strokeWidth={strokeWidth}
-          stroke={stroke}
           strokeDasharray={CIRC}
-          strokeDashoffset={offset}
-          style={{ filter: `drop-shadow(0 0 4px color-mix(in oklab, ${platinum ? "var(--color-plat-2)" : color} var(--glow-mix), transparent))` }}
+          strokeDashoffset={CIRC * (1 - shown / 100)}
+          style={platinum ? { stroke: "url(#g-plat)" } : undefined}
         />
       </svg>
-      <div
-        className="absolute inset-0 flex items-center justify-center font-numeric font-bold tabular-nums leading-none"
-        style={{ fontSize: size * 0.3 }}
-      >
-        {Math.round(display)}
-        <small className="self-center text-[0.5em] text-text-3">%</small>
+      <div className="val" aria-hidden>
+        <span className="rv">{Math.round(shown)}</span>
+        <small>%</small>
       </div>
     </div>
   );

@@ -1,39 +1,27 @@
-import {
-  LayoutDashboard,
-  Library,
-  ListChecks,
-  Plug,
-  RefreshCw,
-  Trophy,
-  type LucideIcon,
-} from "lucide-react";
-
 export interface NavItem {
   to: string;
   label: string;
-  icon: LucideIcon;
+  /** Rótulo curto (tab bar do celular). */
+  short: string;
+  /** Símbolo do Sprite (glifos do style tile). */
+  icon: string;
+  /** Aparece na tab bar inferior do celular (máx. 5). */
+  mobile: boolean;
 }
 
 /** Navegação do app (copy em pt-BR). Ordem = prioridade no fluxo de uso. */
 export const NAV_ITEMS: NavItem[] = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/library", label: "Biblioteca", icon: Library },
-  { to: "/next", label: "Próxima Platina", icon: Trophy },
-  { to: "/timeline", label: "Linha do tempo", icon: ListChecks },
-  { to: "/settings/integrations", label: "Integrações", icon: Plug },
-  { to: "/sync", label: "Sync", icon: RefreshCw },
+  { to: "/", label: "Início", short: "Início", icon: "i-home", mobile: true },
+  { to: "/library", label: "Biblioteca", short: "Jogos", icon: "i-lib", mobile: true },
+  { to: "/next", label: "Próxima Platina", short: "Próxima", icon: "t-plat", mobile: true },
+  { to: "/timeline", label: "Linha do tempo", short: "Tempo", icon: "i-play", mobile: true },
+  { to: "/settings/integrations", label: "Contas", short: "Contas", icon: "i-key", mobile: true },
+  { to: "/sync", label: "Sync", short: "Sync", icon: "i-sync", mobile: false },
 ];
 
 export function isNavActive(to: string, pathname: string): boolean {
   if (to === "/") return pathname === "/";
+  // A página do jogo é "filha" da biblioteca.
+  if (to === "/library" && pathname.startsWith("/games/")) return true;
   return pathname === to || pathname.startsWith(`${to}/`);
-}
-
-export function sectionFor(pathname: string): string {
-  // Jogo é filho da biblioteca no breadcrumb.
-  if (pathname.startsWith("/games/")) return "Biblioteca";
-  for (const item of NAV_ITEMS) {
-    if (isNavActive(item.to, pathname)) return item.label;
-  }
-  return "Trophy Hunter";
 }

@@ -1,4 +1,5 @@
 import type { SyncRun } from "@/api/schemas";
+import { SectionHead } from "@/design-system/components/SectionHead";
 import { ProgressBar } from "@/design-system/components/ProgressBar";
 import { Badge, type BadgeProps } from "@/design-system/components/ui/badge";
 import { Skeleton } from "@/design-system/components/ui/skeleton";
@@ -48,7 +49,15 @@ function GamesCell({ run }: { run: SyncRun }) {
 /** Log de sync — tabela HUD ligada à API (poll a cada 15s). */
 export default function SyncLogPage() {
   const query = useSyncRuns();
+  return (
+    <section className="flex flex-col gap-6">
+      <SectionHead idx="06" title="Sync" subtitle="Execuções de sincronização: quando rodaram, o que mudou e o que falhou." />
+      <SyncTable query={query} />
+    </section>
+  );
+}
 
+function SyncTable({ query }: { query: ReturnType<typeof useSyncRuns> }) {
   if (query.isPending) return <Skeleton className="h-64 w-full" />;
   if (query.isError)
     return (

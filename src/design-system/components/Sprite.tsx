@@ -117,6 +117,18 @@ export function Sprite() {
           <path d="M5 7V5a3 3 0 016 0v2" fill="none" stroke="currentColor" strokeWidth="1.6" />
         </symbol>
       </defs>
+          {/* Ícones de interface do style tile (barra superior, botões, banners). */}
+        <symbol id="i-ai" viewBox="0 0 24 24"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8zM18.5 14l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z" fill="currentColor"/></symbol>
+        <symbol id="i-check" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square"/></symbol>
+        <symbol id="i-eye" viewBox="0 0 16 16"><path d="M1 8s2.6-5 7-5 7 5 7 5-2.6 5-7 5-7-5-7-5z" fill="none" stroke="currentColor" strokeWidth="1.4"/><circle cx="8" cy="8" r="2.2" fill="currentColor"/></symbol>
+        <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9h-6v-6H9v6H3z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></symbol>
+        <symbol id="i-key" viewBox="0 0 16 16"><circle cx="5" cy="8" r="3" fill="none" stroke="currentColor" strokeWidth="1.5"/><path d="M8 8h7M12 8v3M14 8v2" stroke="currentColor" strokeWidth="1.5"/></symbol>
+        <symbol id="i-lib" viewBox="0 0 24 24"><path d="M4 4h4v16H4zM10 4h4v16h-4zM16 5l3.8-1 3 15.5-3.8 1z" fill="none" stroke="currentColor" strokeWidth="1.8"/></symbol>
+        <symbol id="i-play" viewBox="0 0 16 16"><path d="M4 2.5l9 5.5-9 5.5z" fill="currentColor"/></symbol>
+        <symbol id="i-sync" viewBox="0 0 16 16"><path d="M13 6.5A5 5 0 003.5 5M3 9.5A5 5 0 0012.5 11" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M3 2v3.5h3.5M13 14v-3.5H9.5" fill="none" stroke="currentColor" strokeWidth="1.6"/></symbol>
+        <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.8"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" strokeWidth="1.8"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></symbol>
+        <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" strokeWidth="1.8"/><path d="M4 21c1.5-4 4.4-6 8-6s6.5 2 8 6" fill="none" stroke="currentColor" strokeWidth="1.8"/></symbol>
+        <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 2.5l10 18H2z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><path d="M12 9.5v5" stroke="currentColor" strokeWidth="2.2"/><circle cx="12" cy="17.6" r="1.3" fill="currentColor"/></symbol>
     </svg>
   );
 }

@@ -167,6 +167,16 @@ export const gameSchema = z.object({
 });
 export type Game = z.infer<typeof gameSchema>;
 
+/** Troféus ganhos/total por tipo (PSN) e conquistas raras ganhas (< 5%) — contadores do card. */
+export const typeCountsSchema = z.object({
+  platinum: typeCountSchema,
+  gold: typeCountSchema,
+  silver: typeCountSchema,
+  bronze: typeCountSchema,
+  rare_earned: z.number().int(),
+});
+export type TypeCounts = z.infer<typeof typeCountsSchema>;
+
 /** Uma conta que possui o jogo, com o progresso dela. */
 export const gameAccountSchema = z.object({
   integration_id: z.string(),
@@ -191,6 +201,7 @@ export const gameListItemSchema = gameSchema.extend({
   progress: progressSummarySchema,
   /** Desbloqueio mais recente (conta best). */
   last_unlock_at: timestamp.nullish(),
+  counts: typeCountsSchema,
   accounts: accountListSchema,
 });
 export type GameListItem = z.infer<typeof gameListItemSchema>;
