@@ -1,59 +1,197 @@
 /**
- * Tokens do design system — Trophy Hunter.
- *
- * ATENÇÃO: paleta provisória, neutra e escura. As telas finais esperam a aprovação do *style tile*
- * (paleta/tipografia/refs no plano). Tudo aqui é variável CSS exposta como token do Tailwind v4
- * (`@theme`), então a paleta aprovada "cai" trocando só estes valores — nenhum componente usa cor
- * hardcoded. Placeholders de acento/raridade já seguem a direção do plano (ciano/violeta, tiers loot)
- * para não precisar reescrever classes depois.
+ * Tokens do design system — Trophy Hunter (style tile v0.1 APROVADO).
+ * Fonte de verdade: design/tokens.css e design/style-tile.html. Os nomes seguem os namespaces do
+ * Tailwind v4 (--color-*, --font-*, --text-*, --radius-*, --shadow-*, --ease-*, --breakpoint-*),
+ * então viram utilities (bg-surface-2, text-neon-cyan, font-display, text-h2…). Tokens fora dos
+ * namespaces (chanfro, duração, z, glow, scanline, tv) ficam em :root como variáveis comuns.
  */
 @theme {
-  /* Superfícies e texto */
-  --color-canvas: #07080d;
-  --color-surface: #11141d;
-  --color-surface-2: #171b27;
-  --color-elevated: #1d2231;
-  --color-border: #262c3a;
-  --color-border-strong: #343b4d;
-  --color-text: #e6e9f0;
-  --color-muted: #9aa3b2;
-  --color-faint: #6b7385;
+  /* Superfícies (dark "console") */
+  --color-bg-0: #07080d;
+  --color-bg-1: #0b0d15;
+  --color-surface-1: #10131e;
+  --color-surface-2: #161b2a;
+  --color-surface-3: #1f2539;
+  --color-glass: rgb(16 19 30 / 0.72);
+  --color-scrim: rgb(4 5 9 / 0.72);
 
-  /* Acentos (placeholder — direção "console" do plano) */
-  --color-accent: #3df5ff;
-  --color-accent-foreground: #04121a;
-  --color-accent-2: #8b5cf6;
+  /* Bordas */
+  --color-border-subtle: rgb(148 163 200 / 0.1);
+  --color-border: rgb(148 163 200 / 0.2);
+  --color-border-strong: rgb(61 245 255 / 0.5);
 
-  /* Estados */
-  --color-success: #3ddc97;
-  --color-warning: #f5c542;
-  --color-danger: #ff5c73;
-  --color-danger-foreground: #1a0509;
+  /* Texto */
+  --color-text-1: #eef2fa;
+  --color-text-2: #a9b3c7;
+  --color-text-3: #8590a6;
+  --color-text-disabled: #4a5368;
+  --color-text-on-accent: #04121a;
+
+  /* Neon */
+  --color-neon-cyan: #3df5ff;
+  --color-neon-violet: #8b5cf6;
+  --color-neon-violet-text: #b39dff;
+  --color-focus: #3df5ff;
 
   /* Plataformas */
-  --color-steam: #66c0f4;
   --color-psn: #0070d1;
+  --color-psn-deep: #003791;
+  --color-psn-text: #5aa9ff;
+  --color-steam-bg: #1b2838;
+  --color-steam-bg-2: #2a475e;
+  --color-steam: #66c0f4;
+  --color-steam-green: #a4d007;
 
-  /* Troféus / raridade loot (ícone + rótulo, nunca só cor) */
-  --color-bronze: #cd7f32;
-  --color-silver: #c4ccd8;
-  --color-gold: #f5c542;
-  --color-platinum: #b8a9ff;
-  --color-rarity-common: #9aa3b2;
-  --color-rarity-uncommon: #3ddc97;
-  --color-rarity-rare: #4aa3ff;
-  --color-rarity-epic: #8b5cf6;
-  --color-rarity-legendary: #ff9f43;
+  /* Semânticas */
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-info: #60a5fa;
 
-  /* Tipografia (famílias do plano entram com o style tile; por ora stack do sistema) */
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: var(--font-sans);
-  --font-mono: ui-monospace, "SFMono-Regular", "Menlo", monospace;
+  /* Troféus */
+  --color-trophy-bronze: #cd7f32;
+  --color-trophy-bronze-hi: #f0b27a;
+  --color-trophy-silver: #c4ccd8;
+  --color-trophy-silver-hi: #f4f7fb;
+  --color-trophy-gold: #f5c542;
+  --color-trophy-gold-hi: #fff1b8;
+  --color-plat-1: #e5f0ff;
+  --color-plat-2: #b8a9ff;
+  --color-plat-3: #7fe7ff;
+  --color-plat-4: #ffd6f5;
+  --color-achievement: #66c0f4;
 
-  /* Raios e sombras */
-  --radius: 0.625rem;
-  --radius-sm: 0.375rem;
-  --radius-lg: 1rem;
+  /* Raridade (loot) */
+  --color-rarity-common: #9aa4b2;
+  --color-rarity-uncommon: #4ade80;
+  --color-rarity-rare: #4c9bff;
+  --color-rarity-epic: #b57bff;
+  --color-rarity-legendary: #ff9f3d;
+
+  /* Aliases semânticos (mantêm as primitivas genéricas simples) */
+  --color-canvas: var(--color-bg-0);
+  --color-surface: var(--color-surface-1);
+  --color-elevated: var(--color-surface-3);
+  --color-text: var(--color-text-1);
+  --color-muted: var(--color-text-2);
+  --color-faint: var(--color-text-3);
+  --color-accent: var(--color-neon-cyan);
+  --color-accent-foreground: var(--color-text-on-accent);
+
+  /* Tipografia (self-hosted via @fontsource — ver styles.css) */
+  --font-display: "Chakra Petch", "Oxanium", system-ui, sans-serif;
+  --font-numeric: "Rajdhani", "Chakra Petch", system-ui, sans-serif;
+  --font-sans: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+  --text-caption: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-h4: clamp(1.125rem, 1rem + 0.4vw, 1.25rem);
+  --text-h3: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --text-h2: clamp(1.5rem, 1.2rem + 1.2vw, 2.25rem);
+  --text-h1: clamp(2rem, 1.4rem + 2.6vw, 3.5rem);
+  --text-stat: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
+  --text-hero: clamp(3rem, 1.8rem + 5vw, 6rem);
+
+  /* Raios */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+
+  /* Sombras / glow (intensidade por --glow-mix, default médio) */
+  --shadow-panel: 0 18px 40px -18px rgb(0 0 0 / 0.8);
+  --shadow-glow-cyan: 0 0 18px color-mix(in oklab, var(--color-neon-cyan) var(--glow-mix), transparent);
+  --shadow-glow-violet: 0 0 22px color-mix(in oklab, var(--color-neon-violet) var(--glow-mix), transparent);
+  --shadow-glow-gold: 0 0 20px color-mix(in oklab, var(--color-trophy-gold) var(--glow-mix), transparent);
+
+  /* Easing */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-snap: cubic-bezier(0.3, 1.45, 0.5, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  /* Breakpoints */
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+}
+
+:root {
+  /* Gradientes da platina (única coisa iridescente da UI) */
+  --gradient-platinum: conic-gradient(
+    from 0deg,
+    var(--color-plat-1),
+    var(--color-plat-2),
+    var(--color-plat-3),
+    var(--color-plat-4),
+    var(--color-plat-1)
+  );
+  --gradient-platinum-linear: linear-gradient(
+    120deg,
+    var(--color-plat-1) 0%,
+    var(--color-plat-2) 30%,
+    var(--color-plat-3) 60%,
+    var(--color-plat-4) 85%,
+    var(--color-plat-1) 100%
+  );
+
+  /* Chanfros */
+  --chamfer-sm: 6px;
+  --chamfer-md: 12px;
+  --chamfer-lg: 20px;
+
+  /* Tracking / leading HUD */
+  --tracking-hud: 0.14em;
+  --leading-body: 1.55;
+
+  /* Movimento */
+  --dur-instant: 80ms;
+  --dur-fast: 140ms;
+  --dur-base: 220ms;
+  --dur-slow: 380ms;
+  --dur-count: 900ms;
+
+  /* Camadas */
+  --z-sticky: 100;
+  --z-overlay: 1000;
+  --z-toast: 1100;
+  --z-scanlines: 9000;
+
+  /* Neon MÉDIO por padrão (data-glow="low|high" troca; vira setting futura) */
+  --glow-mix: 38%;
+  --scanline-opacity: 0.045;
+}
+
+:root[data-glow="low"] {
+  --glow-mix: 22%;
+  --scanline-opacity: 0.025;
+}
+:root[data-glow="high"] {
+  --glow-mix: 60%;
+  --scanline-opacity: 0.07;
+}
+
+/* Movimento reduzido: sistema OU toggle do app (data-motion="reduce") zera durações */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-instant: 0ms;
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+    --dur-count: 0ms;
+  }
+}
+:root[data-motion="reduce"] {
+  --dur-instant: 0ms;
+  --dur-fast: 0ms;
+  --dur-base: 0ms;
+  --dur-slow: 0ms;
+  --dur-count: 0ms;
 }
 
 @layer base {
@@ -64,28 +202,49 @@
   }
 
   body {
-    background-color: var(--color-canvas);
-    color: var(--color-text);
+    background-color: var(--color-bg-0);
+    color: var(--color-text-1);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Foco sempre visível e consistente (acessibilidade). */
-  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
-    border-radius: var(--radius-sm);
+  /* Grade de fundo que some nas bordas (atrás do conteúdo). */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      linear-gradient(rgb(148 163 200 / 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(148 163 200 / 0.035) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 80%);
   }
 
-  /* `--th-motion` desliga transições declarativas quando o usuário pede menos movimento. */
-  :root {
-    --th-motion: 1;
+  /* Scanlines sutis globais (4–5%), por cima de tudo mas sem capturar cliques. */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: var(--z-scanlines);
+    background: repeating-linear-gradient(
+      to bottom,
+      rgb(255 255 255 / var(--scanline-opacity)) 0 1px,
+      transparent 1px 3px
+    );
+    mix-blend-mode: overlay;
   }
+
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    :root {
-      --th-motion: 0;
-    }
     *,
     *::before,
     *::after {
@@ -93,6 +252,92 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.001ms !important;
       scroll-behavior: auto !important;
+    }
+  }
+  :root[data-motion="reduce"] *,
+  :root[data-motion="reduce"] *::before,
+  :root[data-motion="reduce"] *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Chanfro HUD como utilities (clip-path com --c). */
+@utility chamfer-sm {
+  --c: var(--chamfer-sm);
+  clip-path: polygon(var(--c) 0, 100% 0, 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, 0 100%, 0 var(--c));
+}
+@utility chamfer-md {
+  --c: var(--chamfer-md);
+  clip-path: polygon(var(--c) 0, 100% 0, 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, 0 100%, 0 var(--c));
+}
+@utility chamfer-lg {
+  --c: var(--chamfer-lg);
+  clip-path: polygon(var(--c) 0, 100% 0, 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, 0 100%, 0 var(--c));
+}
+
+@layer components {
+  /* Rótulo técnico HUD (caixa-alta, tracking largo). */
+  .hud-label {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-caption);
+    letter-spacing: var(--tracking-hud);
+    text-transform: uppercase;
+    color: var(--color-text-3);
+  }
+
+  /* Painel chanfrado com borda em gradiente ciano→violeta. */
+  .panel {
+    --c: var(--chamfer-lg);
+    position: relative;
+    isolation: isolate;
+    clip-path: polygon(var(--c) 0, 100% 0, 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, 0 100%, 0 var(--c));
+    background: linear-gradient(
+      135deg,
+      rgb(61 245 255 / 0.55),
+      var(--color-border) 22%,
+      var(--color-border-subtle) 60%,
+      rgb(139 92 246 / 0.45)
+    );
+  }
+  .panel::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    z-index: -1;
+    clip-path: polygon(
+      calc(var(--c) - 0.4px) 0,
+      100% 0,
+      100% calc(100% - var(--c) + 0.4px),
+      calc(100% - var(--c) + 0.4px) 100%,
+      0 100%,
+      0 calc(var(--c) - 0.4px)
+    );
+    background: var(--panel-bg, linear-gradient(180deg, var(--color-surface-1), rgb(12 14 22 / 0.96)));
+  }
+  .panel-sm {
+    --c: var(--chamfer-md);
+  }
+
+  /* Shimmer de skeleton. */
+  .skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-surface-2);
+  }
+  .skeleton-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgb(148 163 200 / 0.1), transparent);
+    transform: translateX(-100%);
+    animation: th-skel 1.4s var(--ease-in-out) infinite;
+  }
+  @keyframes th-skel {
+    to {
+      transform: translateX(100%);
     }
   }
 }

@@ -3,14 +3,22 @@ import { cn } from "@/lib/utils";
 
 export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="w-full overflow-x-auto rounded-[var(--radius-lg)] border border-border">
+    <div className="chamfer-md w-full overflow-x-auto bg-surface-1 shadow-[inset_0_0_0_1px_var(--color-border-subtle)]">
       <table className={cn("w-full border-collapse text-sm", className)} {...props} />
     </div>
   );
 }
 
 export function THead({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className={cn("bg-surface-2 text-left text-xs uppercase tracking-wide text-muted", className)} {...props} />;
+  return (
+    <thead
+      className={cn(
+        "bg-surface-2 text-left font-display text-[11px] uppercase tracking-[0.12em] text-text-3",
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 export function TBody(props: HTMLAttributes<HTMLTableSectionElement>) {
@@ -18,13 +26,13 @@ export function TBody(props: HTMLAttributes<HTMLTableSectionElement>) {
 }
 
 export function TR({ className, ...props }: HTMLAttributes<HTMLTableRowElement>) {
-  return <tr className={cn("border-t border-border", className)} {...props} />;
+  return <tr className={cn("border-t border-border-subtle", className)} {...props} />;
 }
 
 export function TH({ className, ...props }: ThHTMLAttributes<HTMLTableCellElement>) {
-  return <th className={cn("px-4 py-3 font-medium", className)} {...props} />;
+  return <th className={cn("px-4 py-3 font-semibold", className)} {...props} />;
 }
 
 export function TD({ className, ...props }: TdHTMLAttributes<HTMLTableCellElement>) {
-  return <td className={cn("px-4 py-3 text-text", className)} {...props} />;
+  return <td className={cn("px-4 py-3 text-text-1", className)} {...props} />;
 }

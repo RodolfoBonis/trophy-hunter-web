@@ -1,6 +1,7 @@
 import { type HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
+/** Placeholder com shimmer HUD (ver tokens: .skeleton-shimmer). */
 export function Skeleton({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("animate-pulse rounded-[var(--radius-sm)] bg-surface-2", className)} {...props} />;
+  return <div className={cn("skeleton-shimmer chamfer-sm", className)} {...props} />;
 }
