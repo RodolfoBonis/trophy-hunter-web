@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 # Trophy Hunter web (Vite SPA/PWA) → nginx não-root. Uma imagem serve qualquer ambiente: a
 # configuração (OIDC, API) é injetada no start via /config.js (ver docker/05-app-config.envsh), e o
-# proxy /api é apontado por API_UPSTREAM no start do container.
+# a origem da API (subdomínio próprio) vem de API_BASE_URL no start do container.
 
 FROM node:22-alpine AS base
 RUN corepack enable

@@ -10,7 +10,7 @@ import { CacheFirst, NetworkOnly } from "workbox-strategies";
  * Service Worker do Trophy Hunter (estratégia `injectManifest` do vite-plugin-pwa).
  * - precache dos assets do build (`self.__WB_MANIFEST`);
  * - CacheFirst para capas/ícones de jogos (hosts da Steam/PSN) com expiração ~30 dias;
- * - NetworkOnly para a API (/api) e qualquer coisa com SSE — nunca cacheamos dados mutáveis;
+ * - NetworkOnly para a API (qualquer origem com /api/, ex. api.trophy.rb.lab) e SSE — nunca cacheamos dados mutáveis;
  * - stubs de `push`/`notificationclick` (push real é a Fase 5).
  */
 

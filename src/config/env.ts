@@ -22,7 +22,7 @@ const configSchema = z.object({
    * `trophy-hunter-user` (concedida via /admins), não do scope.
    */
   oidcScope: z.string().min(1),
-  /** Base da API, mesma origem do app (o nginx/dev-proxy encaminha para a API Go que serve /api/v1). */
+  /** Base da API (origem do subdomínio api.<app>.<domínio> + "/api"; o client acrescenta /v1/...). */
   apiBase: z.string().transform((value) => value.replace(/\/+$/, "")),
   /** Sessão fake (sem Keycloak) — só em `--mode mock` (dev local e e2e). */
   authMode: z.enum(["oidc", "mock"]),

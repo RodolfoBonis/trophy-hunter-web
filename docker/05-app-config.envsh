@@ -1,19 +1,23 @@
 #!/bin/sh
 # Executado (sourced, por ser .envsh) pelo entrypoint do nginx ANTES do 20-envsubst-on-templates.
 # 1) Gera /config.js com a configuração pública do ambiente (nada secreto: client OIDC é público).
-# 2) Exporta ${API_UPSTREAM} (proxy /api) e as origens da CSP (connect-src/frame-src) para o template.
+# 2) Exporta as origens da CSP (connect-src/frame-src) para o template do nginx.
+# A API vive no próprio subdomínio (padrão api.<app>.<domínio>): o SPA chama API_BASE_URL direto (CORS).
 # Os `:?` abaixo derrubam o start se faltar env obrigatória.
 
 : "${OIDC_AUTHORITY:?defina OIDC_AUTHORITY (ex.: https://auth.rb.lab/realms/platform)}"
-: "${API_UPSTREAM:?defina API_UPSTREAM (ex.: http://trophy-hunter-api-svc:8080)}"
+: "${API_BASE_URL:?defina API_BASE_URL (ex.: https://api.trophy.rb.lab)}"
 OIDC_CLIENT_ID="${OIDC_CLIENT_ID:-trophy-hunter-web}"
 OIDC_SCOPE="${OIDC_SCOPE:-openid profile email trophy-hunter-api}"
 
 fail() { echo "app-config: $1" >&2; exit 1; }
 # Valida formatos ANTES de usar: os valores vão para o JS e para a conf do nginx (evita injeção).
 URL_RE='^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[A-Za-z0-9._~%/-]*)?$'
-UPSTREAM_RE='^https?://[A-Za-z0-9.-]+(:[0-9]{1,5})?$'
-[ "${APP_ALLOW_HTTP:-false}" = "true" ] && URL_RE='^https?://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[A-Za-z0-9._~%/-]*)?$'
+ORIGIN_RE='^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?$'
+if [ "${APP_ALLOW_HTTP:-false}" = "true" ]; then
+  URL_RE='^https?://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[A-Za-z0-9._~%/-]*)?$'
+  ORIGIN_RE='^https?://[A-Za-z0-9.-]+(:[0-9]{1,5})?$'
+fi
 ID_RE='^[A-Za-z0-9._-]+$'
 SCOPE_RE='^[A-Za-z0-9 ._:-]+$'
 NL='
@@ -23,7 +27,7 @@ matches() {
   printf '%s' "$1" | grep -Eq "$2"
 }
 matches "$OIDC_AUTHORITY" "$URL_RE" || fail "OIDC_AUTHORITY inválida (esperado https://host/realms/…): $OIDC_AUTHORITY"
-matches "$API_UPSTREAM" "$UPSTREAM_RE" || fail "API_UPSTREAM inválida (esperado http(s)://host[:porta], sem caminho): $API_UPSTREAM"
+matches "$API_BASE_URL" "$ORIGIN_RE" || fail "API_BASE_URL inválida (esperado https://host[:porta], sem caminho): $API_BASE_URL"
 matches "$OIDC_CLIENT_ID" "$ID_RE" || fail "OIDC_CLIENT_ID inválido"
 matches "$OIDC_SCOPE" "$SCOPE_RE" || fail "OIDC_SCOPE inválido"
 
@@ -33,25 +37,19 @@ origin() { printf '%s' "$1" | sed -E 's#^(https?://[^/]+).*#\1#'; }
 
 CONFIG_DIR="${APP_CONFIG_DIR:-/tmp/app-config}"
 mkdir -p "$CONFIG_DIR" "${NGINX_ENVSUBST_OUTPUT_DIR:-/tmp/nginx-conf.d}"
-# apiBase é sempre /api (mesma origem; o proxy acima encaminha para a API Go).
+# apiBase = origem da API + /api (o client acrescenta /v1/...).
 cat > "$CONFIG_DIR/config.js" <<JS
 window.__APP_CONFIG__ = {
   oidcAuthority: "$(js "$OIDC_AUTHORITY")",
   oidcClientId: "$(js "$OIDC_CLIENT_ID")",
   oidcScope: "$(js "$OIDC_SCOPE")",
-  apiBase: "/api"
+  apiBase: "$(js "$API_BASE_URL")/api"
 };
 JS
 
-# Resolver para o proxy_pass por variável: 1º nameserver do resolv.conf (kube-dns no cluster,
-# 127.0.0.11 no Docker). Sem isso o nginx não resolve o upstream em runtime.
-APP_RESOLVER="$(awk '/^nameserver/ {print $2; exit}' /etc/resolv.conf 2>/dev/null)"
-export APP_RESOLVER="${APP_RESOLVER:-127.0.0.11}"
-
 AUTH_ORIGIN="$(origin "$OIDC_AUTHORITY")"
-# connect-src: self (chamadas /api same-origin) + Keycloak (discovery, token, silent renew via iframe).
-export CSP_CONNECT_SRC="'self' $AUTH_ORIGIN"
+# connect-src: self + API (subdomínio próprio) + Keycloak (discovery, token, silent renew via iframe).
+export CSP_CONNECT_SRC="'self' $API_BASE_URL $AUTH_ORIGIN"
 export CSP_FRAME_SRC="$AUTH_ORIGIN"
-export API_UPSTREAM
 # Só estas variáveis são substituídas no template (o resto, como $uri, fica para o nginx).
-export NGINX_ENVSUBST_FILTER='^(CSP_|API_UPSTREAM$|APP_RESOLVER$)'
+export NGINX_ENVSUBST_FILTER='^CSP_'

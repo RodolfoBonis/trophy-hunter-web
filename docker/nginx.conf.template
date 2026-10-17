@@ -1,5 +1,5 @@
-# SPA do Trophy Hunter + proxy /api. Gerado de /etc/nginx/templates no start
-# (envsubst só de ${API_UPSTREAM} e ${CSP_*}; $uri etc. ficam para o nginx).
+# SPA do Trophy Hunter. Gerado de /etc/nginx/templates no start (envsubst só de ${CSP_*};
+# $uri etc. ficam para o nginx). A API NÃO passa por aqui: vive em api.<app>.<domínio> (CORS).
 server {
     listen 8080;
     server_name _;
@@ -10,7 +10,7 @@ server {
     gzip_types text/css application/javascript application/json image/svg+xml application/manifest+json;
     gzip_min_length 1024;
 
-    # CSP: self + a origem do Keycloak (connect-src/frame-src p/ login e silent renew); imagens dos
+    # CSP: self + API + a origem do Keycloak (connect-src/frame-src p/ login e silent renew); imagens dos
     # CDNs de Steam/PSN; data:/blob: p/ capas em cache do SW. frame-ancestors none (não embutível).
     set $csp "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.steamstatic.com https://*.playstation.net https://*.playstation.com; font-src 'self' data:; connect-src ${CSP_CONNECT_SRC}; frame-src ${CSP_FRAME_SRC}; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' ${CSP_FRAME_SRC}; object-src 'none'";
 
@@ -18,26 +18,6 @@ server {
         access_log off;
         default_type text/plain;
         return 200 "ok\n";
-    }
-
-    # Proxy da API. Sem reescrita de caminho: a API Go serve /api/v1 (o front chama /api/v1/...).
-    # SSE: http/1.1, sem buffer, sem cache, timeout longo.
-    location /api/ {
-        # proxy_pass por variável + resolver: o nginx sobe mesmo se a API ainda não estiver de pé
-        # (resolve o host por request). $request_uri preserva /api/v1/... sem reescrita de caminho.
-        resolver ${APP_RESOLVER} valid=30s;
-        set $api_upstream "${API_UPSTREAM}";
-        proxy_pass $api_upstream$request_uri;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Connection "";
-        proxy_buffering off;
-        proxy_cache off;
-        proxy_read_timeout 3600s;
-        proxy_send_timeout 3600s;
     }
 
     # Configuração de runtime (gerada pelo 05-app-config.envsh) — nunca cachear.

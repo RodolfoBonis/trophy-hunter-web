@@ -83,10 +83,12 @@ jobs:
         run: |
           docker run -d --name web -p 8080:8080 --read-only --tmpfs /tmp \
             -e OIDC_AUTHORITY=https://auth.rb.lab/realms/platform \
-            -e API_UPSTREAM=http://trophy-hunter-api-svc:8080 \
+            -e API_BASE_URL=https://api.trophy.rb.lab \
             trophy-hunter-web:ci
           for i in $(seq 1 20); do curl -fsS http://localhost:8080/healthz && break; sleep 1; done
           curl -fsS http://localhost:8080/config.js | grep -q 'trophy-hunter-web'
           curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/library | grep -q 200
           curl -fsSI http://localhost:8080/ | grep -qi 'content-security-policy'
+          curl -fsS http://localhost:8080/config.js | grep -q 'https://api.trophy.rb.lab/api'
+          curl -fsSI http://localhost:8080/ | grep -i 'content-security-policy' | grep -q 'https://api.trophy.rb.lab'
           docker rm -f web

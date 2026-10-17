@@ -19,7 +19,7 @@ Tailwind v4 · Radix (estilo shadcn, `cva` + `tailwind-merge`) · `motion` · lu
 ```bash
 pnpm install
 
-# Dev contra a API Go real (proxy /api → VITE_API_PROXY, default http://localhost:8080).
+# Dev contra a API Go local (VITE_API_BASE=http://localhost:8080/api; a API libera o CORS de localhost:5173).
 # Copie .env.example → .env.local e ajuste OIDC/API se precisar.
 pnpm dev
 
@@ -68,18 +68,19 @@ Colima: `export DOCKER_HOST=unix:///Users/<você>/.colima/default/docker.sock`.
 ## Configuração de runtime
 
 Uma imagem serve qualquer ambiente. No start do container, `docker/05-app-config.envsh` gera
-`/config.js` (`window.__APP_CONFIG__`, validado por zod em `src/config/env.ts`) e configura o proxy
-`/api` e a CSP do nginx a partir destas envs:
+`/config.js` (`window.__APP_CONFIG__`, validado por zod em `src/config/env.ts`) e a CSP do nginx a
+partir destas envs:
 
 | Env | Obrigatória | Default | Uso |
 |---|---|---|---|
 | `OIDC_AUTHORITY` | sim | — | issuer do Keycloak (ex.: `https://auth.rb.lab/realms/platform`) |
 | `OIDC_CLIENT_ID` | não | `trophy-hunter-web` | client público PKCE |
 | `OIDC_SCOPE` | não | `openid profile email trophy-hunter-api` | scopes; `trophy-hunter-api` é o *audience scope* (injeta `aud` no token) |
-| `API_UPSTREAM` | sim | — | destino do proxy `/api` (ex.: `http://trophy-hunter-api-svc:8080`) — **sem caminho** |
+| `API_BASE_URL` | sim | — | origem da API, no padrão `api.<app>.<domínio>` (ex.: `https://api.trophy.rb.lab`) — **sem caminho** |
 | `APP_ALLOW_HTTP` | não | `false` | permite `http://` na authority (só dev) |
 
-`apiBase` é sempre `/api` (mesma origem; o nginx encaminha para a API Go, que serve `/api/v1`).
+`apiBase` = `API_BASE_URL` + `/api`. O SPA chama a API direto (cross-origin, CORS na API); o nginx
+só serve estáticos. A CSP `connect-src` inclui essa origem.
 Em dev usamos os `VITE_*` (`.env.local` / `.env.mock`).
 
 ## Decisões

@@ -13,12 +13,7 @@ import { VitePWA } from "vite-plugin-pwa";
  * desligado (`devOptions.enabled: false`) e no modo mock a gente nem registra — quem controla o
  * cache ali é o MSW.
  */
-export default defineConfig(({ mode }) => {
-  const isMock = mode === "mock";
-  // Em dev (sem nginx) o `/api` precisa de um proxy para a API Go local. No modo mock o MSW
-  // intercepta antes, então o proxy não é usado.
-  const apiProxyTarget = process.env.VITE_API_PROXY ?? "http://localhost:8080";
-
+export default defineConfig(() => {
   return {
     plugins: [
       react(),
@@ -43,18 +38,6 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       strictPort: true,
-      proxy: isMock
-        ? undefined
-        : {
-            "/api": {
-              target: apiProxyTarget,
-              changeOrigin: true,
-              // SSE: sem buffer e timeout longo (mesma intenção do nginx em produção).
-              configure: (proxy) => {
-                proxy.on("proxyReq", (proxyReq) => proxyReq.setHeader("X-Forwarded-Proto", "http"));
-              },
-            },
-          },
     },
     preview: { port: 4173, strictPort: true },
   };
