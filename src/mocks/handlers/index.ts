@@ -33,6 +33,17 @@ function accountsOf(row: MockGameRow, only?: string | null): GameAccount[] {
     .map(toAccount);
 }
 
+/** Cenário `library-many`: 130 jogos sintéticos (testa a rolagem infinita da biblioteca). */
+function manyGames(): MockGameRow[] {
+  const base = db.games[0]!;
+  return Array.from({ length: 130 }, (_, i) => ({
+    ...base,
+    id: `00000000-0000-0000-0000-${String(i).padStart(12, "0")}`,
+    external_id: `9${String(i).padStart(5, "0")}`,
+    title: `Jogo ${String(i + 1).padStart(3, "0")}`,
+  }));
+}
+
 export const handlers: HttpHandler[] = [
   /* Perfil */
   http.get(`${API}/me`, () => HttpResponse.json({ subject: "mock-user", name: "Rodolfo de Bonis", email: "rodolfo@rb.lab" })),
@@ -48,7 +59,9 @@ export const handlers: HttpHandler[] = [
     const limit = Number(url.searchParams.get("limit") ?? 50);
     const offset = Number(url.searchParams.get("offset") ?? 0);
 
-    const rows = hasScenario("library-empty") ? [] : db.games.filter((g) => !only || g.integration_id === only);
+    const rows = hasScenario("library-empty")
+      ? []
+      : (hasScenario("library-many") ? manyGames() : db.games).filter((g) => !only || g.integration_id === only);
     const best = new Map<string, MockGameRow>();
     for (const row of [...rows].sort(moreAdvancedFirst)) {
       if (!best.has(gameKey(row))) best.set(gameKey(row), row);

@@ -153,6 +153,8 @@ export const gameSchema = z.object({
   title: z.string(),
   icon: z.string().optional(),
   cover: z.string().optional(),
+  /** Arte horizontal (Steam header). Vazio → usar cover. */
+  hero: z.string().optional(),
   platforms: z.array(z.string()).optional(),
   has_achievements: z.boolean(),
   has_platinum: z.boolean().optional(),
@@ -187,6 +189,8 @@ const accountListSchema = z
  */
 export const gameListItemSchema = gameSchema.extend({
   progress: progressSummarySchema,
+  /** Desbloqueio mais recente (conta best). */
+  last_unlock_at: timestamp.nullish(),
   accounts: accountListSchema,
 });
 export type GameListItem = z.infer<typeof gameListItemSchema>;

@@ -1,14 +1,12 @@
-import { useState, type ReactNode } from "react";
-import { Link } from "react-router";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Platform } from "@/api/schemas";
-import { GameCover } from "@/design-system/components/GameCover";
-import { PlatformBadge } from "@/design-system/components/PlatformBadge";
-import { ProgressRing } from "@/design-system/components/ProgressRing";
+import { GameCard } from "@/design-system/components/GameCard";
+import { Button } from "@/design-system/components/ui/button";
 import { Input } from "@/design-system/components/ui/input";
 import { Skeleton } from "@/design-system/components/ui/skeleton";
 import { useIntegrations } from "@/features/integrations/queries";
 import { cn } from "@/lib/utils";
-import { useLibrary } from "./queries";
+import { LIBRARY_PAGE_SIZE, useLibrary } from "./queries";
 
 function FilterChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
   return (
@@ -50,6 +48,8 @@ export default function LibraryPage() {
   const [account, setAccount] = useState<string>("");
   const integrations = useIntegrations();
   const query = useLibrary({ q: q || undefined, platform, integration_id: account || undefined });
+  const games = query.data?.pages.flatMap((p) => p.items) ?? [];
+  const total = query.data?.pages[0]?.total;
   // Só faz sentido filtrar por conta quando existe mais de uma.
   const accounts = integrations.data ?? [];
 
@@ -75,6 +75,11 @@ export default function LibraryPage() {
             PSN
           </FilterChip>
         </div>
+        {total !== undefined && (
+          <span className="ml-auto font-numeric text-sm tabular-nums text-text-2" aria-live="polite">
+            <span className="font-semibold text-text-1">{total}</span> {total === 1 ? "jogo" : "jogos"}
+          </span>
+        )}
         {accounts.length > 1 && (
           <label className="flex items-center gap-2">
             <span className="hud-label text-text-3">Conta</span>
@@ -95,11 +100,12 @@ export default function LibraryPage() {
       </div>
 
       {query.isPending && (
-        <ul className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <li key={i} className="flex flex-col gap-2">
-              <Skeleton className="aspect-[3/4] w-full" />
-              <Skeleton className="h-3.5 w-3/4" />
+        <ul className="gcard-grid" aria-busy="true" aria-label="Carregando biblioteca">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <li key={i} className="flex flex-col gap-3">
+              <Skeleton className="aspect-[16/10] w-full" />
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-3 w-1/3" />
             </li>
           ))}
         </ul>
@@ -111,71 +117,85 @@ export default function LibraryPage() {
         </p>
       )}
 
-      {query.data && query.data.items.length === 0 && (
+      {query.data && games.length === 0 && (
         <p className="text-sm text-text-2">Nenhum jogo ainda. Conecte uma integração e sincronize.</p>
       )}
 
-      {query.data && query.data.items.length > 0 && (
-        <ul className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4">
-          {query.data.items.map((game) => {
-            const pct = Math.round(game.progress.completion_pct * 100);
-            return (
-              <li key={game.id}>
-                <Link
-                  to={`/games/${game.id}`}
-                  className="group flex flex-col gap-2.5 focus-visible:outline-none"
-                >
-                  <div className="relative">
-                    {/* moldura chanfrada com borda em gradiente que acende no hover/foco */}
-                    <div
-                      className="chamfer-md absolute -inset-px opacity-25 transition-opacity duration-[var(--dur-fast)] group-hover:opacity-90 group-focus-visible:opacity-90"
-                      style={{
-                        background:
-                          "linear-gradient(140deg,var(--color-neon-cyan),transparent 35%,transparent 70%,var(--color-neon-violet))",
-                      }}
-                      aria-hidden
-                    />
-                    <div className="chamfer-md relative aspect-[3/4] overflow-hidden bg-surface-2">
-                      <GameCover
-                        cover={game.cover}
-                        title={game.title}
-                        platform={game.platform}
-                        externalId={game.external_id}
-                      />
-                      <div className="absolute left-2 top-2">
-                        <PlatformBadge platform={game.platform} />
-                      </div>
-                      <div className="absolute bottom-2 right-2 rounded-full bg-bg-0/70 p-0.5 backdrop-blur-sm">
-                        <ProgressRing
-                          value={pct}
-                          size={44}
-                          strokeWidth={10}
-                          platinum={game.progress.platinum_earned}
-                          color={game.platform === "steam" ? "var(--color-steam)" : "var(--color-neon-cyan)"}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <p className="truncate font-display text-sm font-semibold text-text-1" title={game.title}>
-                      {game.title}
-                    </p>
-                    <p className="flex items-center gap-2 font-numeric text-xs tabular-nums text-text-2">
-                      <span>
-                        {game.progress.earned}/{game.progress.total}
-                        {game.progress.platinum_earned ? " · Platinado" : ""}
-                      </span>
-                      {game.accounts.length > 1 && (
-                        <AccountsChip best={game.accounts[0]?.label ?? ""} count={game.accounts.length} />
-                      )}
-                    </p>
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+      {games.length > 0 && (
+        <>
+          <ul className="gcard-grid">
+            {games.map((game, i) => {
+              const pct = game.progress.completion_pct * 100;
+              const best = game.accounts[0];
+              return (
+                <li key={game.id}>
+                  <GameCard
+                    to={`/games/${game.id}`}
+                    index={i % LIBRARY_PAGE_SIZE}
+                    title={game.title}
+                    platform={game.platform}
+                    externalId={game.external_id}
+                    cover={game.cover}
+                    hero={game.hero}
+                    pct={pct}
+                    earned={game.progress.earned}
+                    total={game.progress.total}
+                    platinum={game.progress.platinum_earned ?? false}
+                    transitionName={`game-art-${game.id}`}
+                    meta={game.last_unlock_at ? <> · última: {lastUnlock(game.last_unlock_at)}</> : null}
+                    footer={
+                      game.accounts.length > 1 && best ? (
+                        <AccountsChip best={best.label} count={game.accounts.length} />
+                      ) : null
+                    }
+                  />
+                </li>
+              );
+            })}
+          </ul>
+          <LoadMore query={query} />
+        </>
       )}
     </section>
+  );
+}
+
+/** "hoje", "ontem", "há 3 dias" ou a data. */
+function lastUnlock(iso: string): string {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (days <= 0) return "hoje";
+  if (days === 1) return "ontem";
+  if (days < 30) return `há ${days} dias`;
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+/**
+ * Carrega a próxima página quando o sentinela entra na tela (IntersectionObserver), com um botão como
+ * alternativa acessível (teclado/leitor de tela e navegadores sem observer).
+ */
+function LoadMore({ query }: { query: ReturnType<typeof useLibrary> }) {
+  const sentinel = useRef<HTMLDivElement>(null);
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
+
+  useEffect(() => {
+    const el = sentinel.current;
+    if (!el || !hasNextPage || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting) && !isFetchingNextPage) void fetchNextPage();
+      },
+      { rootMargin: "600px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  if (!hasNextPage) return null;
+  return (
+    <div ref={sentinel} className="flex justify-center py-4">
+      <Button variant="secondary" onClick={() => void fetchNextPage()} disabled={isFetchingNextPage}>
+        {isFetchingNextPage ? "Carregando…" : "Carregar mais"}
+      </Button>
+    </div>
   );
 }

@@ -20,6 +20,46 @@ const TYPE_LABEL: Record<TrophyType, string> = {
   achievement: "Conquista",
 };
 
+/**
+ * Ícone REAL da conquista/troféu (Steam/PSN) com o glifo do tipo no canto. Bloqueado: ícone de
+ * bloqueio da plataforma (icon_locked) ou o ícone dessaturado + cadeado. Sem ícone (ou 404) → glifo.
+ * Com o spoiler guard ativo, o ícone também fica borrado (alguns ícones entregam o segredo).
+ */
+function TrophyArt({ trophy, spoiler }: { trophy: Trophy; spoiler: boolean }) {
+  const [broken, setBroken] = useState(false);
+  const earned = trophy.earned;
+  const src = earned ? trophy.icon : trophy.icon_locked || trophy.icon;
+  const desaturate = !earned && !trophy.icon_locked;
+  return (
+    <div className="chamfer-sm relative grid size-[52px] place-items-center overflow-hidden bg-bg-1">
+      {src && !broken ? (
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          onError={() => setBroken(true)}
+          className={cn(
+            "size-full object-cover transition-[filter] duration-[var(--dur-base)]",
+            desaturate && "opacity-50 grayscale",
+            spoiler && "blur-[5px]",
+          )}
+        />
+      ) : (
+        <span className={cn(!earned && "opacity-40 grayscale")}>
+          <TrophyIcon type={trophy.type} size={34} />
+        </span>
+      )}
+      {src && !broken && (
+        <span className="absolute left-0.5 top-0.5 rounded-sm bg-bg-0/80 p-px" aria-hidden>
+          <TrophyIcon type={trophy.type} size={14} />
+        </span>
+      )}
+      {!earned && <Lock className="absolute bottom-1 right-1 size-3.5 text-text-1 drop-shadow" aria-hidden />}
+    </div>
+  );
+}
+
 function TrophyRow({ trophy }: { trophy: Trophy }) {
   const [revealed, setRevealed] = useState(false);
   const earned = trophy.earned;
@@ -34,17 +74,7 @@ function TrophyRow({ trophy }: { trophy: Trophy }) {
       )}
     >
       {earned && <span className="absolute inset-y-2.5 left-0 w-[2px] bg-trophy-gold" aria-hidden />}
-      <div
-        className={cn(
-          "chamfer-sm relative grid size-[52px] place-items-center bg-bg-1",
-          !earned && "[&_svg]:opacity-40 [&_svg]:grayscale",
-        )}
-      >
-        <TrophyIcon type={trophy.type} size={34} />
-        {!earned && (
-          <Lock className="absolute bottom-1 right-1 size-3.5 text-text-3" aria-hidden />
-        )}
-      </div>
+      <TrophyArt trophy={trophy} spoiler={spoiler} />
 
       <div className="relative min-w-0">
         {/* Spoiler guard: todo o bloco (nome, descrição, tipo, tags) borra junto; raridade e
@@ -174,11 +204,30 @@ export default function GamePage() {
 
       {query.data && (
         <>
-          <Panel className="flex flex-wrap items-center justify-between gap-5">
-            <div className="flex items-center gap-4">
-              <div className="chamfer-sm hidden w-20 shrink-0 overflow-hidden sm:block" style={{ aspectRatio: "3 / 4" }}>
+          <Panel className="relative isolate flex flex-wrap items-center justify-between gap-5 overflow-hidden">
+            {/* Fundo hero: a arte horizontal desfocada e escurecida (mesma família visual do card). */}
+            <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
+              <div className="absolute inset-[-10%] scale-110 opacity-45 blur-2xl saturate-150">
                 <GameCover
+                  variant="hero"
                   cover={query.data.cover}
+                  hero={query.data.hero}
+                  title={query.data.title}
+                  platform={query.data.platform}
+                  externalId={query.data.external_id}
+                />
+              </div>
+              <div className="absolute inset-0 bg-[linear-gradient(90deg,var(--color-surface-1)_20%,color-mix(in_oklab,var(--color-surface-1)_70%,transparent))]" />
+            </div>
+            <div className="flex items-center gap-5">
+              <div
+                className="chamfer-sm hidden w-44 shrink-0 overflow-hidden shadow-[0_8px_30px_rgb(0_0_0/0.45)] sm:block"
+                style={{ aspectRatio: "16 / 10", viewTransitionName: `game-art-${query.data.id}` }}
+              >
+                <GameCover
+                  variant="hero"
+                  cover={query.data.cover}
+                  hero={query.data.hero}
                   title={query.data.title}
                   platform={query.data.platform}
                   externalId={query.data.external_id}
@@ -202,7 +251,7 @@ export default function GamePage() {
             </div>
             <ProgressRing
               value={Math.round(query.data.progress.completion_pct * 100)}
-              size={96}
+              size={112}
               strokeWidth={10}
               platinum={query.data.progress.platinum_earned}
               color={query.data.platform === "steam" ? "var(--color-steam)" : "var(--color-neon-cyan)"}

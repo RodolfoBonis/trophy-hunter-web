@@ -7,7 +7,17 @@ function steamHeader(appid: string): string {
   return `https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/header.jpg`;
 }
 
-function Placeholder({ title, platform, className }: { title: string; platform: Platform; className?: string }) {
+function Placeholder({
+  title,
+  platform,
+  showTitle,
+  className,
+}: {
+  title: string;
+  platform: Platform;
+  showTitle: boolean;
+  className?: string;
+}) {
   const isPsn = platform === "psn";
   return (
     <div
@@ -21,45 +31,55 @@ function Placeholder({ title, platform, className }: { title: string; platform: 
       <svg width={30} height={30} aria-hidden className={cn("opacity-40", isPsn ? "text-white" : "text-steam")}>
         <use href={isPsn ? "#i-ps" : "#i-steam"} />
       </svg>
-      <span className={cn("line-clamp-3 font-display text-sm font-semibold uppercase leading-tight", isPsn ? "text-white" : "text-[#c7d5e0]")}>
-        {title}
-      </span>
+      {showTitle && (
+        <span className={cn("line-clamp-3 font-display text-sm font-semibold uppercase leading-tight", isPsn ? "text-white" : "text-[#c7d5e0]")}>
+          {title}
+        </span>
+      )}
     </div>
   );
 }
 
 /**
- * Capa do jogo com cadeia de fallback: `cover` → (Steam) header.jpg → placeholder estilizado
- * (gradiente da plataforma + título em display + glifo sutil). Evita o ícone de imagem quebrada.
+ * Arte do jogo com cadeia de fallback, sem ícone de imagem quebrada.
+ * - `variant="cover"` (vertical): cover → hero → (Steam) header.jpg → placeholder.
+ * - `variant="hero"` (horizontal, card 16:10 e cabeçalho): hero → cover → header.jpg → placeholder.
+ * O placeholder é estilizado (gradiente da plataforma + título em display + glifo sutil).
  */
 export function GameCover({
   cover,
+  hero,
+  variant = "cover",
   title,
   platform,
   externalId,
   className,
 }: {
   cover?: string | null;
+  hero?: string | null;
+  variant?: "cover" | "hero";
   title: string;
   platform: Platform;
   externalId?: string;
   className?: string;
 }) {
   const sources = useMemo(() => {
-    const list: string[] = [];
-    if (cover) list.push(cover);
+    const ordered = variant === "hero" ? [hero, cover] : [cover, hero];
+    const list = ordered.filter((s): s is string => Boolean(s));
     if (platform === "steam" && externalId) list.push(steamHeader(externalId));
-    return list;
-  }, [cover, platform, externalId]);
+    return [...new Set(list)];
+  }, [cover, hero, variant, platform, externalId]);
   const [idx, setIdx] = useState(0);
   const src = sources[idx];
 
-  if (!src) return <Placeholder title={title} platform={platform} className={className} />;
+  // Na arte horizontal (card/cabeçalho) o título já aparece por cima; o placeholder fica só com o glifo.
+  if (!src) return <Placeholder title={title} platform={platform} showTitle={variant === "cover"} className={className} />;
   return (
     <img
       src={src}
       alt=""
       loading="lazy"
+      decoding="async"
       className={cn("h-full w-full object-cover", className)}
       onError={() => setIdx((i) => i + 1)}
     />

@@ -183,6 +183,8 @@ export interface components {
             external_id: string;
             has_achievements: boolean;
             has_platinum?: boolean;
+            /** @description Arte horizontal (Steam header). Vazio → use cover. */
+            hero?: string;
             icon?: string;
             /** Format: uuid */
             id: string;
@@ -225,6 +227,11 @@ export interface components {
         /** @description Um item por jogo (platform + external_id). Game/progress são da conta MAIS AVANÇADA (id = game_id dela); accounts lista todas as contas que possuem o jogo, mais avançada primeiro. */
         GameListItem: components["schemas"]["Game"] & {
             accounts: components["schemas"]["GameAccount"][];
+            /**
+             * Format: date-time
+             * @description Desbloqueio mais recente (conta best).
+             */
+            last_unlock_at?: string | null;
             progress: components["schemas"]["ProgressSummary"];
         };
         GameListPage: {

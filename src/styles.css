@@ -12,3 +12,4 @@
 
 @import "tailwindcss";
 @import "./design-system/tokens.css";
+@import "./design-system/game-card.css";

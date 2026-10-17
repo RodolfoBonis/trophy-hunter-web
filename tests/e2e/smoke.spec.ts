@@ -8,8 +8,8 @@ test("biblioteca carrega e a navegação é alcançável por teclado", async ({ 
   await page.goto("/library");
 
   // Dados vindos do MSW.
-  await expect(page.getByText("ELDEN RING")).toBeVisible();
-  await expect(page.getByText("God of War Ragnarök")).toBeVisible();
+  await expect(page.getByRole("link", { name: /^ELDEN RING,/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /^God of War Ragnarök,/ })).toBeVisible();
 
   // O primeiro Tab cai no skip link; segue tabulando até chegar num link da navegação principal.
   const nav = page.getByRole("navigation", { name: "Navegação principal" });
