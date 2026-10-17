@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import type { Platform } from "@/api/schemas";
+import { GameCover } from "@/design-system/components/GameCover";
 import { PlatformBadge } from "@/design-system/components/PlatformBadge";
 import { ProgressRing } from "@/design-system/components/ProgressRing";
 import { Input } from "@/design-system/components/ui/input";
@@ -98,13 +99,12 @@ export default function LibraryPage() {
                       aria-hidden
                     />
                     <div className="chamfer-md relative aspect-[3/4] overflow-hidden bg-surface-2">
-                      {game.cover ? (
-                        <img src={game.cover} alt="" loading="lazy" className="h-full w-full object-cover" />
-                      ) : (
-                        <span className="grid h-full place-items-center px-2 text-center font-display text-sm uppercase text-text-3">
-                          {game.title}
-                        </span>
-                      )}
+                      <GameCover
+                        cover={game.cover}
+                        title={game.title}
+                        platform={game.platform}
+                        externalId={game.external_id}
+                      />
                       <div className="absolute left-2 top-2">
                         <PlatformBadge platform={game.platform} />
                       </div>

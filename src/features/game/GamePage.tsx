@@ -2,6 +2,7 @@ import { ArrowLeft, Check, Eye, Lock } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 import type { Trophy, TrophyType } from "@/api/schemas";
+import { GameCover } from "@/design-system/components/GameCover";
 import { PlatformBadge } from "@/design-system/components/PlatformBadge";
 import { Panel } from "@/design-system/components/Panel";
 import { ProgressRing } from "@/design-system/components/ProgressRing";
@@ -45,23 +46,39 @@ function TrophyRow({ trophy }: { trophy: Trophy }) {
         )}
       </div>
 
-      <div className="min-w-0">
-        <p className={cn("text-[15px] font-semibold leading-snug text-text-1", spoiler && "select-none blur-[6px]")}>
-          {spoiler ? "Troféu oculto" : trophy.name}
-        </p>
-        {trophy.description && (
-          <p className={cn("mt-0.5 text-[13px] leading-snug text-text-2", spoiler && "select-none blur-[6px]")}>
-            {trophy.description}
-          </p>
-        )}
-        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-caption text-text-3">
-          <span className="hud-label">{TYPE_LABEL[trophy.type]}</span>
-          {(trophy.tags ?? []).map((t) => (
-            <span key={t} className="chamfer-sm bg-surface-3 px-1.5 py-0.5 text-[11px] text-text-2">
-              {t}
-            </span>
-          ))}
+      <div className="relative min-w-0">
+        {/* Spoiler guard: todo o bloco (nome, descrição, tipo, tags) borra junto; raridade e
+            estado "bloqueado" seguem visíveis. Ao revelar, o blur sai com animação (reduced-motion
+            zera a duração). */}
+        <div
+          aria-hidden={spoiler}
+          className={cn(
+            "transition-[filter] duration-[var(--dur-base)] ease-[var(--ease-out)]",
+            spoiler && "pointer-events-none select-none blur-[7px]",
+          )}
+        >
+          <p className="text-[15px] font-semibold leading-snug text-text-1">{trophy.name}</p>
+          {trophy.description && (
+            <p className="mt-0.5 text-[13px] leading-snug text-text-2">{trophy.description}</p>
+          )}
+          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-caption text-text-3">
+            <span className="hud-label">{TYPE_LABEL[trophy.type]}</span>
+            {(trophy.tags ?? []).map((t) => (
+              <span key={t} className="chamfer-sm bg-surface-3 px-1.5 py-0.5 text-[11px] text-text-2">
+                {t}
+              </span>
+            ))}
+          </div>
         </div>
+        {spoiler && (
+          <button
+            type="button"
+            onClick={() => setRevealed(true)}
+            className="chamfer-sm absolute inset-0 m-auto inline-flex h-fit w-fit items-center gap-1.5 border border-border-strong bg-bg-0/85 px-3 py-2 font-display text-[12px] font-semibold uppercase tracking-[0.1em] text-neon-cyan"
+          >
+            <Eye className="size-3.5" aria-hidden /> Clique para revelar
+          </button>
+        )}
       </div>
 
       <div className="col-start-2 flex flex-row flex-wrap items-center gap-2 sm:col-start-auto sm:flex-col sm:items-end sm:gap-1.5">
@@ -78,15 +95,6 @@ function TrophyRow({ trophy }: { trophy: Trophy }) {
         {trophy.rarity_pct != null && <RarityBadge pct={trophy.rarity_pct} mini />}
       </div>
 
-      {spoiler && (
-        <button
-          type="button"
-          onClick={() => setRevealed(true)}
-          className="chamfer-sm absolute inset-0 m-auto inline-flex h-fit w-fit items-center gap-1.5 border border-border-strong bg-bg-0/80 px-3 py-2 font-display text-[12px] font-semibold uppercase tracking-[0.1em] text-neon-cyan"
-        >
-          <Eye className="size-3.5" aria-hidden /> Clique para revelar
-        </button>
-      )}
     </li>
   );
 }
@@ -112,15 +120,25 @@ export default function GamePage() {
       {query.data && (
         <>
           <Panel className="flex flex-wrap items-center justify-between gap-5">
-            <div className="flex flex-col gap-2">
-              <PlatformBadge platform={query.data.platform} />
-              <h2 className="font-display text-h3 font-bold uppercase tracking-[0.02em] text-text-1">
-                {query.data.title}
-              </h2>
-              <p className="font-numeric text-sm tabular-nums text-text-2">
-                {query.data.progress.earned}/{query.data.progress.total} troféus
-                {query.data.progress.platinum_earned ? " · Platinado" : ""}
-              </p>
+            <div className="flex items-center gap-4">
+              <div className="chamfer-sm hidden w-20 shrink-0 overflow-hidden sm:block" style={{ aspectRatio: "3 / 4" }}>
+                <GameCover
+                  cover={query.data.cover}
+                  title={query.data.title}
+                  platform={query.data.platform}
+                  externalId={query.data.external_id}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <PlatformBadge platform={query.data.platform} />
+                <h2 className="font-display text-h3 font-bold uppercase tracking-[0.02em] text-text-1">
+                  {query.data.title}
+                </h2>
+                <p className="font-numeric text-sm tabular-nums text-text-2">
+                  {query.data.progress.earned}/{query.data.progress.total} troféus
+                  {query.data.progress.platinum_earned ? " · Platinado" : ""}
+                </p>
+              </div>
             </div>
             <ProgressRing
               value={Math.round(query.data.progress.completion_pct * 100)}
