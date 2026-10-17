@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   quality:
-    runs-on: arc-trophy-hunter-web
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
@@ -37,7 +37,7 @@ jobs:
         run: pnpm build
 
   e2e:
-    runs-on: arc-trophy-hunter-web
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
@@ -64,7 +64,7 @@ jobs:
           retention-days: 7
 
   image:
-    runs-on: arc-trophy-hunter-web
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: docker/setup-buildx-action@v3
