@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => {
         // Registramos o SW manualmente (src/app/pwa.ts) só fora do modo mock — ver comentário acima.
         injectRegister: null,
         injectManifest: {
-          globPatterns: ["**/*.{js,css,html,svg,woff2}"],
+          globPatterns: ["**/*.{js,css,html,svg,woff2,png}"],
         },
         manifest: false, // servimos um manifest.webmanifest estático de public/.
         devOptions: { enabled: false },
