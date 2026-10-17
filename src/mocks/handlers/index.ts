@@ -221,9 +221,12 @@ export const handlers: HttpHandler[] = [
     const rows = hasScenario("library-empty")
       ? []
       : (hasScenario("library-many") ? manyGames() : db.games).filter((g) => !only || g.integration_id === only);
+    // Um card por jogo: o unificado (Steam + PSN) ou a chave da plataforma; o filtro de plataforma
+    // vale antes de agrupar (mostra a versão daquela plataforma), como na API.
     const best = new Map<string, MockGameRow>();
-    for (const row of [...rows].sort(moreAdvancedFirst)) {
-      if (!best.has(gameKey(row))) best.set(gameKey(row), row);
+    for (const row of [...rows].filter((g) => !platform || g.platform === platform).sort(moreAdvancedFirst)) {
+      const key = row.unified_id ?? gameKey(row);
+      if (!best.has(key)) best.set(key, row);
     }
     let items = [...best.values()].map((row) => {
       const { groups: _g, integration_id: _i, account_label: _l, unified_id: _u, unify_locked: _k, ...rest } = row;
@@ -235,7 +238,6 @@ export const handlers: HttpHandler[] = [
         accounts: accountsOf(row, only),
       };
     });
-    if (platform) items = items.filter((g) => g.platform === platform);
     if (q) items = items.filter((g) => g.title.toLowerCase().includes(q));
     const total = items.length;
     return HttpResponse.json({ items: items.slice(offset, offset + limit), total, limit, offset });

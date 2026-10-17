@@ -9,7 +9,7 @@ describe("LibraryPage", () => {
     renderRoutes({ routes: libraryRoutes, path: "/library" });
     expect(await screen.findByRole("link", { name: /^ELDEN RING,/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^God of War Ragnarök,/ })).toBeInTheDocument();
-    expect(screen.getByText(/^4 jogos/)).toBeInTheDocument();
+    expect(screen.getByText(/^3 jogos/)).toBeInTheDocument();
   });
 
   it("mostra UM card por jogo, pela conta mais avançada, com o total de contas", async () => {
@@ -26,14 +26,22 @@ describe("LibraryPage", () => {
 });
 
 describe("LibraryPage — cross-platform", () => {
-  it("mostra os badges das duas plataformas na capa dos jogos vinculados", async () => {
+  it("mostra o jogo unificado em UM card, com os badges das duas plataformas", async () => {
     renderRoutes({ routes: libraryRoutes, path: "/library" });
-    const steam = await screen.findByRole("link", { name: /^Hades, Steam \(também na outra plataforma\)/ });
-    expect(steam.querySelectorAll(".pbadges .pbadge")).toHaveLength(2);
-    expect(steam.querySelector(".pbadges")).toHaveTextContent("SteamPSN");
-    const psn = screen.getByRole("link", { name: /^Hades, PlayStation \(também na outra plataforma\)/ });
-    expect(psn.querySelector(".pbadges")).toHaveTextContent("PSNSteam");
+    // Hades: Steam Alt (84%) é mais avançado que a PSN (18%) — o card é o da Steam.
+    const hades = await screen.findByRole("link", { name: /^Hades, Steam \(também na outra plataforma\)/ });
+    expect(screen.getAllByRole("link", { name: /^Hades,/ })).toHaveLength(1);
+    expect(hades.querySelector(".pbadges")).toHaveTextContent("SteamPSN");
     expect(screen.getByRole("link", { name: /^ELDEN RING,/ }).querySelectorAll(".pbadge")).toHaveLength(1);
+  });
+
+  it("com filtro de plataforma, mostra a versão daquela plataforma", async () => {
+    const user = userEvent.setup();
+    renderRoutes({ routes: libraryRoutes, path: "/library" });
+    await screen.findByRole("link", { name: /^Hades, Steam/ });
+    await user.click(screen.getByRole("button", { name: "PSN" }));
+    const psn = await screen.findByRole("link", { name: /^Hades, PlayStation/ });
+    expect(psn.querySelector(".pbadges")).toHaveTextContent("PSNSteam");
   });
 });
 
