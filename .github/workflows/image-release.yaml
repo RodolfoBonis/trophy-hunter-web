@@ -1,5 +1,5 @@
 # Release da imagem trophy-hunter-web: build + push no ECR (sa-east-1, conta 718446585908) e bump da
-# tag no repo de manifests (RodolfoBonis/k3s-apps → apps/trophy-hunter/values-web-prod.yaml). O
+# tag no repo de manifests (RodolfoBonis/k3s-apps → apps/trophy-hunter-web/values-prod.yaml). O
 # ArgoCD do cluster rblab sincroniza o deploy a partir do manifest.
 #
 # Dispare por tag `v*` (a tag sem o "v" vira o tag da imagem) ou manualmente:
@@ -30,7 +30,7 @@ env:
   ECR_REGISTRY: 718446585908.dkr.ecr.sa-east-1.amazonaws.com
   ECR_REPOSITORY: rodolfobonis/trophy-hunter-web
   MANIFEST_REPO: RodolfoBonis/k3s-apps
-  VALUES_FILE: apps/trophy-hunter/values-web-prod.yaml
+  VALUES_FILE: apps/trophy-hunter-web/values-prod.yaml
 
 jobs:
   build-push-bump:
@@ -97,11 +97,11 @@ jobs:
             echo "::error::$VALUES_FILE não existe no ${MANIFEST_REPO} — crie os manifests antes do primeiro release."
             exit 1
           fi
-          # Atualiza a tag da imagem do web-server (chave image.tag no values do rb-stack).
+          # Atualiza a tag da imagem do web-server (chave web-server.image.tag no values do rb-stack).
           go install github.com/mikefarah/yq/v4@latest >/dev/null 2>&1 || true
           export PATH="$PATH:$(go env GOPATH)/bin"
           if command -v yq >/dev/null 2>&1; then
-            yq -i ".image.tag = \"${IMAGE_TAG}\"" "$VALUES_FILE"
+            yq -i ".web-server.image.tag = \"${IMAGE_TAG}\"" "$VALUES_FILE"
           else
             sed -i -E "s/^(\s*tag:\s*).*/\1\"${IMAGE_TAG}\"/" "$VALUES_FILE"
           fi
