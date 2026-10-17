@@ -76,7 +76,7 @@ Uma imagem serve qualquer ambiente. No start do container, `docker/05-app-config
 | `OIDC_AUTHORITY` | sim | — | issuer do Keycloak (ex.: `https://auth.rb.lab/realms/platform`) |
 | `OIDC_CLIENT_ID` | não | `trophy-hunter-web` | client público PKCE |
 | `OIDC_SCOPE` | não | `openid profile email trophy-hunter-api` | scopes; `trophy-hunter-api` é o *audience scope* (injeta `aud` no token) |
-| `API_UPSTREAM` | sim | — | destino do proxy `/api` (ex.: `http://trophy-hunter-api-web-server:8080`) — **sem caminho** |
+| `API_UPSTREAM` | sim | — | destino do proxy `/api` (ex.: `http://trophy-hunter-api-svc:8080`) — **sem caminho** |
 | `APP_ALLOW_HTTP` | não | `false` | permite `http://` na authority (só dev) |
 
 `apiBase` é sempre `/api` (mesma origem; o nginx encaminha para a API Go, que serve `/api/v1`).

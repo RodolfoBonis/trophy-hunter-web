@@ -5,7 +5,7 @@
 # Os `:?` abaixo derrubam o start se faltar env obrigatória.
 
 : "${OIDC_AUTHORITY:?defina OIDC_AUTHORITY (ex.: https://auth.rb.lab/realms/platform)}"
-: "${API_UPSTREAM:?defina API_UPSTREAM (ex.: http://trophy-hunter-api-web-server:8080)}"
+: "${API_UPSTREAM:?defina API_UPSTREAM (ex.: http://trophy-hunter-api-svc:8080)}"
 OIDC_CLIENT_ID="${OIDC_CLIENT_ID:-trophy-hunter-web}"
 OIDC_SCOPE="${OIDC_SCOPE:-openid profile email trophy-hunter-api}"
 
