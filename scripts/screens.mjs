@@ -25,6 +25,8 @@ const viewports = [
 const pages = [
   { name: "library", path: "/library", ready: "text=ELDEN RING" },
   { name: "game", path: `/games/${GAME}`, ready: "text=Lorde Éldero" },
+  { name: "integrations", path: "/settings/integrations", ready: "text=Conectar Steam" },
+  { name: "sync", path: "/sync", ready: "text=Incremental" },
 ];
 
 const browser = await chromium.launch();
