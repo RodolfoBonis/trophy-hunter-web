@@ -871,6 +871,8 @@ export interface components {
             summary: string;
             tips: string[];
             uncertainty_notes: string;
+            /** @description Onde o troféu sai (capítulo/fase/área). Ausente em guias v1. */
+            where?: string;
         };
         /** @enum {string} */
         TrophyTag: "missable" | "online" | "grind" | "difficulty" | "collectible" | "buggy";

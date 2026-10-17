@@ -609,6 +609,8 @@ h3.sub{font-family:var(--font-display);font-weight:600;font-size:var(--text-h4);
   .ai-caret::after { content: "▍"; color: var(--color-neon-violet-text); animation: ai-blink 1s steps(1) infinite; margin-left: 1px; }
 
   /* Conteúdo do guia */
+  .ai-where { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; padding: 10px 12px; background: var(--color-surface-2); border-left: 2px solid var(--color-neon-cyan); font: 600 14px/1.4 var(--font-display); color: var(--color-text-1); }
+  .ai-where .label { color: var(--color-neon-cyan); }
   .ai-steps { margin: 0; padding: 0; list-style: none; counter-reset: step; display: flex; flex-direction: column; gap: 8px; }
   .ai-steps li { counter-increment: step; display: grid; grid-template-columns: 26px 1fr; gap: 10px; font: 400 14px/1.5 var(--font-sans); color: var(--color-text-1); }
   .ai-steps li::before { content: counter(step, decimal-leading-zero); font: 700 12px/1.9 var(--font-numeric); color: var(--color-neon-violet-text); }

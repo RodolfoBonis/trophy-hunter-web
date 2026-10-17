@@ -152,6 +152,12 @@ export function TrophyGuideEditor({
         });
       }}
     >
+      <Text
+        id="g-where"
+        label="Onde"
+        value={v.where}
+        onChange={(x) => set("where", x)}
+      />
       <Area
         id="g-summary"
         label="Resumo"

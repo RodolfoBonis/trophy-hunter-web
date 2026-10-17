@@ -172,6 +172,12 @@ export function TrophyGuideView({
   const steps = (c.steps ?? []).filter(Boolean);
   return (
     <div className="flex flex-col gap-4">
+      {c.where && (
+        <p className="ai-where m-0">
+          <span className="label">Onde</span>
+          <span>{c.where}</span>
+        </p>
+      )}
       {c.summary && (
         <p
           className={cn(

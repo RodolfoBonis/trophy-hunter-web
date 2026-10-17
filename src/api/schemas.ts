@@ -456,6 +456,8 @@ const strings = z
 
 /** Guia de um troféu (schema trophy_guide v1, validado na API). */
 export const trophyGuideContentSchema = z.object({
+  /** Onde o troféu sai (capítulo/fase/área). Guias v1 não têm. */
+  where: z.string().default(""),
   summary: z.string(),
   steps: strings,
   prerequisites: strings,

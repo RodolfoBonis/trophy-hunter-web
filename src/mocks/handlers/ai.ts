@@ -14,6 +14,7 @@ import { hasScenario } from "../scenario";
  * `ai-error` faz a geração falhar. */
 
 const MOCK_GUIDE: TrophyGuideContent = {
+  where: "Capítulo 7 — Castelo Tempestuoso (Stormveil Castle), arena do chefe",
   summary: "Derrote o chefe final na dificuldade Normal ou superior.",
   steps: [
     "Avance a campanha até o capítulo final.",
