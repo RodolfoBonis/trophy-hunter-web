@@ -1,10 +1,11 @@
-import type { GameDetail, Integration, SyncRun } from "@/api/schemas";
-import { mockGames, mockIntegrations, mockSyncRuns } from "./fixtures";
+import type { Integration, SyncRun } from "@/api/schemas";
+import { mockGames, mockIntegrations, mockSyncRuns, type MockGameRow } from "./fixtures";
 
 /** Estado mutável do modo mock: connectSteam/syncNow alteram e os testes resetam entre casos. */
 interface MockDb {
   integrations: Integration[];
-  games: GameDetail[];
+  /** Uma linha por (conta, jogo) — igual à tabela games da API. */
+  games: MockGameRow[];
   syncRuns: SyncRun[];
 }
 

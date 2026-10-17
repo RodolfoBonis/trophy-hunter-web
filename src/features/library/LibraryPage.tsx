@@ -6,6 +6,7 @@ import { PlatformBadge } from "@/design-system/components/PlatformBadge";
 import { ProgressRing } from "@/design-system/components/ProgressRing";
 import { Input } from "@/design-system/components/ui/input";
 import { Skeleton } from "@/design-system/components/ui/skeleton";
+import { useIntegrations } from "@/features/integrations/queries";
 import { cn } from "@/lib/utils";
 import { useLibrary } from "./queries";
 
@@ -27,11 +28,30 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
   );
 }
 
+/**
+ * O jogo existe em várias contas: o card mostra a mais avançada (best); o chip diz quantas contas e
+ * qual é a melhor (texto, não só cor).
+ */
+function AccountsChip({ best, count }: { best: string; count: number }) {
+  return (
+    <span
+      className="chamfer-sm bg-surface-2 px-1.5 py-0.5 font-display text-[10px] font-semibold uppercase tracking-[0.08em] text-neon-cyan"
+      title={`${count} contas — mostrando a mais avançada: ${best}`}
+    >
+      {best} · {count} contas
+    </span>
+  );
+}
+
 /** Biblioteca — grade de cards HUD ligada à API. Capa chanfrada, badge de plataforma e anel de %. */
 export default function LibraryPage() {
   const [q, setQ] = useState("");
   const [platform, setPlatform] = useState<Platform | undefined>();
-  const query = useLibrary({ q: q || undefined, platform });
+  const [account, setAccount] = useState<string>("");
+  const integrations = useIntegrations();
+  const query = useLibrary({ q: q || undefined, platform, integration_id: account || undefined });
+  // Só faz sentido filtrar por conta quando existe mais de uma.
+  const accounts = integrations.data ?? [];
 
   return (
     <section className="flex flex-col gap-5">
@@ -55,6 +75,23 @@ export default function LibraryPage() {
             PSN
           </FilterChip>
         </div>
+        {accounts.length > 1 && (
+          <label className="flex items-center gap-2">
+            <span className="hud-label text-text-3">Conta</span>
+            <select
+              value={account}
+              onChange={(e) => setAccount(e.target.value)}
+              className="chamfer-sm h-9 bg-surface-2 px-3 font-display text-[11px] font-semibold uppercase tracking-[0.1em] text-text-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
+            >
+              <option value="">Todas</option>
+              {accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
 
       {query.isPending && (
@@ -123,9 +160,14 @@ export default function LibraryPage() {
                     <p className="truncate font-display text-sm font-semibold text-text-1" title={game.title}>
                       {game.title}
                     </p>
-                    <p className="font-numeric text-xs tabular-nums text-text-2">
-                      {game.progress.earned}/{game.progress.total}
-                      {game.progress.platinum_earned ? " · Platinado" : ""}
+                    <p className="flex items-center gap-2 font-numeric text-xs tabular-nums text-text-2">
+                      <span>
+                        {game.progress.earned}/{game.progress.total}
+                        {game.progress.platinum_earned ? " · Platinado" : ""}
+                      </span>
+                      {game.accounts.length > 1 && (
+                        <AccountsChip best={game.accounts[0]?.label ?? ""} count={game.accounts.length} />
+                      )}
                     </p>
                   </div>
                 </Link>

@@ -7,6 +7,7 @@ import {
   integrationSchema,
   syncRunListSchema,
   userSchema,
+  type ConnectSteamRequest,
   type GameStatus,
   type Platform,
   type SyncScope,
@@ -14,6 +15,8 @@ import {
 
 export interface GamesQuery {
   platform?: Platform;
+  /** Restringe a uma conta (default: todas, um item por jogo). */
+  integration_id?: string;
   status?: GameStatus;
   q?: string;
   has_achievements?: "true" | "false" | "all";
@@ -33,15 +36,19 @@ export const api = {
 
   /* Integrações */
   integrations: (c: ApiClient) => c.request("/integrations", { schema: integrationListSchema }),
-  /** Conecta/atualiza a Steam (PUT): valida contra a Steam e enfileira full sync. Nunca retorna o segredo. */
-  connectSteam: (c: ApiClient, body: { api_key: string; steam_id_or_vanity: string }) =>
-    c.request("/integrations/steam", { method: "PUT", body, schema: integrationSchema }),
-  deleteIntegration: (c: ApiClient, platform: Platform) =>
-    c.request(`/integrations/${encodeURIComponent(platform)}`, { method: "DELETE" }),
+  /** Conecta uma NOVA conta Steam: valida contra a Steam e enfileira full sync. Nunca retorna o segredo. */
+  connectSteam: (c: ApiClient, body: ConnectSteamRequest) =>
+    c.request("/integrations/steam", { method: "POST", body, schema: integrationSchema }),
+  /** Renomeia a conta e/ou troca a API key. */
+  updateIntegration: (c: ApiClient, id: string, body: { label?: string; api_key?: string }) =>
+    c.request(`/integrations/${encodeURIComponent(id)}`, { method: "PATCH", body, schema: integrationSchema }),
+  /** Remove a conta e os jogos dela. */
+  deleteIntegration: (c: ApiClient, id: string) =>
+    c.request(`/integrations/${encodeURIComponent(id)}`, { method: "DELETE" }),
 
   /* Sync */
-  syncPlatform: (c: ApiClient, platform: Platform, scope?: SyncScope) =>
-    c.request(`/integrations/${encodeURIComponent(platform)}/sync`, {
+  syncIntegration: (c: ApiClient, id: string, scope?: SyncScope) =>
+    c.request(`/integrations/${encodeURIComponent(id)}/sync`, {
       method: "POST",
       body: scope ? { scope } : undefined,
       schema: enqueueResponseSchema,
@@ -50,7 +57,7 @@ export const api = {
     c.request(`/games/${encodeURIComponent(id)}/sync`, { method: "POST", schema: enqueueResponseSchema }),
 
   /* Log de sync */
-  syncRuns: (c: ApiClient, params: { platform?: Platform; limit?: number } = {}) =>
+  syncRuns: (c: ApiClient, params: { platform?: Platform; integration_id?: string; limit?: number } = {}) =>
     c.request("/sync-runs", { query: params, schema: syncRunListSchema }),
 } as const;
 

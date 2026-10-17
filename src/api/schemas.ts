@@ -54,7 +54,10 @@ export type User = z.infer<typeof userSchema>;
 /* ── Integrações ────────────────────────────────────────────────────────────────────────── */
 
 export const integrationSchema = z.object({
+  id: z.string(),
   platform: platformSchema,
+  /** Apelido da conta no app (ex.: "Principal", "Alt") — várias contas por plataforma. */
+  label: z.string(),
   status: integrationStatusSchema,
   account_id: z.string().optional(),
   display_name: z.string().optional(),
@@ -70,7 +73,9 @@ export const integrationListSchema = z
   .transform((items) => items ?? []);
 
 export const connectSteamRequestSchema = z.object({
-  api_key: z.string(),
+  label: z.string().optional(),
+  /** Obrigatória só na 1ª conta Steam; nas seguintes, omitida → a API reaproveita a key existente. */
+  api_key: z.string().optional(),
   steam_id_or_vanity: z.string(),
 });
 export type ConnectSteamRequest = z.infer<typeof connectSteamRequestSchema>;
@@ -85,6 +90,8 @@ export type EnqueueResponse = z.infer<typeof enqueueResponseSchema>;
 
 export const syncRunSchema = z.object({
   id: z.string(),
+  /** Conta do run (null se a conta foi removida). */
+  integration_id: z.string().nullish(),
   platform: platformSchema,
   scope: z.enum(["full", "incremental", "game"]),
   trigger: z.enum(["schedule", "manual"]),
@@ -158,7 +165,30 @@ export const gameSchema = z.object({
 });
 export type Game = z.infer<typeof gameSchema>;
 
-export const gameListItemSchema = gameSchema.extend({ progress: progressSummarySchema });
+/** Uma conta que possui o jogo, com o progresso dela. */
+export const gameAccountSchema = z.object({
+  integration_id: z.string(),
+  label: z.string(),
+  display_name: z.string(),
+  /** Linha do jogo NESTA conta (GET /games/{id}). */
+  game_id: z.string(),
+  progress: progressSummarySchema,
+});
+export type GameAccount = z.infer<typeof gameAccountSchema>;
+
+const accountListSchema = z
+  .array(gameAccountSchema)
+  .nullable()
+  .transform((a) => a ?? []);
+
+/**
+ * Um item por jogo: Game/progress são da conta MAIS AVANÇADA (id = game_id dela); accounts lista
+ * todas as contas que possuem o jogo, mais avançada primeiro.
+ */
+export const gameListItemSchema = gameSchema.extend({
+  progress: progressSummarySchema,
+  accounts: accountListSchema,
+});
 export type GameListItem = z.infer<typeof gameListItemSchema>;
 
 export const gameListPageSchema = z.object({
@@ -208,6 +238,11 @@ export const trophyGroupSchema = z.object({
 export type TrophyGroup = z.infer<typeof trophyGroupSchema>;
 
 export const gameDetailSchema = gameSchema.extend({
+  /** Conta desta linha do jogo. */
+  integration_id: z.string(),
+  account_label: z.string(),
+  /** Todas as contas que possuem o jogo (mais avançada primeiro). */
+  accounts: accountListSchema,
   progress: progressDetailSchema,
   groups: z
     .array(trophyGroupSchema)

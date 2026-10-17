@@ -7,8 +7,18 @@ import { ago, DAY, HOUR } from "../http";
  * (steamstatic/playstation) — a CSP já os libera; offline, caem no alt/placeholder.
  */
 
+/** Contas do mock: duas Steam (Principal + Alt, como o usuário real) e uma PSN. */
+export const STEAM_MAIN = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+export const STEAM_ALT = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
+export const PSN_MAIN = "cccccccc-cccc-cccc-cccc-cccccccccccc";
+
+/** Linha de jogo no mock (uma por conta); `accounts` é derivado pelos handlers, como na API. */
+export type MockGameRow = Omit<GameDetail, "accounts">;
+
 export const mockIntegrations: Integration[] = [
   {
+    id: STEAM_MAIN,
+    label: "Principal",
     platform: "steam",
     status: "connected",
     account_id: "76561198000000000",
@@ -17,6 +27,17 @@ export const mockIntegrations: Integration[] = [
     last_synced_at: ago(2 * HOUR),
   },
   {
+    id: STEAM_ALT,
+    label: "Alt",
+    platform: "steam",
+    status: "connected",
+    account_id: "76561198000000001",
+    display_name: "rbonis_alt",
+    last_synced_at: ago(3 * HOUR),
+  },
+  {
+    id: PSN_MAIN,
+    label: "rb_lab",
     platform: "psn",
     status: "needs_reconnect",
     account_id: "rb_lab",
@@ -26,9 +47,11 @@ export const mockIntegrations: Integration[] = [
   },
 ];
 
-export const mockGames: GameDetail[] = [
+export const mockGames: MockGameRow[] = [
   {
     id: "11111111-1111-1111-1111-111111111111",
+    integration_id: STEAM_MAIN,
+    account_label: "Principal",
     platform: "steam",
     external_id: "1245620",
     title: "ELDEN RING",
@@ -86,6 +109,8 @@ export const mockGames: GameDetail[] = [
   },
   {
     id: "22222222-2222-2222-2222-222222222222",
+    integration_id: PSN_MAIN,
+    account_label: "rb_lab",
     platform: "psn",
     external_id: "NPWR21555_00",
     np_service_name: "trophy2",
@@ -137,6 +162,8 @@ export const mockGames: GameDetail[] = [
   },
   {
     id: "33333333-3333-3333-3333-333333333333",
+    integration_id: STEAM_MAIN,
+    account_label: "Principal",
     platform: "steam",
     external_id: "1145360",
     title: "Hades",
@@ -153,11 +180,41 @@ export const mockGames: GameDetail[] = [
     },
     groups: [{ id: "g-hades-base", external_id: "base", name: "Jogo base", is_base: true, trophies: [] }],
   },
+  /* Mesmos jogos na conta Alt: em Hades a Alt é a mais avançada (vira o card); em ELDEN RING, não. */
+  {
+    id: "44444444-4444-4444-4444-444444444444",
+    integration_id: STEAM_ALT,
+    account_label: "Alt",
+    platform: "steam",
+    external_id: "1145360",
+    title: "Hades",
+    cover: "https://cdn.cloudflare.steamstatic.com/steam/apps/1145360/library_600x900.jpg",
+    has_achievements: true,
+    has_platinum: false,
+    last_played_at: ago(10 * DAY),
+    progress: { total: 49, earned: 41, remaining: 8, completion_pct: 0.837, status: "almost" },
+    groups: [{ id: "g-hades-alt-base", external_id: "base", name: "Jogo base", is_base: true, trophies: [] }],
+  },
+  {
+    id: "55555555-5555-5555-5555-555555555555",
+    integration_id: STEAM_ALT,
+    account_label: "Alt",
+    platform: "steam",
+    external_id: "1245620",
+    title: "ELDEN RING",
+    cover: "https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/library_600x900.jpg",
+    has_achievements: true,
+    has_platinum: false,
+    last_played_at: ago(60 * DAY),
+    progress: { total: 42, earned: 6, remaining: 36, completion_pct: 0.143, status: "in_progress" },
+    groups: [{ id: "g-elden-alt-base", external_id: "base", name: "Jogo base", is_base: true, trophies: [] }],
+  },
 ];
 
 export const mockSyncRuns: SyncRun[] = [
   {
     id: "run-0",
+    integration_id: STEAM_MAIN,
     platform: "steam",
     scope: "incremental",
     trigger: "manual",
@@ -171,6 +228,7 @@ export const mockSyncRuns: SyncRun[] = [
   },
   {
     id: "run-1",
+    integration_id: STEAM_ALT,
     platform: "steam",
     scope: "incremental",
     trigger: "schedule",
@@ -184,6 +242,7 @@ export const mockSyncRuns: SyncRun[] = [
   },
   {
     id: "run-2",
+    integration_id: PSN_MAIN,
     platform: "psn",
     scope: "full",
     trigger: "manual",
@@ -198,6 +257,7 @@ export const mockSyncRuns: SyncRun[] = [
   },
   {
     id: "run-3",
+    integration_id: STEAM_MAIN,
     platform: "steam",
     scope: "full",
     trigger: "manual",

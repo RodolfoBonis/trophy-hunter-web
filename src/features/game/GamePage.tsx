@@ -1,7 +1,7 @@
 import { ArrowLeft, Check, Eye, Lock } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "react-router";
-import type { Trophy, TrophyType } from "@/api/schemas";
+import type { GameAccount, Platform, Trophy, TrophyType } from "@/api/schemas";
 import { GameCover } from "@/design-system/components/GameCover";
 import { PlatformBadge } from "@/design-system/components/PlatformBadge";
 import { Panel } from "@/design-system/components/Panel";
@@ -99,6 +99,61 @@ function TrophyRow({ trophy }: { trophy: Trophy }) {
   );
 }
 
+/**
+ * Contas que possuem o jogo, lado a lado (≥ lg: cards com anel; < lg: abas compactas). Cada conta é
+ * uma linha do jogo na API: selecionar navega para /games/{game_id} daquela conta (URL compartilhável).
+ * A conta da página atual fica marcada (aria-current), não só por cor.
+ */
+function AccountSwitcher({
+  accounts,
+  currentGameId,
+  platform,
+}: {
+  accounts: GameAccount[];
+  currentGameId: string;
+  platform: Platform;
+}) {
+  if (accounts.length < 2) return null;
+  const color = platform === "steam" ? "var(--color-steam)" : "var(--color-neon-cyan)";
+  return (
+    <nav aria-label="Contas com este jogo" className="flex flex-col gap-2">
+      <h3 className="hud-label">Contas ({accounts.length}) · mais avançada primeiro</h3>
+      <ul className="flex gap-2 overflow-x-auto lg:grid lg:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] lg:overflow-visible">
+        {accounts.map((a, i) => {
+          const current = a.game_id === currentGameId;
+          const pct = Math.round(a.progress.completion_pct * 100);
+          return (
+            <li key={a.integration_id} className="shrink-0">
+              <Link
+                to={`/games/${a.game_id}`}
+                replace
+                aria-current={current ? "page" : undefined}
+                className={cn(
+                  "chamfer-sm flex items-center gap-3 border bg-surface-2 px-3 py-2 transition-colors duration-[var(--dur-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan",
+                  current ? "border-neon-cyan text-text-1" : "border-transparent text-text-2 hover:text-text-1",
+                )}
+              >
+                <span className="hidden lg:block">
+                  <ProgressRing value={pct} size={44} strokeWidth={8} color={color} />
+                </span>
+                <span className="flex flex-col">
+                  <span className="font-display text-sm font-semibold uppercase tracking-[0.04em]">
+                    {a.label}
+                    {i === 0 && <span className="ml-2 text-[10px] text-neon-cyan">★ melhor</span>}
+                  </span>
+                  <span className="font-numeric text-xs tabular-nums text-text-3">
+                    {a.progress.earned}/{a.progress.total} · {pct}%
+                  </span>
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
 /** Página do jogo — HUD. Cabeçalho com anel + troféus agrupados (base vs DLC) e spoiler guard. */
 export default function GamePage() {
   const { gameId = "" } = useParams();
@@ -130,7 +185,12 @@ export default function GamePage() {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <PlatformBadge platform={query.data.platform} />
+                <div className="flex flex-wrap items-center gap-2">
+                  <PlatformBadge platform={query.data.platform} />
+                  {query.data.accounts.length > 1 && (
+                    <span className="hud-label text-text-2">Conta: {query.data.account_label}</span>
+                  )}
+                </div>
                 <h2 className="font-display text-h3 font-bold uppercase tracking-[0.02em] text-text-1">
                   {query.data.title}
                 </h2>
@@ -148,6 +208,12 @@ export default function GamePage() {
               color={query.data.platform === "steam" ? "var(--color-steam)" : "var(--color-neon-cyan)"}
             />
           </Panel>
+
+          <AccountSwitcher
+            accounts={query.data.accounts}
+            currentGameId={query.data.id}
+            platform={query.data.platform}
+          />
 
           {query.data.groups.map((group) => {
             if (group.trophies.length === 0) return null;

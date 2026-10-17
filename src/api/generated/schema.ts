@@ -70,7 +70,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/integrations/{platform}": {
+    "/integrations/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -80,14 +80,15 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Remove a integração de uma plataforma. */
+        /** Remove a conta e os jogos/troféus dela. */
         delete: operations["deleteIntegration"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Renomeia a conta e/ou troca a API key. */
+        patch: operations["updateIntegration"];
         trace?: never;
     };
-    "/integrations/{platform}/sync": {
+    "/integrations/{id}/sync": {
         parameters: {
             query?: never;
             header?: never;
@@ -96,8 +97,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Enfileira uma sincronização da plataforma. */
-        post: operations["syncPlatform"];
+        /** Enfileira uma sincronização da conta. */
+        post: operations["syncIntegration"];
         delete?: never;
         options?: never;
         head?: never;
@@ -112,12 +113,12 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
+        put?: never;
         /**
-         * Conecta/atualiza a integração Steam.
-         * @description Valida a API key e o SteamID64/vanity contra a Steam, grava as credenciais cifradas e enfileira um full sync. O perfil deve ser público. Nunca retorna a API key.
+         * Conecta uma nova conta Steam.
+         * @description Várias contas por plataforma são suportadas. Valida o SteamID64/vanity contra a Steam, grava as credenciais cifradas e enfileira um full sync. api_key é opcional quando já existe outra conta Steam (a Steam Web API key lê qualquer perfil público e é reaproveitada). O perfil e os detalhes de jogos devem ser públicos. Nunca retorna a API key.
          */
-        put: operations["connectSteam"];
-        post?: never;
+        post: operations["connectSteam"];
         delete?: never;
         options?: never;
         head?: never;
@@ -163,8 +164,10 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         ConnectSteamRequest: {
-            /** @description Steam Web API key (https://steamcommunity.com/dev/apikey). Nunca é retornada. */
-            api_key: string;
+            /** @description Steam Web API key (https://steamcommunity.com/dev/apikey). Obrigatória só na primeira conta Steam; nas seguintes, omitida → reaproveita a key existente. Nunca é retornada. */
+            api_key?: string;
+            /** @description Apelido da conta. Vazio → nome do perfil na Steam. */
+            label?: string;
             /** @description SteamID64 (17 dígitos) ou a vanity URL (nome do perfil). */
             steam_id_or_vanity: string;
         };
@@ -194,11 +197,34 @@ export interface components {
             tags?: components["schemas"]["TrophyTag"][];
             title: string;
         };
+        /** @description Uma conta que possui o jogo, com o progresso dela. */
+        GameAccount: {
+            display_name: string;
+            /**
+             * Format: uuid
+             * @description Linha do jogo nesta conta (GET /games/{id}).
+             */
+            game_id: string;
+            /** Format: uuid */
+            integration_id: string;
+            label: string;
+            progress: components["schemas"]["ProgressSummary"];
+        };
         GameDetail: components["schemas"]["Game"] & {
+            account_label: string;
+            /** @description Todas as contas que possuem o jogo (mais avançada primeiro). */
+            accounts: components["schemas"]["GameAccount"][];
             groups: components["schemas"]["TrophyGroup"][];
+            /**
+             * Format: uuid
+             * @description Conta desta linha do jogo.
+             */
+            integration_id: string;
             progress: components["schemas"]["ProgressDetail"];
         };
+        /** @description Um item por jogo (platform + external_id). Game/progress são da conta MAIS AVANÇADA (id = game_id dela); accounts lista todas as contas que possuem o jogo, mais avançada primeiro. */
         GameListItem: components["schemas"]["Game"] & {
+            accounts: components["schemas"]["GameAccount"][];
             progress: components["schemas"]["ProgressSummary"];
         };
         GameListPage: {
@@ -213,6 +239,10 @@ export interface components {
             account_id?: string;
             avatar?: string;
             display_name?: string;
+            /** Format: uuid */
+            id: string;
+            /** @description Apelido da conta no app (ex.: Principal, Alt). */
+            label: string;
             last_error?: string;
             /** Format: date-time */
             last_synced_at?: string | null;
@@ -276,6 +306,11 @@ export interface components {
             games_total?: number;
             /** Format: uuid */
             id: string;
+            /**
+             * Format: uuid
+             * @description Conta do run (null se removida).
+             */
+            integration_id?: string | null;
             items_changed?: number;
             platform: components["schemas"]["Platform"];
             /** @enum {string} */
@@ -329,6 +364,11 @@ export interface components {
             earned: number;
             total: number;
         };
+        UpdateIntegrationRequest: {
+            /** @description Nova Steam Web API key (validada contra a conta). */
+            api_key?: string;
+            label?: string;
+        };
         User: {
             email?: string;
             name?: string;
@@ -348,7 +388,7 @@ export interface components {
     };
     parameters: {
         GameIDPath: string;
-        PlatformPath: components["schemas"]["Platform"];
+        IntegrationIDPath: string;
     };
     requestBodies: never;
     headers: never;
@@ -361,6 +401,8 @@ export interface operations {
             query?: {
                 /** @description Filtra por jogos com/sem conquistas. Default true. Use "all" para não filtrar. */
                 has_achievements?: "true" | "false" | "all";
+                /** @description Restringe a biblioteca a UMA conta (default — todas, um item por jogo). */
+                integration_id?: string;
                 limit?: number;
                 offset?: number;
                 platform?: components["schemas"]["Platform"];
@@ -461,7 +503,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                platform: components["parameters"]["PlatformPath"];
+                id: components["parameters"]["IntegrationIDPath"];
             };
             cookie?: never;
         };
@@ -478,12 +520,50 @@ export interface operations {
             404: components["responses"]["Problem"];
         };
     };
-    syncPlatform: {
+    updateIntegration: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                platform: components["parameters"]["PlatformPath"];
+                id: components["parameters"]["IntegrationIDPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateIntegrationRequest"];
+            };
+        };
+        responses: {
+            /** @description Conta atualizada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Integration"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+            /** @description A Steam rejeitou a nova API key. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    syncIntegration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IntegrationIDPath"];
             };
             cookie?: never;
         };
@@ -519,8 +599,8 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Integração conectada; full sync enfileirado. */
-            200: {
+            /** @description Conta conectada; full sync enfileirado. */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -529,6 +609,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
             422: components["responses"]["Problem"];
             /** @description Falha ao validar com a Steam (chave inválida, perfil privado, etc.). */
             502: {
@@ -565,6 +646,7 @@ export interface operations {
     listSyncRuns: {
         parameters: {
             query?: {
+                integration_id?: string;
                 limit?: number;
                 platform?: components["schemas"]["Platform"];
             };

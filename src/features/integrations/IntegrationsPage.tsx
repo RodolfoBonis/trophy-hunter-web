@@ -1,4 +1,4 @@
-import { KeyRound, RefreshCw } from "lucide-react";
+import { Check, KeyRound, Pencil, RefreshCw, Trash2, X } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { isApiError } from "@/api/errors";
 import type { Integration, IntegrationStatus, SyncRun } from "@/api/schemas";
@@ -11,7 +11,14 @@ import { Input } from "@/design-system/components/ui/input";
 import { Label } from "@/design-system/components/ui/label";
 import { Skeleton } from "@/design-system/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { useConnectSteam, useIntegrations, useLatestRuns, useSyncNow } from "./queries";
+import {
+  useConnectSteam,
+  useIntegrations,
+  useLatestRuns,
+  useRemoveIntegration,
+  useRenameIntegration,
+  useSyncNow,
+} from "./queries";
 
 const STATUS: Record<IntegrationStatus, { label: string; cls: string }> = {
   connected: { label: "Conectado", cls: "text-success" },
@@ -31,19 +38,101 @@ function StatusChip({ status }: { status: IntegrationStatus }) {
   );
 }
 
+/** Apelido da conta com edição inline (Enter salva, Esc cancela). */
+function AccountLabel({ integration }: { integration: Integration }) {
+  const rename = useRenameIntegration();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(integration.label);
+
+  function save(e: FormEvent) {
+    e.preventDefault();
+    const label = value.trim();
+    if (!label || label === integration.label) {
+      setEditing(false);
+      return;
+    }
+    rename.mutate({ id: integration.id, label }, { onSuccess: () => setEditing(false) });
+  }
+
+  if (!editing) {
+    return (
+      <div className="flex min-w-0 items-center gap-2">
+        <h2 className="truncate font-display text-h4 font-bold uppercase tracking-[0.02em] text-text-1">
+          {integration.label}
+        </h2>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => {
+            setValue(integration.label);
+            setEditing(true);
+          }}
+          aria-label={`Renomear a conta ${integration.label}`}
+        >
+          <Pencil className="size-4" aria-hidden />
+        </Button>
+      </div>
+    );
+  }
+  return (
+    <form onSubmit={save} className="flex items-center gap-2">
+      <Label htmlFor={`label-${integration.id}`} className="sr-only">
+        Apelido da conta
+      </Label>
+      <Input
+        id={`label-${integration.id}`}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => e.key === "Escape" && setEditing(false)}
+        maxLength={40}
+        autoFocus
+        className="h-9 w-48"
+      />
+      <Button type="submit" variant="ghost" size="icon" disabled={rename.isPending} aria-label="Salvar apelido">
+        <Check className="size-4" aria-hidden />
+      </Button>
+      <Button type="button" variant="ghost" size="icon" onClick={() => setEditing(false)} aria-label="Cancelar">
+        <X className="size-4" aria-hidden />
+      </Button>
+    </form>
+  );
+}
+
+/** Remoção em dois passos (sem modal): o 1º clique pede confirmação explícita. */
+function RemoveAccount({ integration }: { integration: Integration }) {
+  const remove = useRemoveIntegration();
+  const [confirming, setConfirming] = useState(false);
+  if (!confirming) {
+    return (
+      <Button variant="ghost" size="sm" onClick={() => setConfirming(true)} className="text-text-3 hover:text-danger">
+        <Trash2 className="size-4" aria-hidden /> Remover
+      </Button>
+    );
+  }
+  return (
+    <div role="group" aria-label="Confirmar remoção" className="flex items-center gap-2">
+      <span className="text-sm text-text-2">Remover {integration.label} e os jogos dela?</span>
+      <Button variant="secondary" size="sm" onClick={() => setConfirming(false)}>
+        Cancelar
+      </Button>
+      <Button variant="danger" size="sm" onClick={() => remove.mutate(integration.id)} disabled={remove.isPending}>
+        Remover conta
+      </Button>
+    </div>
+  );
+}
+
 function IntegrationCard({ integration, runningRun }: { integration: Integration; runningRun?: SyncRun }) {
   const sync = useSyncNow();
   const needsAttention = integration.status === "needs_reconnect" || integration.status === "error";
   return (
     <Panel className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <PlatformBadge platform={integration.platform} />
-          <StatusChip status={integration.status} />
+          <AccountLabel integration={integration} />
         </div>
-        <Button variant="secondary" size="sm" onClick={() => sync.mutate(integration.platform)} disabled={sync.isPending}>
-          <RefreshCw className={cn("size-4", sync.isPending && "animate-spin")} aria-hidden /> Sincronizar agora
-        </Button>
+        <StatusChip status={integration.status} />
       </div>
 
       {runningRun && (
@@ -100,12 +189,24 @@ function IntegrationCard({ integration, runningRun }: { integration: Integration
           Não foi possível iniciar o sync.
         </p>
       )}
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Button variant="secondary" size="sm" onClick={() => sync.mutate(integration.id)} disabled={sync.isPending}>
+          <RefreshCw className={cn("size-4", sync.isPending && "animate-spin")} aria-hidden /> Sincronizar agora
+        </Button>
+        <RemoveAccount integration={integration} />
+      </div>
     </Panel>
   );
 }
 
-function ConnectSteamForm() {
+/**
+ * Adiciona uma conta Steam. A API key só é obrigatória na 1ª conta: a mesma key lê qualquer perfil
+ * público, então nas seguintes ela é opcional (a API reaproveita a existente).
+ */
+export function ConnectSteamForm({ hasSteamAccount }: { hasSteamAccount: boolean }) {
   const connect = useConnectSteam();
+  const [label, setLabel] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [account, setAccount] = useState("");
   const fieldError = connect.error && isApiError(connect.error) ? connect.error : null;
@@ -113,9 +214,14 @@ function ConnectSteamForm() {
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     connect.mutate(
-      { api_key: apiKey.trim(), steam_id_or_vanity: account.trim() },
+      {
+        steam_id_or_vanity: account.trim(),
+        ...(label.trim() ? { label: label.trim() } : {}),
+        ...(apiKey.trim() ? { api_key: apiKey.trim() } : {}),
+      },
       {
         onSuccess: () => {
+          setLabel("");
           setApiKey("");
           setAccount("");
         },
@@ -125,11 +231,26 @@ function ConnectSteamForm() {
 
   return (
     <Panel className="flex flex-col gap-4">
-      <h2 className="font-display text-h4 font-bold uppercase tracking-[0.02em] text-text-1">Conectar Steam</h2>
+      <h2 className="font-display text-h4 font-bold uppercase tracking-[0.02em] text-text-1">
+        {hasSteamAccount ? "Adicionar conta Steam" : "Conectar Steam"}
+      </h2>
       <form onSubmit={onSubmit} className="flex max-w-md flex-col gap-4">
         <div className="flex flex-col gap-1.5">
+          <Label htmlFor="steam-label" className="hud-label">
+            Apelido (opcional)
+          </Label>
+          <Input
+            id="steam-label"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder={hasSteamAccount ? "Alt" : "Principal"}
+            maxLength={40}
+            autoComplete="off"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="steam-api-key" className="hud-label">
-            Steam Web API key
+            Steam Web API key{hasSteamAccount && " (opcional)"}
           </Label>
           <div className="relative">
             <KeyRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-3" aria-hidden />
@@ -141,10 +262,16 @@ function ConnectSteamForm() {
               placeholder="••••••••••••••••••••••••••••••••"
               autoComplete="off"
               spellCheck={false}
-              required
+              required={!hasSteamAccount}
+              aria-describedby="steam-api-key-hint"
               className="pl-10"
             />
           </div>
+          <p id="steam-api-key-hint" className="text-caption text-text-3">
+            {hasSteamAccount
+              ? "Deixe em branco para reaproveitar a key da conta já conectada — ela lê qualquer perfil público."
+              : "Gere em steamcommunity.com/dev/apikey."}
+          </p>
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="steam-account" className="hud-label">
@@ -158,16 +285,19 @@ function ConnectSteamForm() {
             autoComplete="off"
             required
           />
-          <p className="text-caption text-text-3">17 dígitos = SteamID64; qualquer outra coisa é tratada como vanity.</p>
+          <p className="text-caption text-text-3">
+            17 dígitos = SteamID64; qualquer outra coisa é tratada como vanity. O perfil e os
+            &quot;Detalhes do jogo&quot; precisam estar públicos.
+          </p>
         </div>
         {fieldError && (
           <p role="alert" className="text-sm text-danger">
             {fieldError.message || "Não foi possível conectar."}
           </p>
         )}
-        {connect.isSuccess && <p className="text-sm text-success">Steam conectada.</p>}
+        {connect.isSuccess && <p className="text-sm text-success">Conta conectada — o sync completo já começou.</p>}
         <Button type="submit" disabled={connect.isPending} className="self-start">
-          {connect.isPending ? "Conectando…" : "Conectar"}
+          {connect.isPending ? "Conectando…" : hasSteamAccount ? "Adicionar conta" : "Conectar"}
         </Button>
       </form>
     </Panel>
@@ -178,9 +308,9 @@ function ConnectSteamForm() {
 export default function IntegrationsPage() {
   const query = useIntegrations();
   const runs = useLatestRuns();
-  // Run em andamento mais recente por plataforma (a lista vem do mais novo para o mais antigo).
-  const runningFor = (platform: Integration["platform"]) =>
-    runs.data?.find((r) => r.platform === platform && r.status === "running");
+  // Run em andamento mais recente por conta (a lista vem do mais novo para o mais antigo).
+  const runningFor = (id: string) => runs.data?.find((r) => r.integration_id === id && r.status === "running");
+  const hasSteamAccount = query.data?.some((i) => i.platform === "steam") ?? false;
   return (
     <section className="flex max-w-2xl flex-col gap-5">
       {query.isPending && <Skeleton className="h-40 w-full" />}
@@ -190,13 +320,9 @@ export default function IntegrationsPage() {
         </p>
       )}
       {query.data?.map((integration) => (
-        <IntegrationCard
-          key={integration.platform}
-          integration={integration}
-          runningRun={runningFor(integration.platform)}
-        />
+        <IntegrationCard key={integration.id} integration={integration} runningRun={runningFor(integration.id)} />
       ))}
-      <ConnectSteamForm />
+      {query.data && <ConnectSteamForm hasSteamAccount={hasSteamAccount} />}
     </section>
   );
 }
