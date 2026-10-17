@@ -264,41 +264,42 @@ export default function GamePage() {
         ← Biblioteca
       </Link>
 
-      <div className="panel hero-stat relative overflow-hidden !p-0">
-        {/* Arte desfocada ao fundo (mesma família do card). */}
-        <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
-          <div className="absolute inset-[-12%] opacity-40 blur-2xl saturate-150">
-            <GameCover variant="hero" cover={game.cover} hero={game.hero} title={game.title} platform={game.platform} externalId={game.external_id} />
-          </div>
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,var(--color-bg-1)_25%,color-mix(in_oklab,var(--color-bg-1)_60%,transparent))]" />
+      <div className="panel hero-stat game-hero !p-0">
+        {/* Arte do jogo como fundo do card: nítida, com pouca opacidade e esmaecendo em gradiente
+            (topo no celular, direita no desktop). Fica acima do ::before do painel e abaixo do texto. */}
+        <div className="game-hero-art" aria-hidden>
+          <GameCover variant="hero" cover={game.cover} hero={game.hero} title={game.title} platform={game.platform} externalId={game.external_id} />
         </div>
-        <div className="grid items-center gap-6 p-6 md:grid-cols-[auto_1fr_auto] md:p-8">
+        <div className="game-hero-body">
           <div
-            className="chamfer-md hidden w-56 overflow-hidden shadow-[0_12px_40px_rgb(0_0_0/0.5)] md:block"
+            className="game-hero-thumb chamfer-md hidden w-56 overflow-hidden shadow-[0_12px_40px_rgb(0_0_0/0.5)] md:block"
             style={{ aspectRatio: "16 / 10", viewTransitionName: `game-art-${game.id}` }}
           >
             <GameCover variant="hero" cover={game.cover} hero={game.hero} title={game.title} platform={game.platform} externalId={game.external_id} />
           </div>
-          <div className="min-w-0">
+          <div className="game-hero-info min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <PlatformBadge platform={game.platform} />
               {game.accounts.length > 1 && <span className="chip">Conta: {game.account_label}</span>}
               {complete && <span className="chip !text-[var(--color-plat-3)]">{isPsn ? "Platinado" : "100%"}</span>}
             </div>
-            <h2 className="mt-3 font-display text-h2 font-bold uppercase leading-none tracking-[0.02em] text-text-1">{game.title}</h2>
+            <h2 className="mt-3 font-display text-h2 font-bold uppercase leading-none tracking-[0.02em] text-text-1 [text-shadow:0_2px_16px_rgb(0_0_0/0.6)]">
+              {game.title}
+            </h2>
             <p className="muted mt-2">
               <span className="num text-text-1">{game.progress.earned}</span>/{game.progress.total} {isPsn ? "troféus" : "conquistas"}
               {game.progress.remaining > 0 ? ` · faltam ${game.progress.remaining}` : ""}
               {game.progress.dlc && game.progress.dlc.total > 0 ? ` · ${game.progress.dlc.total} em DLC` : ""}
             </p>
+          </div>
+          <div className="game-hero-stats">
             <StatLine game={game} />
           </div>
           <ProgressRing
             value={game.progress.completion_pct * 100}
-            size={132}
             platinum={complete}
             color={isPsn ? undefined : "var(--color-steam)"}
-            className="big justify-self-center"
+            className="game-hero-ring"
           />
         </div>
       </div>

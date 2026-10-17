@@ -13,13 +13,14 @@ const DUR = 900; // mesma duração do count-up do style tile
  */
 export function ProgressRing({
   value,
-  size = 64,
+  size,
   strokeWidth = 10,
   color,
   platinum = false,
   className,
 }: {
   value: number;
+  /** px; sem valor, o tamanho vem do CSS (--size), útil para tamanhos responsivos. */
   size?: number;
   strokeWidth?: number;
   /** Cor do arco (default: ciano; Steam usa --color-steam). */
@@ -54,7 +55,10 @@ export function ProgressRing({
   return (
     <div
       className={cn("hring", className)}
-      style={{ ["--size" as string]: `${size}px`, ...(ringColor ? { ["--ring-c" as string]: ringColor } : {}) }}
+      style={{
+        ...(size ? { ["--size" as string]: `${size}px` } : {}),
+        ...(ringColor ? { ["--ring-c" as string]: ringColor } : {}),
+      }}
       role="img"
       aria-label={`${Math.round(target)}% concluído`}
     >
