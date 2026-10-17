@@ -10,7 +10,7 @@ import { CacheFirst, NetworkOnly } from "workbox-strategies";
  * Service Worker do Trophy Hunter (estratégia `injectManifest` do vite-plugin-pwa).
  * - precache dos assets do build (`self.__WB_MANIFEST`);
  * - CacheFirst para capas/ícones de jogos (hosts da Steam/PSN) com expiração ~30 dias;
- * - NetworkOnly para a API (qualquer origem com /api/, ex. api.trophy.rb.lab) e SSE — nunca cacheamos dados mutáveis;
+ * - NetworkOnly para a API (paths .../v1/..., ex. api.rodolfodebonis.com.br/trophy/v1) e SSE — nunca cacheamos dados mutáveis;
  * - stubs de `push`/`notificationclick` (push real é a Fase 5).
  */
 
@@ -22,8 +22,9 @@ precacheAndRoute((self as any).__WB_MANIFEST ?? []);
 cleanupOutdatedCaches();
 clientsClaim();
 
-// A API nunca é cacheada (inclui SSE). Deixa passar direto para a rede.
-registerRoute(({ url }) => url.pathname.startsWith("/api/"), new NetworkOnly());
+// A API nunca é cacheada (inclui SSE). Deixa passar direto para a rede. Ela vive em outra origem
+// (rota do gateway, ex. api.rodolfodebonis.com.br/trophy/v1/...) ou em /api/v1 no dev local.
+registerRoute(({ url }) => /\/(api\/)?v1\//.test(url.pathname), new NetworkOnly());
 
 // Imagens de jogos (capas, ícones, avatares) dos CDNs da Steam/PSN.
 const IMAGE_HOSTS = /(\.steamstatic\.com|\.playstation\.net|\.playstation\.com)$/;

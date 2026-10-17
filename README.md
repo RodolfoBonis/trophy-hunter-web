@@ -2,7 +2,7 @@
 
 Front do **Trophy Hunter**: app pessoal (single-user) para acompanhar conquistas Steam e troféus PSN,
 saber o que falta para platinar/100% e (depois) ter guias de IA. SPA em React servida como PWA, atrás
-do nginx, com SSO no Keycloak (realm `platform`) e deploy no cluster rblab em `https://trophy.rb.lab`.
+do nginx, com SSO no Keycloak (realm `platform`) e deploy no cluster rblab em `https://trophy.rodolfodebonis.com.br` (API em `https://api.rodolfodebonis.com.br/trophy`, rota do gateway Gravitee).
 
 > **Status:** fundação + app shell (Fase 1). As telas finais aguardam a aprovação do *style tile*
 > (paleta/tipografia/refs). O visual atual é neutro/escuro de propósito — ver `src/design-system/tokens.css`.
@@ -76,10 +76,10 @@ partir destas envs:
 | `OIDC_AUTHORITY` | sim | — | issuer do Keycloak (ex.: `https://auth.rb.lab/realms/platform`) |
 | `OIDC_CLIENT_ID` | não | `trophy-hunter-web` | client público PKCE |
 | `OIDC_SCOPE` | não | `openid profile email` | scopes; o `aud=trophy-hunter-api` vem do client scope *default* `aud-trophy-hunter-api` (não se pede) |
-| `API_BASE_URL` | sim | — | origem da API, no padrão `api.<app>.<domínio>` (ex.: `https://api.trophy.rb.lab`) — **sem caminho** |
+| `API_BASE_URL` | sim | — | base da API, onde fica o `/v1` (ex.: `https://api.rodolfodebonis.com.br/trophy`); pode ter caminho, sem barra final |
 | `APP_ALLOW_HTTP` | não | `false` | permite `http://` na authority (só dev) |
 
-`apiBase` = `API_BASE_URL` + `/api`. O SPA chama a API direto (cross-origin, CORS na API); o nginx
+`apiBase` = `API_BASE_URL` (o client acrescenta `/v1/...`). O SPA chama a API direto (cross-origin, CORS na API); o nginx
 só serve estáticos. A CSP `connect-src` inclui essa origem.
 Em dev usamos os `VITE_*` (`.env.local` / `.env.mock`).
 

@@ -2,21 +2,22 @@
 # Executado (sourced, por ser .envsh) pelo entrypoint do nginx ANTES do 20-envsubst-on-templates.
 # 1) Gera /config.js com a configuração pública do ambiente (nada secreto: client OIDC é público).
 # 2) Exporta as origens da CSP (connect-src/frame-src) para o template do nginx.
-# A API vive no próprio subdomínio (padrão api.<app>.<domínio>): o SPA chama API_BASE_URL direto (CORS).
+# A API é chamada direto pelo browser (CORS). API_BASE_URL é a BASE onde fica o /v1 — pode ter path,
+# ex.: rota do gateway https://api.rodolfodebonis.com.br/trophy.
 # Os `:?` abaixo derrubam o start se faltar env obrigatória.
 
 : "${OIDC_AUTHORITY:?defina OIDC_AUTHORITY (ex.: https://auth.rb.lab/realms/platform)}"
-: "${API_BASE_URL:?defina API_BASE_URL (ex.: https://api.trophy.rb.lab)}"
+: "${API_BASE_URL:?defina API_BASE_URL (ex.: https://api.rodolfodebonis.com.br/trophy)}"
 OIDC_CLIENT_ID="${OIDC_CLIENT_ID:-trophy-hunter-web}"
 OIDC_SCOPE="${OIDC_SCOPE:-openid profile email}"
 
 fail() { echo "app-config: $1" >&2; exit 1; }
 # Valida formatos ANTES de usar: os valores vão para o JS e para a conf do nginx (evita injeção).
 URL_RE='^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[A-Za-z0-9._~%/-]*)?$'
-ORIGIN_RE='^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?$'
+API_RE='^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[A-Za-z0-9._~%-]+)*$'
 if [ "${APP_ALLOW_HTTP:-false}" = "true" ]; then
   URL_RE='^https?://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[A-Za-z0-9._~%/-]*)?$'
-  ORIGIN_RE='^https?://[A-Za-z0-9.-]+(:[0-9]{1,5})?$'
+  API_RE='^https?://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[A-Za-z0-9._~%-]+)*$'
 fi
 ID_RE='^[A-Za-z0-9._-]+$'
 SCOPE_RE='^[A-Za-z0-9 ._:-]+$'
@@ -27,7 +28,7 @@ matches() {
   printf '%s' "$1" | grep -Eq "$2"
 }
 matches "$OIDC_AUTHORITY" "$URL_RE" || fail "OIDC_AUTHORITY inválida (esperado https://host/realms/…): $OIDC_AUTHORITY"
-matches "$API_BASE_URL" "$ORIGIN_RE" || fail "API_BASE_URL inválida (esperado https://host[:porta], sem caminho): $API_BASE_URL"
+matches "$API_BASE_URL" "$API_RE" || fail "API_BASE_URL inválida (esperado https://host[:porta][/caminho], sem barra final): $API_BASE_URL"
 matches "$OIDC_CLIENT_ID" "$ID_RE" || fail "OIDC_CLIENT_ID inválido"
 matches "$OIDC_SCOPE" "$SCOPE_RE" || fail "OIDC_SCOPE inválido"
 
@@ -37,19 +38,19 @@ origin() { printf '%s' "$1" | sed -E 's#^(https?://[^/]+).*#\1#'; }
 
 CONFIG_DIR="${APP_CONFIG_DIR:-/tmp/app-config}"
 mkdir -p "$CONFIG_DIR" "${NGINX_ENVSUBST_OUTPUT_DIR:-/tmp/nginx-conf.d}"
-# apiBase = origem da API + /api (o client acrescenta /v1/...).
+# apiBase = API_BASE_URL (o client acrescenta /v1/...).
 cat > "$CONFIG_DIR/config.js" <<JS
 window.__APP_CONFIG__ = {
   oidcAuthority: "$(js "$OIDC_AUTHORITY")",
   oidcClientId: "$(js "$OIDC_CLIENT_ID")",
   oidcScope: "$(js "$OIDC_SCOPE")",
-  apiBase: "$(js "$API_BASE_URL")/api"
+  apiBase: "$(js "$API_BASE_URL")"
 };
 JS
 
 AUTH_ORIGIN="$(origin "$OIDC_AUTHORITY")"
-# connect-src: self + API (subdomínio próprio) + Keycloak (discovery, token, silent renew via iframe).
-export CSP_CONNECT_SRC="'self' $API_BASE_URL $AUTH_ORIGIN"
+# connect-src: self + origem da API + Keycloak (discovery, token, silent renew via iframe).
+export CSP_CONNECT_SRC="'self' $(origin "$API_BASE_URL") $AUTH_ORIGIN"
 export CSP_FRAME_SRC="$AUTH_ORIGIN"
 # Só estas variáveis são substituídas no template (o resto, como $uri, fica para o nginx).
 export NGINX_ENVSUBST_FILTER='^CSP_'
