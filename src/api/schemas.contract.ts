@@ -23,6 +23,11 @@ import type {
   TypeCount,
   TypeCounts,
   User,
+  Alert,
+  NextPlatinum,
+  RemainingTrophy,
+  Stats,
+  TimelinePage,
 } from "./schemas";
 
 type Gen = components["schemas"];
@@ -50,4 +55,9 @@ export type ContractChecks = [
   AssertNever<MissingKeys<Gen["GameDetail"], GameDetail>>,
   AssertNever<MissingKeys<Gen["TrophyGroup"], TrophyGroup>>,
   AssertNever<MissingKeys<Gen["Trophy"], Trophy>>,
+  AssertNever<MissingKeys<Gen["Stats"], Stats>>,
+  AssertNever<MissingKeys<Gen["NextPlatinum"], NextPlatinum>>,
+  AssertNever<MissingKeys<Gen["RemainingTrophy"], RemainingTrophy>>,
+  AssertNever<MissingKeys<Gen["TimelinePage"], TimelinePage>>,
+  AssertNever<MissingKeys<Gen["Alert"], Alert>>,
 ];

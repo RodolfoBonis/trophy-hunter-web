@@ -69,6 +69,117 @@ function lastUnlockOf(row: MockGameRow): string | null {
   return dates.sort().at(-1) ?? row.last_played_at ?? null;
 }
 
+function pick(obj: Record<string, unknown>, keys: string[]): Record<string, unknown> {
+  return Object.fromEntries(keys.filter((k) => k in obj).map((k) => [k, obj[k]]));
+}
+
+/** Linhas "best" (conta mais avançada por jogo), como a view best_games da API. */
+function bestRows(): MockGameRow[] {
+  const best = new Map<string, MockGameRow>();
+  for (const row of [...db.games].sort(moreAdvancedFirst)) if (!best.has(gameKey(row))) best.set(gameKey(row), row);
+  return [...best.values()];
+}
+
+function mockStats() {
+  const rows = bestRows();
+  const trophies = rows.flatMap((r) => r.groups.flatMap((g) => g.trophies));
+  const by = (type: string) => ({
+    total: trophies.filter((t) => t.type === type).length,
+    earned: trophies.filter((t) => t.type === type && t.earned).length,
+  });
+  const done = rows.filter((r) => r.progress.total > 0 && r.progress.earned === r.progress.total);
+  const months = ["2025-11", "2025-12", "2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09", "2026-10"];
+  const per = [8, 14, 3, 0, 22, 17, 9, 31, 12, 6, 19, 25];
+  let cum = 180;
+  return {
+    games: {
+      total: rows.length,
+      completed: done.length,
+      almost: rows.filter((r) => r.progress.status === "almost").length,
+      in_progress: rows.filter((r) => r.progress.status === "in_progress").length,
+      not_started: rows.filter((r) => r.progress.earned === 0).length,
+      abandoned: rows.filter((r) => r.abandoned).length,
+    },
+    trophies: {
+      total: rows.reduce((n, r) => n + r.progress.total, 0),
+      earned: rows.reduce((n, r) => n + r.progress.earned, 0),
+      platinum: by("platinum"),
+      gold: by("gold"),
+      silver: by("silver"),
+      bronze: by("bronze"),
+      rarity: { legendary: 2, epic: 9, rare: 26, uncommon: 41, common: 77 },
+    },
+    rarest: trophies
+      .filter((t) => t.earned && t.rarity_pct != null)
+      .sort((a, b) => a.rarity_pct! - b.rarity_pct!)
+      .slice(0, 6)
+      .map((t) => {
+        const g = rows.find((r) => r.groups.some((gr) => gr.trophies.includes(t)))!;
+        return { id: t.id, name: t.name, type: t.type, icon: t.icon ?? "", rarity_pct: t.rarity_pct!, earned_at: t.earned_at, game_id: g.id, game_title: g.title, platform: g.platform };
+      }),
+    completions: done.map((r) => ({
+      game_id: r.id, title: r.title, platform: r.platform, external_id: r.external_id,
+      cover: r.cover ?? "", hero: r.hero ?? "", total: r.progress.total, completed_at: lastUnlockOf(r),
+    })),
+    evolution: months.map((m, i) => ({ month: m, earned: per[i]!, cumulative: (cum += per[i]!) })),
+  };
+}
+
+function mockNext() {
+  const rows = bestRows().filter((r) => !r.abandoned && r.progress.earned > 0 && r.progress.earned < r.progress.total);
+  const items = rows
+    .map((r) => {
+      const c = r.progress.completion_pct;
+      const remaining = r.progress.total - r.progress.earned;
+      const factors = { completion: 0.45 * c, remaining: 0.25 / (1 + remaining / 8), ease: 0.3 * 0.32, priority: 0.05 * (r.priority ?? 0), urgency: 0 };
+      return {
+        game_id: r.id, title: r.title, platform: r.platform, external_id: r.external_id, cover: r.cover ?? "", hero: r.hero ?? "",
+        earned: r.progress.earned, total: r.progress.total, remaining, completion_pct: c,
+        avg_remaining_rarity: 32, min_remaining_rarity: 3.2, remaining_missable: 1, remaining_online: 0,
+        priority: r.priority ?? 0, last_unlock_at: lastUnlockOf(r),
+        score: Object.values(factors).reduce((a, b) => a + b, 0), factors,
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+  const top = items[0] ? db.games.find((g) => g.id === items[0]!.game_id) : undefined;
+  const today = top
+    ? {
+        game_id: top.id,
+        trophies: top.groups.flatMap((g) => g.trophies).filter((t) => !t.earned).slice(0, 3)
+          .map((t) => ({ id: t.id, name: t.name, description: t.description, type: t.type, hidden: t.hidden, icon: t.icon ?? "", icon_locked: t.icon_locked ?? "", rarity_pct: t.rarity_pct, tags: t.tags ?? [] })),
+      }
+    : null;
+  return { items, today };
+}
+
+function mockTimeline() {
+  return db.games
+    .flatMap((g) =>
+      g.groups.flatMap((gr) =>
+        gr.trophies.filter((t) => t.earned && t.earned_at).map((t) => ({
+          trophy_id: t.id, name: t.name, description: t.description, type: t.type, icon: t.icon ?? "", rarity_pct: t.rarity_pct,
+          earned_at: t.earned_at, game_id: g.id, game_title: g.title, platform: g.platform, external_id: g.external_id,
+          cover: g.cover ?? "", hero: g.hero ?? "", account_label: g.account_label,
+          completes_game: g.progress.earned === g.progress.total && t.earned_at === lastUnlockOf(g),
+        })),
+      ),
+    )
+    .sort((a, b) => (b.earned_at ?? "").localeCompare(a.earned_at ?? ""));
+}
+
+function mockAlerts() {
+  return db.games.flatMap((g) =>
+    g.groups.flatMap((gr) =>
+      gr.trophies
+        .filter((t) => !t.earned && ((t.tags ?? []).some((x) => ["missable", "online", "difficulty"].includes(x)) || t.server_shutdown_risk))
+        .map((t) => ({
+          trophy_id: t.id, name: t.name, type: t.type, hidden: t.hidden, icon: t.icon ?? "", rarity_pct: t.rarity_pct,
+          tags: t.tags ?? [], server_shutdown_risk: t.server_shutdown_risk ?? false, game_id: g.id, game_title: g.title, platform: g.platform,
+        })),
+    ),
+  );
+}
+
 export const handlers: HttpHandler[] = [
   /* Perfil */
   http.get(`${API}/me`, () => HttpResponse.json({ subject: "mock-user", name: "Rodolfo de Bonis", email: "rodolfo@rb.lab" })),
@@ -193,6 +304,40 @@ export const handlers: HttpHandler[] = [
     db.syncRuns = [run, ...db.syncRuns];
     const body: EnqueueResponse = { enqueued: true, job_id: `job-${Date.now()}` };
     return HttpResponse.json(body, { status: 202 });
+  }),
+
+  /* Insights */
+  http.get(`${API}/stats`, async () => {
+    const gate = await scenarioGate("dashboard");
+    if (gate) return gate;
+    return HttpResponse.json(mockStats());
+  }),
+  http.get(`${API}/next`, () => HttpResponse.json(mockNext())),
+  http.get(`${API}/timeline`, ({ request }) => {
+    const url = new URL(request.url);
+    const limit = Number(url.searchParams.get("limit") ?? 60);
+    const cursor = url.searchParams.get("cursor");
+    const all = mockTimeline();
+    const start = cursor ? Number(cursor) : 0;
+    const items = all.slice(start, start + limit);
+    const next = start + limit < all.length ? String(start + limit) : null;
+    return HttpResponse.json({ items, next_cursor: next });
+  }),
+  http.get(`${API}/alerts`, () => HttpResponse.json(mockAlerts())),
+  http.patch(`${API}/games/:id`, async ({ params, request }) => {
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    const game = db.games.find((g) => g.id === params.id);
+    if (!game) return apiError(404, "not_found", "Jogo não encontrado.");
+    Object.assign(game, pick(body, ["abandoned", "priority", "notes", "tags"]));
+    const { groups: _g, integration_id: _i, account_label: _l, progress: _p, ...rest } = game;
+    return HttpResponse.json(rest);
+  }),
+  http.patch(`${API}/trophies/:id`, async ({ params, request }) => {
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    const trophy = db.games.flatMap((g) => g.groups.flatMap((gr) => gr.trophies)).find((t) => t.id === params.id);
+    if (!trophy) return apiError(404, "not_found", "Troféu não encontrado.");
+    Object.assign(trophy, pick(body, ["priority", "notes", "tags", "server_shutdown_risk"]));
+    return HttpResponse.json(trophy);
   }),
 
   /* Log de sync */

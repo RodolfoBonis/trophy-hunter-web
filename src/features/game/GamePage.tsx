@@ -7,6 +7,7 @@ import { ProgressRing } from "@/design-system/components/ProgressRing";
 import { RarityBadge } from "@/design-system/components/RarityBadge";
 import { TrophyIcon } from "@/design-system/components/TrophyIcon";
 import { cn } from "@/lib/utils";
+import { GameAnnotations, TAG_LABEL, TrophyMarks } from "./GameAnnotations";
 import { useGame } from "./queries";
 
 const TYPE_LABEL: Record<TrophyType, string> = {
@@ -75,6 +76,7 @@ function TrophyArt({ trophy, spoiler }: { trophy: Trophy; spoiler: boolean }) {
 /** Linha de troféu do style tile (`.trow`): obtido / bloqueado / oculto (spoiler guard). */
 function TrophyRow({ trophy }: { trophy: Trophy }) {
   const [revealed, setRevealed] = useState(false);
+  const [marking, setMarking] = useState(false);
   const hidden = trophy.hidden && !trophy.earned;
   const spoiler = hidden && !revealed;
   const progress =
@@ -122,15 +124,38 @@ function TrophyRow({ trophy }: { trophy: Trophy }) {
             <div className="tm">
               {status}
               {(trophy.tags ?? []).map((t) => (
-                <span key={t} className="chip !px-1.5 !py-1">
-                  {t}
+                <span key={t} className="chip !px-1.5 !py-1 !text-warning">
+                  {TAG_LABEL[t]}
                 </span>
               ))}
+              {trophy.server_shutdown_risk && <span className="chip !px-1.5 !py-1 !text-danger">Servidor pode fechar</span>}
             </div>
           </>
         )}
       </div>
-      <div className="right">{trophy.rarity_pct != null && <RarityBadge pct={trophy.rarity_pct} mini />}</div>
+      <div className="right">
+        {trophy.rarity_pct != null && <RarityBadge pct={trophy.rarity_pct} mini />}
+        {!trophy.earned && (
+          <button
+            type="button"
+            className="label cursor-pointer hover:!text-neon-cyan"
+            aria-expanded={marking}
+            onClick={() => setMarking((m) => !m)}
+          >
+            Marcar
+          </button>
+        )}
+      </div>
+      {marking && (
+        <div className="col-span-full">
+          <TrophyMarks
+            trophyId={trophy.id}
+            tags={trophy.tags ?? []}
+            serverRisk={trophy.server_shutdown_risk ?? false}
+            onClose={() => setMarking(false)}
+          />
+        </div>
+      )}
     </li>
   );
 }
@@ -339,6 +364,8 @@ export default function GamePage() {
       </div>
 
       <AccountSwitcher accounts={game.accounts} currentGameId={game.id} platform={game.platform} />
+
+      <GameAnnotations game={game} />
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="seg" role="group" aria-label="Mostrar">

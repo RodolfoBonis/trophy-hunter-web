@@ -101,7 +101,7 @@ export const mockGames: MockGameRow[] = [
             rarity_pct: 3.2,
             earned: false,
             earned_at: null,
-            tags: ["grind"],
+            tags: ["grind", "missable"],
             server_shutdown_risk: false,
           },
         ],

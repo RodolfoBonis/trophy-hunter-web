@@ -1,6 +1,13 @@
 import type { ApiClient } from "./client";
 import {
+  alertListSchema,
   enqueueResponseSchema,
+  gameSchema,
+  nextPlatinumSchema,
+  statsSchema,
+  timelinePageSchema,
+  trophySchema,
+  type Annotations,
   gameDetailSchema,
   gameListPageSchema,
   integrationListSchema,
@@ -56,6 +63,19 @@ export const api = {
   syncGame: (c: ApiClient, id: string) =>
     c.request(`/games/${encodeURIComponent(id)}/sync`, { method: "POST", schema: enqueueResponseSchema }),
 
+  /* Insights */
+  stats: (c: ApiClient) => c.request("/stats", { schema: statsSchema }),
+  next: (c: ApiClient) => c.request("/next", { schema: nextPlatinumSchema }),
+  timeline: (c: ApiClient, params: { cursor?: string; limit?: number } = {}, signal?: AbortSignal) =>
+    c.request("/timeline", { query: params, schema: timelinePageSchema, signal }),
+  alerts: (c: ApiClient) => c.request("/alerts", { schema: alertListSchema }),
+
+  /* Marcações */
+  patchGame: (c: ApiClient, id: string, body: Annotations) =>
+    c.request(`/games/${encodeURIComponent(id)}`, { method: "PATCH", body, schema: gameSchema }),
+  patchTrophy: (c: ApiClient, id: string, body: Annotations) =>
+    c.request(`/trophies/${encodeURIComponent(id)}`, { method: "PATCH", body, schema: trophySchema }),
+
   /* Log de sync */
   syncRuns: (c: ApiClient, params: { platform?: Platform; integration_id?: string; limit?: number } = {}) =>
     c.request("/sync-runs", { query: params, schema: syncRunListSchema }),
@@ -68,4 +88,8 @@ export const queryKeys = {
   game: (id: string) => ["game", id] as const,
   integrations: ["integrations"] as const,
   syncRuns: (params: object) => ["sync-runs", params] as const,
+  stats: ["stats"] as const,
+  next: ["next"] as const,
+  timeline: ["timeline"] as const,
+  alerts: ["alerts"] as const,
 } as const;

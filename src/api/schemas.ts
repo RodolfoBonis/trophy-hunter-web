@@ -275,3 +275,148 @@ export const gameDetailSchema = gameSchema.extend({
     .transform((g) => g ?? []),
 });
 export type GameDetail = z.infer<typeof gameDetailSchema>;
+
+/* ── Insights (dashboard, próxima platina, linha do tempo, alertas) ─────────────────────── */
+
+export const statsSchema = z.object({
+  games: z.object({
+    total: z.number().int(),
+    completed: z.number().int(),
+    almost: z.number().int(),
+    in_progress: z.number().int(),
+    not_started: z.number().int(),
+    abandoned: z.number().int(),
+  }),
+  trophies: z.object({
+    total: z.number().int(),
+    earned: z.number().int(),
+    platinum: typeCountSchema,
+    gold: typeCountSchema,
+    silver: typeCountSchema,
+    bronze: typeCountSchema,
+    rarity: rarityEarnedSchema,
+  }),
+  rarest: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      type: trophyTypeSchema,
+      icon: z.string(),
+      rarity_pct: z.number(),
+      earned_at: timestamp.nullish(),
+      game_id: z.string(),
+      game_title: z.string(),
+      platform: platformSchema,
+    }),
+  ),
+  completions: z.array(
+    z.object({
+      game_id: z.string(),
+      title: z.string(),
+      platform: platformSchema,
+      external_id: z.string(),
+      cover: z.string(),
+      hero: z.string(),
+      total: z.number().int(),
+      completed_at: timestamp.nullish(),
+    }),
+  ),
+  evolution: z.array(z.object({ month: z.string(), earned: z.number().int(), cumulative: z.number().int() })),
+});
+export type Stats = z.infer<typeof statsSchema>;
+
+export const remainingTrophySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().nullish(),
+  type: trophyTypeSchema,
+  hidden: z.boolean(),
+  icon: z.string(),
+  icon_locked: z.string(),
+  rarity_pct: z.number().nullish(),
+  tags: z.array(trophyTagSchema),
+});
+export type RemainingTrophy = z.infer<typeof remainingTrophySchema>;
+
+export const nextItemSchema = z.object({
+  game_id: z.string(),
+  title: z.string(),
+  platform: platformSchema,
+  external_id: z.string(),
+  cover: z.string(),
+  hero: z.string(),
+  earned: z.number().int(),
+  total: z.number().int(),
+  remaining: z.number().int(),
+  completion_pct: z.number(),
+  avg_remaining_rarity: z.number(),
+  min_remaining_rarity: z.number(),
+  remaining_missable: z.number().int(),
+  remaining_online: z.number().int(),
+  priority: z.number().int(),
+  last_unlock_at: timestamp.nullish(),
+  score: z.number(),
+  factors: z.object({
+    completion: z.number(),
+    remaining: z.number(),
+    ease: z.number(),
+    priority: z.number(),
+    urgency: z.number(),
+  }),
+});
+export type NextItem = z.infer<typeof nextItemSchema>;
+
+export const nextPlatinumSchema = z.object({
+  items: z.array(nextItemSchema),
+  today: z.object({ game_id: z.string(), trophies: z.array(remainingTrophySchema) }).nullish(),
+});
+export type NextPlatinum = z.infer<typeof nextPlatinumSchema>;
+
+export const timelineItemSchema = z.object({
+  trophy_id: z.string(),
+  name: z.string(),
+  description: z.string().nullish(),
+  type: trophyTypeSchema,
+  icon: z.string(),
+  rarity_pct: z.number().nullish(),
+  earned_at: timestamp.nullish(),
+  game_id: z.string(),
+  game_title: z.string(),
+  platform: platformSchema,
+  external_id: z.string(),
+  cover: z.string(),
+  hero: z.string(),
+  account_label: z.string(),
+  completes_game: z.boolean(),
+});
+export type TimelineItem = z.infer<typeof timelineItemSchema>;
+
+export const timelinePageSchema = z.object({
+  items: z.array(timelineItemSchema),
+  next_cursor: z.string().nullish(),
+});
+export type TimelinePage = z.infer<typeof timelinePageSchema>;
+
+export const alertSchema = z.object({
+  trophy_id: z.string(),
+  name: z.string(),
+  type: trophyTypeSchema,
+  hidden: z.boolean(),
+  icon: z.string(),
+  rarity_pct: z.number().nullish(),
+  tags: z.array(trophyTagSchema),
+  server_shutdown_risk: z.boolean(),
+  game_id: z.string(),
+  game_title: z.string(),
+  platform: platformSchema,
+});
+export type Alert = z.infer<typeof alertSchema>;
+export const alertListSchema = z.array(alertSchema);
+
+export interface Annotations {
+  abandoned?: boolean;
+  priority?: number;
+  notes?: string;
+  tags?: TrophyTag[];
+  server_shutdown_risk?: boolean;
+}

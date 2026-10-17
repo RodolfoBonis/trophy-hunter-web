@@ -545,3 +545,44 @@ h3.sub{font-family:var(--font-display);font-weight:600;font-size:var(--text-h4);
   .statline.rarity-line .num small { font-size: .55em; color: var(--color-text-3); font-weight: 600; }
   .statline.rarity-line .caption svg { color: var(--rc); }
 }
+
+@layer components {
+  /* Hero e stat-tiles do tile (usados no Início). */
+  .hero{padding:var(--space-16) 0 var(--space-12)}
+  .hero-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:var(--space-10);align-items:center}
+  @media (max-width:900px){.hero-grid{grid-template-columns:1fr}}
+  .kicker{display:inline-flex;align-items:center;gap:10px}
+  .kicker::before{content:"";width:28px;height:2px;background:var(--color-neon-cyan);box-shadow:var(--shadow-glow-cyan)}
+  .hero h1{font-family:var(--font-display);font-weight:700;font-size:var(--text-hero);line-height:1.02;letter-spacing:-.01em;margin:var(--space-4) 0 var(--space-5);text-transform:uppercase}
+  .hero h1 .outline{color:transparent;-webkit-text-stroke:1.5px var(--color-neon-cyan);text-shadow:0 0 24px color-mix(in oklab,var(--color-neon-cyan) var(--glow-mix),transparent)}
+  .hero p.lead{font-size:var(--text-lg);color:var(--color-text-2);max-width:56ch;margin:0 0 var(--space-6)}
+  .stat-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .stat-tile{display:grid;gap:4px;padding:12px;background:var(--color-surface-2);border-top:2px solid var(--color-border);--c:8px;clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c))}
+  .stat-tile .num{font-size:34px;line-height:1}
+  .stat-tile .num small{font-size:.5em;color:var(--color-text-3);margin-left:2px}
+  .stat-tile .delta{font-size:12px;color:var(--color-text-2);display:inline-flex;gap:5px;align-items:center}
+  .stat-tile .delta.up{color:var(--color-success)}
+  .hero { padding: var(--space-4) 0 var(--space-6); }
+  @media (max-width: 600px) { .stat-tiles { grid-template-columns: repeat(2, 1fr); } }
+}
+
+@layer components {
+  .hero-stat .statline { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (max-width: 600px) { .hero-stat .statline { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  /* Barras de fator do ranking (Próxima Platina). */
+  .factor { display: grid; grid-template-columns: 92px 1fr 34px; gap: 8px; align-items: center; font: 600 10.5px/1 var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--color-text-3); }
+  .factor .track { position: relative; height: 6px; background: var(--color-surface-3); overflow: hidden; }
+  .factor .track i { position: absolute; inset: 0; transform-origin: left; background: var(--fc, var(--color-neon-cyan)); }
+  .factor b { font: 700 12px/1 var(--font-numeric); color: var(--color-text-2); text-align: right; font-variant-numeric: tabular-nums; }
+  .rank-idx { font-family: var(--font-numeric); font-weight: 700; font-size: 44px; line-height: .8; color: transparent; -webkit-text-stroke: 1px rgb(61 245 255 / .55); min-width: 1.4em; text-align: center; }
+}
+
+@layer components {
+  /* Glifo do "momento" (platina/100%): halo iridescente girando atrás, como a platina do tile. */
+  .moment-glyph { position: relative; isolation: isolate; }
+  .moment-glyph::before {
+    content: ""; position: absolute; inset: -6px; z-index: -1; border-radius: 50%;
+    background: var(--gradient-platinum); filter: blur(14px); opacity: .55;
+    animation: spin var(--dur-sheen) linear infinite;
+  }
+}

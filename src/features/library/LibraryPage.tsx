@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import type { GamesQuery } from "@/api/endpoints";
 import type { GameStatus, Platform } from "@/api/schemas";
 import { GameCard } from "@/design-system/components/GameCard";
 import { SectionHead } from "@/design-system/components/SectionHead";
-import { HudButton } from "@/design-system/components/HudButton";
+import { LoadMore } from "@/components/LoadMore";
 import { useIntegrations } from "@/features/integrations/queries";
 import { LIBRARY_PAGE_SIZE, useLibrary } from "./queries";
 
@@ -197,40 +197,9 @@ export default function LibraryPage() {
               );
             })}
           </ul>
-          <LoadMore query={query} />
+          <LoadMore hasNextPage={query.hasNextPage} isFetchingNextPage={query.isFetchingNextPage} fetchNextPage={query.fetchNextPage} />
         </>
       )}
     </section>
-  );
-}
-
-/**
- * Carrega a próxima página quando o sentinela entra na tela (IntersectionObserver), com um botão como
- * alternativa acessível (teclado/leitor de tela e navegadores sem observer).
- */
-function LoadMore({ query }: { query: ReturnType<typeof useLibrary> }) {
-  const sentinel = useRef<HTMLDivElement>(null);
-  const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
-
-  useEffect(() => {
-    const el = sentinel.current;
-    if (!el || !hasNextPage || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting) && !isFetchingNextPage) void fetchNextPage();
-      },
-      { rootMargin: "600px 0px" },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  if (!hasNextPage) return null;
-  return (
-    <div ref={sentinel} className="flex justify-center py-4">
-      <HudButton variant="secondary" onClick={() => void fetchNextPage()} disabled={isFetchingNextPage}>
-        {isFetchingNextPage ? "Carregando…" : "Carregar mais"}
-      </HudButton>
-    </div>
   );
 }
