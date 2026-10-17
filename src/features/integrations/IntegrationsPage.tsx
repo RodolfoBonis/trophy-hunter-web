@@ -180,6 +180,7 @@ function IntegrationCard({ integration, runningRun }: { integration: Integration
         </Banner>
       )}
       {integration.platform === "psn" && integration.status === "needs_reconnect" && <ReconnectPSN integrationId={integration.id} />}
+      {integration.platform === "psn" && integration.status !== "needs_reconnect" && <UpdateNpsso integrationId={integration.id} />}
       {integration.status === "error_private" && (
         <Banner tone="warning" title="Perfil privado">
           Libere &quot;Detalhes do jogo&quot; como público na Steam para sincronizar.
@@ -418,7 +419,7 @@ export function ConnectPSNForm() {
 }
 
 /** Reconexão inline de uma conta PSN expirada. */
-function ReconnectPSN({ integrationId }: { integrationId: string }) {
+function ReconnectPSN({ integrationId, onDone }: { integrationId: string; onDone?: () => void }) {
   const reconnect = useReconnect();
   const [npsso, setNpsso] = useState("");
   const error = reconnect.error && isApiError(reconnect.error) ? reconnect.error : null;
@@ -426,7 +427,15 @@ function ReconnectPSN({ integrationId }: { integrationId: string }) {
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        reconnect.mutate({ id: integrationId, npsso: npsso.trim() }, { onSuccess: () => setNpsso("") });
+        reconnect.mutate(
+          { id: integrationId, npsso: npsso.trim() },
+          {
+            onSuccess: () => {
+              setNpsso("");
+              onDone?.();
+            },
+          },
+        );
       }}
       className="flex flex-col gap-3"
     >
@@ -455,4 +464,23 @@ function ReconnectPSN({ integrationId }: { integrationId: string }) {
       </Button>
     </form>
   );
+}
+
+/**
+ * "Atualizar NPSSO" (conta PSN conectada): guarda um NPSSO novo para a renovação automática da
+ * sessão (o refresh da PSN dura ~10 dias; o NPSSO, ~2 meses).
+ */
+function UpdateNpsso({ integrationId }: { integrationId: string }) {
+  const [open, setOpen] = useState(false);
+  if (!open) {
+    return (
+      <p className="caption flex flex-wrap items-center gap-2">
+        Sessão renovada automaticamente pelo NPSSO guardado (cifrado).
+        <button type="button" className="label cursor-pointer !text-neon-cyan" onClick={() => setOpen(true)}>
+          Atualizar NPSSO
+        </button>
+      </p>
+    );
+  }
+  return <ReconnectPSN integrationId={integrationId} onDone={() => setOpen(false)} />;
 }
