@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense, useState, type ReactNode } from "react";
 import { RouterProvider } from "react-router";
 import { OidcSessionProvider } from "@/auth/OidcSessionProvider";
+import { Sprite } from "@/design-system/components/Sprite";
 import type { AppConfig } from "@/config/env";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { createQueryClient } from "./queryClient";
@@ -31,6 +32,7 @@ export function App({ config }: { config: AppConfig }) {
   const [router] = useState(createAppRouter);
   return (
     <ErrorBoundary fallback={(reset) => <CrashScreen onRetry={reset} />}>
+      <Sprite />
       <SessionProvider config={config}>
         <QueryClientProvider client={queryClient}>
           <RouterProvider router={router} />
