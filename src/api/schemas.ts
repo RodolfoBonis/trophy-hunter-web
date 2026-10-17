@@ -446,3 +446,93 @@ export interface Annotations {
   tags?: TrophyTag[];
   server_shutdown_risk?: boolean;
 }
+
+/* ── IA: guias, roadmap e chat ─────────────────────────────────────────────────────────── */
+
+const strings = z
+  .array(z.string())
+  .nullable()
+  .transform((a) => a ?? []);
+
+/** Guia de um troféu (schema trophy_guide v1, validado na API). */
+export const trophyGuideContentSchema = z.object({
+  summary: z.string(),
+  steps: strings,
+  prerequisites: strings,
+  missable: z.boolean(),
+  point_of_no_return: z.string(),
+  difficulty: z.number().int(),
+  estimated_time: z.string(),
+  tips: strings,
+  confidence: z.number(),
+  uncertainty_notes: z.string(),
+  sources: strings,
+});
+export type TrophyGuideContent = z.infer<typeof trophyGuideContentSchema>;
+
+export const roadmapStageSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  trophies: strings,
+  missables: strings,
+});
+export type RoadmapStage = z.infer<typeof roadmapStageSchema>;
+
+/** Roadmap de platina/100% (schema roadmap v1). */
+export const roadmapContentSchema = z.object({
+  summary: z.string(),
+  difficulty: z.number().int(),
+  estimated_total_time: z.string(),
+  playthroughs: z.number().int(),
+  stages: z.array(roadmapStageSchema),
+  missables_overview: strings,
+  tips: strings,
+  confidence: z.number(),
+  uncertainty_notes: z.string(),
+  sources: strings,
+});
+export type RoadmapContent = z.infer<typeof roadmapContentSchema>;
+
+export const guideStatusSchema = z.enum(["pending", "running", "ready", "error"]);
+export type GuideStatus = z.infer<typeof guideStatusSchema>;
+
+/**
+ * Guia de IA. `content` = gerado; `edited_content` = correção do usuário (vence na exibição). O
+ * conteúdo fica como `unknown` aqui e é validado pelo schema do escopo na exibição
+ * (trophyGuideContentSchema / roadmapContentSchema).
+ */
+export const aiGuideSchema = z.object({
+  id: z.string(),
+  scope: z.enum(["trophy", "roadmap"]),
+  status: guideStatusSchema,
+  content: z.unknown().nullable(),
+  edited_content: z.unknown().nullable(),
+  model: z.string(),
+  error: z.string(),
+  generated_at: timestamp.nullish(),
+  updated_at: timestamp.nullish(),
+});
+export type AIGuide = z.infer<typeof aiGuideSchema>;
+
+export const aiGuideEnvelopeSchema = z.object({ guide: aiGuideSchema.nullable() });
+export type AIGuideEnvelope = z.infer<typeof aiGuideEnvelopeSchema>;
+
+export const chatMessageSchema = z.object({
+  id: z.string(),
+  role: z.enum(["user", "assistant"]),
+  content: z.string(),
+  status: z.enum(["pending", "running", "done", "error"]),
+  error: z.string(),
+  created_at: timestamp.nullish(),
+});
+export type ChatMessage = z.infer<typeof chatMessageSchema>;
+
+export const chatThreadSchema = z.object({
+  messages: z
+    .array(chatMessageSchema)
+    .nullable()
+    .transform((m) => m ?? []),
+});
+export type ChatThread = z.infer<typeof chatThreadSchema>;
+
+export const sendChatResponseSchema = z.object({ user: chatMessageSchema, assistant: chatMessageSchema });

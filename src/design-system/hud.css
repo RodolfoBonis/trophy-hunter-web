@@ -588,3 +588,68 @@ h3.sub{font-family:var(--font-display);font-weight:600;font-size:var(--text-h4);
     animation: spin var(--dur-sheen) linear infinite;
   }
 }
+
+/* ── IA: guias, roadmap e chat (Fase 4) ─────────────────────────────────────────────────────
+ * Violeta = IA (cor da "sugestão", nunca confundida com raridade/plataforma). Spoiler veil reusa a
+ * linguagem do .trow oculto (blur + botão revelar).
+ */
+@layer components {
+  .ai-tag { display: inline-flex; align-items: center; gap: 6px; font: 700 10px/1 var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--color-neon-violet-text); }
+  .ai-tag svg { width: 13px; height: 13px; }
+  .ai-panel { position: relative; border-left: 2px solid color-mix(in oklab, var(--color-neon-violet) 70%, transparent); background: linear-gradient(90deg, color-mix(in oklab, var(--color-neon-violet) 7%, transparent), transparent 55%); padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
+  .ai-disclaimer { font: 500 12px/1.4 var(--font-sans); color: var(--color-text-3); }
+
+  /* Geração ao vivo: status pulsante + trilha de pesquisas */
+  .ai-live { display: flex; flex-direction: column; gap: 8px; }
+  .ai-status { display: inline-flex; align-items: center; gap: 8px; font: 600 12px/1 var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--color-neon-violet-text); }
+  .ai-status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--color-neon-violet); box-shadow: var(--shadow-glow-violet); animation: ai-pulse 1.2s var(--ease-out) infinite; }
+  .ai-tools { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
+  .ai-tools li { font: 500 12px/1.35 var(--font-mono); color: var(--color-text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ai-tools li::before { content: "› "; color: var(--color-neon-violet-text); }
+  .ai-caret::after { content: "▍"; color: var(--color-neon-violet-text); animation: ai-blink 1s steps(1) infinite; margin-left: 1px; }
+
+  /* Conteúdo do guia */
+  .ai-steps { margin: 0; padding: 0; list-style: none; counter-reset: step; display: flex; flex-direction: column; gap: 8px; }
+  .ai-steps li { counter-increment: step; display: grid; grid-template-columns: 26px 1fr; gap: 10px; font: 400 14px/1.5 var(--font-sans); color: var(--color-text-1); }
+  .ai-steps li::before { content: counter(step, decimal-leading-zero); font: 700 12px/1.9 var(--font-numeric); color: var(--color-neon-violet-text); }
+  .ai-list { list-style: disc; margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font: 400 13.5px/1.45 var(--font-sans); color: var(--color-text-2); }
+  .ai-meter { display: inline-flex; gap: 3px; vertical-align: middle; }
+  .ai-meter i { width: 8px; height: 12px; background: var(--color-surface-3); transform: skewX(-12deg); }
+  .ai-meter i.on { background: var(--mc, var(--color-warning)); }
+  .ai-conf { height: 6px; background: var(--color-surface-3); overflow: hidden; width: 120px; display: inline-block; vertical-align: middle; }
+  .ai-conf i { display: block; height: 100%; background: var(--cc, var(--color-success)); transform-origin: left; }
+  .ai-facts { display: flex; flex-wrap: wrap; gap: 8px 18px; font: 600 11px/1 var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--color-text-3); align-items: center; }
+  .ai-facts b { color: var(--color-text-1); font-family: var(--font-numeric); letter-spacing: 0; }
+
+  /* Roadmap: etapas numa trilha vertical */
+  .ai-stages { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0; }
+  .ai-stage { position: relative; padding: 0 0 18px 28px; }
+  .ai-stage::before { content: ""; position: absolute; left: 7px; top: 18px; bottom: 0; width: 2px; background: var(--color-border); }
+  .ai-stage:last-child::before { display: none; }
+  .ai-stage::after { content: ""; position: absolute; left: 0; top: 3px; width: 16px; height: 16px; border: 2px solid var(--color-neon-violet); background: var(--color-bg-1); transform: rotate(45deg) scale(.8); }
+  .ai-stage h5 { margin: 0; font: 700 15px/1.3 var(--font-display); color: var(--color-text-1); }
+
+  /* Spoiler veil: conteúdo borrado até revelar */
+  .ai-veil { position: relative; }
+  .ai-veil.veiled > .ai-veil-body { filter: blur(7px); user-select: none; pointer-events: none; max-height: 220px; overflow: hidden; }
+  .ai-veil > .reveal-btn { z-index: 2; }
+
+  /* Chat */
+  .ai-chat { display: flex; flex-direction: column; gap: 12px; }
+  .ai-msgs { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; max-height: min(60vh, 560px); overflow-y: auto; overscroll-behavior: contain; }
+  .ai-msg { max-width: min(92%, 680px); padding: 10px 14px; font: 400 14px/1.55 var(--font-sans); color: var(--color-text-1); --c: 8px; clip-path: polygon(var(--c) 0, 100% 0, 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, 0 100%, 0 var(--c)); }
+  .ai-msg.user { align-self: flex-end; background: color-mix(in oklab, var(--color-neon-cyan) 12%, var(--color-surface-2)); }
+  .ai-msg.assistant { align-self: flex-start; background: color-mix(in oklab, var(--color-neon-violet) 10%, var(--color-surface-2)); }
+  .ai-msg p { margin: 0 0 8px; } .ai-msg p:last-child { margin-bottom: 0; }
+  .ai-msg ul, .ai-msg ol { margin: 0 0 8px; padding-left: 20px; }
+  .ai-msg ul { list-style: disc; } .ai-msg ol { list-style: decimal; }
+  .ai-list li::marker, .ai-msg li::marker { color: var(--color-neon-violet-text); }
+  .ai-msg code { font: 500 12.5px/1 var(--font-mono); background: rgb(0 0 0 / .3); padding: 2px 4px; }
+  .ai-compose { display: flex; gap: 8px; align-items: flex-end; }
+  .ai-compose textarea { flex: 1; min-height: 44px; max-height: 160px; resize: vertical; }
+}
+@keyframes ai-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.7); } }
+@keyframes ai-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .ai-status::before, .ai-caret::after { animation: none; }
+}

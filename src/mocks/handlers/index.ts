@@ -4,6 +4,7 @@ import { db } from "../data/db";
 import type { MockGameRow } from "../data/fixtures";
 import { API, apiError, scenarioGate } from "../http";
 import { hasScenario } from "../scenario";
+import { aiHandlers } from "./ai";
 
 /* Espelha a API: o mesmo jogo (platform + external_id) em várias contas vira UM item, representado
  * pela conta mais avançada (maior % → mais troféus); accounts lista todas, mais avançada primeiro. */
@@ -204,6 +205,7 @@ function mockAlerts() {
 }
 
 export const handlers: HttpHandler[] = [
+  ...aiHandlers,
   /* Perfil */
   http.get(`${API}/me`, () => HttpResponse.json({ subject: "mock-user", name: "Rodolfo de Bonis", email: "rodolfo@rb.lab" })),
 

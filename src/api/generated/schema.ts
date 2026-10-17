@@ -2,6 +2,43 @@
 /** Gerado por `pnpm gen:api` a partir de /Users/rodolfodebonis/Documents/projects/trophy-hunter-api/api/openapi.yaml. Não edite à mão. */
 
 export interface paths {
+    "/ai/guides/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Grava a correção do usuário (mesmo schema do guia) ou null para voltar ao gerado. */
+        patch: operations["editGuide"];
+        trace?: never;
+    };
+    "/ai/streams/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Resposta da IA em tempo real (Server-Sent Events).
+         * @description id = guia ou mensagem do assistente. Eventos (data = JSON {"data": string}): `text` (pedaço do chat), `json` (pedaço do JSON do guia), `tool` ("Pesquisando: …"), `status` (aviso), `ping` (heartbeat a cada 5 s) e os finais `done` (resultado no GET correspondente) e `error` (mensagem). Retoma do header Last-Event-ID. Use fetch (o header Authorization não cabe em EventSource).
+         */
+        get: operations["aiStream"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/alerts": {
         parameters: {
             query?: never;
@@ -54,6 +91,25 @@ export interface paths {
         patch: operations["patchGame"];
         trace?: never;
     };
+    "/games/{id}/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Conversa ativa do jogo. */
+        get: operations["getChat"];
+        put?: never;
+        /** Envia uma pergunta; a resposta chega por /ai/streams/{assistant.id}. Uma por vez. */
+        post: operations["sendChat"];
+        /** Arquiva a conversa (a próxima pergunta começa do zero). */
+        delete: operations["resetChat"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/games/{id}/link": {
         parameters: {
             query?: never;
@@ -86,6 +142,24 @@ export interface paths {
         get: operations["linkCandidates"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games/{id}/roadmap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Roadmap de platina/100% do jogo (null se ainda não gerado). */
+        get: operations["getRoadmap"];
+        put?: never;
+        /** Gera (ou regenera) o roadmap a partir do progresso atual. */
+        post: operations["generateRoadmap"];
         delete?: never;
         options?: never;
         head?: never;
@@ -320,10 +394,50 @@ export interface paths {
         patch: operations["patchTrophy"];
         trace?: never;
     };
+    "/trophies/{id}/guide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Guia de IA do troféu (null se ainda não gerado). */
+        get: operations["getTrophyGuide"];
+        put?: never;
+        /** Gera (ou regenera) o guia do troféu. A edição do usuário é preservada. */
+        post: operations["generateTrophyGuide"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description Guia de IA. content = gerado (validado pelo schema do escopo); edited_content = correção do usuário (a UI mostra a editada quando existe). status pending/running = gerando. */
+        AIGuide: {
+            /** @description TrophyGuideContent (scope trophy) ou RoadmapContent (scope roadmap). */
+            content: components["schemas"]["TrophyGuideContent"] | components["schemas"]["RoadmapContent"] | null;
+            edited_content: components["schemas"]["TrophyGuideContent"] | components["schemas"]["RoadmapContent"] | null;
+            /** @description Mensagem exibível quando status = error. */
+            error: string;
+            /** Format: date-time */
+            generated_at: string | null;
+            /** Format: uuid */
+            id: string;
+            model: string;
+            /** @enum {string} */
+            scope: "trophy" | "roadmap";
+            /** @enum {string} */
+            status: "pending" | "running" | "ready" | "error";
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        AIGuideEnvelope: {
+            guide: components["schemas"]["AIGuide"] | null;
+        };
         Alert: {
             /** Format: uuid */
             game_id: string;
@@ -346,6 +460,21 @@ export interface components {
             priority?: number;
             server_shutdown_risk?: boolean;
             tags?: components["schemas"]["TrophyTag"][];
+        };
+        ChatMessage: {
+            content: string;
+            /** Format: date-time */
+            created_at: string | null;
+            error: string;
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            role: "user" | "assistant";
+            /** @enum {string} */
+            status: "pending" | "running" | "done" | "error";
+        };
+        ChatThread: {
+            messages: components["schemas"]["ChatMessage"][];
         };
         ConnectPSNRequest: {
             /** @description Apelido; vazio → online ID. */
@@ -433,7 +562,7 @@ export interface components {
             /** @description Vínculo decidido manualmente (a unificação automática não mexe). */
             unify_locked: boolean;
         };
-        /** @description Um item por jogo (platform + external_id). Game/progress são da conta MAIS AVANÇADA (id = game_id dela); accounts lista todas as contas que possuem o jogo, mais avançada primeiro. */
+        /** @description Um item por jogo: o jogo unificado (Steam + PSN, cross_platform = true) ou, sem vínculo, platform + external_id. Game/progress são da conta MAIS AVANÇADA — entre plataformas, quando unificado (id = game_id dela); accounts lista as contas da plataforma desse item, mais avançada primeiro. Com filtro de plataforma, aparece a versão daquela plataforma. */
         GameListItem: components["schemas"]["Game"] & {
             accounts: components["schemas"]["GameAccount"][];
             counts: components["schemas"]["TypeCounts"];
@@ -570,6 +699,24 @@ export interface components {
             rarity_pct?: number | null;
             tags: components["schemas"]["TrophyTag"][];
             type: components["schemas"]["TrophyType"];
+        };
+        RoadmapContent: {
+            confidence: number;
+            difficulty: number;
+            estimated_total_time: string;
+            missables_overview: string[];
+            playthroughs: number;
+            sources: string[];
+            stages: components["schemas"]["RoadmapStage"][];
+            summary: string;
+            tips: string[];
+            uncertainty_notes: string;
+        };
+        RoadmapStage: {
+            description: string;
+            missables: string[];
+            title: string;
+            trophies: string[];
         };
         Stats: {
             completions: {
@@ -712,6 +859,19 @@ export interface components {
             name: string;
             trophies: components["schemas"]["Trophy"][];
         };
+        TrophyGuideContent: {
+            confidence: number;
+            difficulty: number;
+            estimated_time: string;
+            missable: boolean;
+            point_of_no_return: string;
+            prerequisites: string[];
+            sources: string[];
+            steps: string[];
+            summary: string;
+            tips: string[];
+            uncertainty_notes: string;
+        };
         /** @enum {string} */
         TrophyTag: "missable" | "online" | "grind" | "difficulty" | "collectible" | "buggy";
         /** @enum {string} */
@@ -760,6 +920,64 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    editGuide: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["GameIDPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    edited_content: components["schemas"]["TrophyGuideContent"] | components["schemas"]["RoadmapContent"] | null;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIGuide"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+        };
+    };
+    aiStream: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Last-Event-ID"?: string;
+            };
+            path: {
+                id: components["parameters"]["GameIDPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stream SSE. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": string;
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
     getAlerts: {
         parameters: {
             query?: never;
@@ -867,6 +1085,88 @@ export interface operations {
             422: components["responses"]["Problem"];
         };
     };
+    getChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["GameIDPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatThread"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    sendChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["GameIDPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    message: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Na fila. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        assistant: components["schemas"]["ChatMessage"];
+                        user: components["schemas"]["ChatMessage"];
+                    };
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    resetChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["GameIDPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Arquivada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
     linkGame: {
         parameters: {
             query?: never;
@@ -942,6 +1242,55 @@ export interface operations {
             };
             401: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
+        };
+    };
+    getRoadmap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["GameIDPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIGuideEnvelope"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    generateRoadmap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["GameIDPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Na fila — acompanhe em /ai/streams/{guide.id}. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIGuide"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     syncGame: {
@@ -1313,6 +1662,55 @@ export interface operations {
             401: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
             422: components["responses"]["Problem"];
+        };
+    };
+    getTrophyGuide: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["GameIDPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIGuideEnvelope"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    generateTrophyGuide: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["GameIDPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Na fila — acompanhe em /ai/streams/{guide.id}. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIGuide"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
 }

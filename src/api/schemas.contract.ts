@@ -5,7 +5,13 @@
  */
 import type { components } from "./generated/schema";
 import type {
+  AIGuide,
+  ChatMessage,
+  ChatThread,
   ConnectSteamRequest,
+  RoadmapContent,
+  RoadmapStage,
+  TrophyGuideContent,
   CrossPlatformGame,
   EnqueueResponse,
   Game,
@@ -62,4 +68,10 @@ export type ContractChecks = [
   AssertNever<MissingKeys<Gen["TimelinePage"], TimelinePage>>,
   AssertNever<MissingKeys<Gen["Alert"], Alert>>,
   AssertNever<MissingKeys<Gen["CrossPlatformGame"], CrossPlatformGame>>,
+  AssertNever<MissingKeys<Gen["AIGuide"], AIGuide>>,
+  AssertNever<MissingKeys<Gen["TrophyGuideContent"], TrophyGuideContent>>,
+  AssertNever<MissingKeys<Gen["RoadmapContent"], RoadmapContent>>,
+  AssertNever<MissingKeys<Gen["RoadmapStage"], RoadmapStage>>,
+  AssertNever<MissingKeys<Gen["ChatMessage"], ChatMessage>>,
+  AssertNever<MissingKeys<Gen["ChatThread"], ChatThread>>,
 ];

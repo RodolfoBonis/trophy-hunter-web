@@ -60,13 +60,23 @@ export class ApiClient {
     return parsed.data as never;
   }
 
+  /**
+   * Abre uma stream SSE (GET) com o mesmo Bearer/renovação das demais chamadas. EventSource não
+   * manda o header Authorization, por isso fetch + leitura do corpo (ver `readSSE`).
+   */
+  openStream(path: string, opts: { lastEventId?: string; signal?: AbortSignal } = {}): Promise<Response> {
+    const headers: Record<string, string> = { Accept: "text/event-stream" };
+    if (opts.lastEventId) headers["Last-Event-ID"] = opts.lastEventId;
+    return this.send(path, { signal: opts.signal, headers });
+  }
+
   private async send(
     path: string,
-    options: Omit<RequestOptions<z.ZodType | undefined>, "schema">,
+    options: Omit<RequestOptions<z.ZodType | undefined>, "schema"> & { headers?: Record<string, string> },
     retried = false,
   ): Promise<Response> {
     const { method = "GET", query, body, signal } = options;
-    const headers: Record<string, string> = { Accept: "application/json" };
+    const headers: Record<string, string> = { Accept: "application/json", ...options.headers };
     const token = this.deps.getAccessToken();
     if (token) headers.Authorization = `Bearer ${token}`;
     if (body !== undefined) headers["Content-Type"] = "application/json";

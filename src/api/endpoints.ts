@@ -1,5 +1,9 @@
 import type { ApiClient } from "./client";
 import {
+  aiGuideEnvelopeSchema,
+  aiGuideSchema,
+  chatThreadSchema,
+  sendChatResponseSchema,
   alertListSchema,
   crossPlatformListSchema,
   enqueueResponseSchema,
@@ -49,6 +53,22 @@ export const api = {
   unlinkGame: (c: ApiClient, id: string) => c.request(`/games/${encodeURIComponent(id)}/link`, { method: "DELETE" }),
   linkCandidates: (c: ApiClient, id: string, q: string, signal?: AbortSignal) =>
     c.request(`/games/${encodeURIComponent(id)}/link-candidates`, { query: { q }, schema: crossPlatformListSchema, signal }),
+
+  /* IA (geração assíncrona; a resposta chega por stream — ver useAIStream) */
+  trophyGuide: (c: ApiClient, trophyId: string) =>
+    c.request(`/trophies/${encodeURIComponent(trophyId)}/guide`, { schema: aiGuideEnvelopeSchema }),
+  generateTrophyGuide: (c: ApiClient, trophyId: string) =>
+    c.request(`/trophies/${encodeURIComponent(trophyId)}/guide`, { method: "POST", schema: aiGuideSchema }),
+  roadmap: (c: ApiClient, gameId: string) => c.request(`/games/${encodeURIComponent(gameId)}/roadmap`, { schema: aiGuideEnvelopeSchema }),
+  generateRoadmap: (c: ApiClient, gameId: string) =>
+    c.request(`/games/${encodeURIComponent(gameId)}/roadmap`, { method: "POST", schema: aiGuideSchema }),
+  /** Grava a correção do usuário (mesmo schema) ou `null` para voltar ao gerado. */
+  editGuide: (c: ApiClient, guideId: string, editedContent: unknown) =>
+    c.request(`/ai/guides/${encodeURIComponent(guideId)}`, { method: "PATCH", body: { edited_content: editedContent }, schema: aiGuideSchema }),
+  chat: (c: ApiClient, gameId: string) => c.request(`/games/${encodeURIComponent(gameId)}/chat`, { schema: chatThreadSchema }),
+  sendChat: (c: ApiClient, gameId: string, message: string) =>
+    c.request(`/games/${encodeURIComponent(gameId)}/chat`, { method: "POST", body: { message }, schema: sendChatResponseSchema }),
+  resetChat: (c: ApiClient, gameId: string) => c.request(`/games/${encodeURIComponent(gameId)}/chat`, { method: "DELETE" }),
 
   /* Integrações */
   integrations: (c: ApiClient) => c.request("/integrations", { schema: integrationListSchema }),
@@ -108,4 +128,7 @@ export const queryKeys = {
   timeline: ["timeline"] as const,
   alerts: ["alerts"] as const,
   linkCandidates: (id: string, q: string) => ["link-candidates", id, q] as const,
+  trophyGuide: (trophyId: string) => ["ai-guide", "trophy", trophyId] as const,
+  roadmap: (gameId: string) => ["ai-guide", "roadmap", gameId] as const,
+  chat: (gameId: string) => ["ai-chat", gameId] as const,
 } as const;
