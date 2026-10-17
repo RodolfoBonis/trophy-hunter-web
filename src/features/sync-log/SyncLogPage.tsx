@@ -1,4 +1,5 @@
 import type { SyncRun } from "@/api/schemas";
+import { ProgressBar } from "@/design-system/components/ProgressBar";
 import { Badge, type BadgeProps } from "@/design-system/components/ui/badge";
 import { Skeleton } from "@/design-system/components/ui/skeleton";
 import { Table, TBody, TD, TH, THead, TR } from "@/design-system/components/ui/table";
@@ -22,7 +23,29 @@ function duration(run: SyncRun): string {
   return `${(ms / 1000).toFixed(1)}s`;
 }
 
-/** Log de sync — tabela plain ligada à API. */
+/** Progresso do fan-out de jogos: barra enquanto roda, contagem concluídos/total, falhas em alerta. */
+function GamesCell({ run }: { run: SyncRun }) {
+  const total = run.games_total ?? 0;
+  const done = run.games_done ?? 0;
+  const failed = run.games_failed ?? 0;
+  if (total === 0 && run.status !== "running") return <span className="text-text-3">—</span>;
+  const pct = total > 0 ? (done / total) * 100 : 0;
+  return (
+    <div className="flex min-w-[140px] flex-col gap-1">
+      <span className="font-numeric text-xs tabular-nums text-text-2">
+        {done}/{total} jogos
+        {failed > 0 && (
+          <span className="ml-2 text-warning">
+            · {failed} {failed === 1 ? "falha" : "falhas"}
+          </span>
+        )}
+      </span>
+      {run.status === "running" && <ProgressBar value={pct} />}
+    </div>
+  );
+}
+
+/** Log de sync — tabela HUD ligada à API (poll a cada 15s). */
 export default function SyncLogPage() {
   const query = useSyncRuns();
 
@@ -33,7 +56,7 @@ export default function SyncLogPage() {
         Não foi possível carregar o log de sync.
       </p>
     );
-  if (query.data.length === 0) return <p className="text-sm text-muted">Nenhum sync executado ainda.</p>;
+  if (query.data.length === 0) return <p className="text-sm text-text-2">Nenhum sync executado ainda.</p>;
 
   return (
     <Table>
@@ -44,25 +67,27 @@ export default function SyncLogPage() {
           <TH scope="col">Escopo</TH>
           <TH scope="col">Gatilho</TH>
           <TH scope="col">Status</TH>
-          <TH scope="col">Mudanças</TH>
+          <TH scope="col">Jogos</TH>
+          <TH scope="col">Itens</TH>
           <TH scope="col">Duração</TH>
         </TR>
       </THead>
       <TBody>
         {query.data.map((run) => (
           <TR key={run.id}>
-            <TD className="whitespace-nowrap text-muted">{new Date(run.started_at).toLocaleString("pt-BR")}</TD>
-            <TD className="uppercase">{run.platform}</TD>
+            <TD className="whitespace-nowrap text-text-2">{new Date(run.started_at).toLocaleString("pt-BR")}</TD>
+            <TD className="font-display uppercase">{run.platform}</TD>
             <TD>{SCOPE_LABEL[run.scope]}</TD>
             <TD>{run.trigger === "manual" ? "Manual" : "Agendado"}</TD>
             <TD>
               <Badge tone={STATUS_TONE[run.status]}>{STATUS_LABEL[run.status]}</Badge>
               {run.error && <p className="mt-1 text-xs text-danger">{run.error}</p>}
             </TD>
-            <TD className="text-muted">
-              {run.items_changed ?? 0} itens · {run.games_touched ?? 0} jogos
+            <TD>
+              <GamesCell run={run} />
             </TD>
-            <TD className="text-muted">{duration(run)}</TD>
+            <TD className="font-numeric tabular-nums text-text-2">{run.items_changed ?? 0}</TD>
+            <TD className="text-text-2">{duration(run)}</TD>
           </TR>
         ))}
       </TBody>
