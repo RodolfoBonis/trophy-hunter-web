@@ -124,6 +124,7 @@ export function Sprite() {
         <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9h-6v-6H9v6H3z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></symbol>
         <symbol id="i-key" viewBox="0 0 16 16"><circle cx="5" cy="8" r="3" fill="none" stroke="currentColor" strokeWidth="1.5"/><path d="M8 8h7M12 8v3M14 8v2" stroke="currentColor" strokeWidth="1.5"/></symbol>
         <symbol id="i-lib" viewBox="0 0 24 24"><path d="M4 4h4v16H4zM10 4h4v16h-4zM16 5l3.8-1 3 15.5-3.8 1z" fill="none" stroke="currentColor" strokeWidth="1.8"/></symbol>
+        <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 006.4 0l3.2-3.2a4.5 4.5 0 00-6.4-6.4L11.6 6M14 10a4.5 4.5 0 00-6.4 0l-3.2 3.2a4.5 4.5 0 006.4 6.4l1.6-1.6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></symbol>
         <symbol id="i-play" viewBox="0 0 16 16"><path d="M4 2.5l9 5.5-9 5.5z" fill="currentColor"/></symbol>
         <symbol id="i-sync" viewBox="0 0 16 16"><path d="M13 6.5A5 5 0 003.5 5M3 9.5A5 5 0 0012.5 11" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M3 2v3.5h3.5M13 14v-3.5H9.5" fill="none" stroke="currentColor" strokeWidth="1.6"/></symbol>
         <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.8"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" strokeWidth="1.8"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></symbol>

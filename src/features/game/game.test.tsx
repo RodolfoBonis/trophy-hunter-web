@@ -1,4 +1,5 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { renderRoutes } from "@/test/render";
 import { gameRoutes } from "./routes";
@@ -23,5 +24,42 @@ describe("GamePage — várias contas", () => {
     renderRoutes({ routes: gameRoutes, path: "/games/22222222-2222-2222-2222-222222222222" });
     await screen.findByText("God of War Ragnarök", {}, { timeout: 3000 });
     expect(screen.queryByRole("navigation", { name: "Contas com este jogo" })).not.toBeInTheDocument();
+  });
+});
+
+const HADES_PSN = "66666666-6666-6666-6666-666666666666";
+const GOW_PSN = "22222222-2222-2222-2222-222222222222";
+const ELDEN_MAIN = "11111111-1111-1111-1111-111111111111";
+
+describe("GamePage — cross-platform", () => {
+  it("mostra o mesmo jogo da outra plataforma lado a lado, pela conta mais avançada", async () => {
+    renderRoutes({ routes: gameRoutes, path: `/games/${HADES_MAIN}` });
+    const panel = await screen.findByRole("region", { name: "Outras plataformas" }, { timeout: 3000 });
+    expect(within(panel).getByText(/Steam × PlayStation/)).toBeInTheDocument();
+    const other = within(panel).getByRole("link");
+    expect(other).toHaveAttribute("href", `/games/${HADES_PSN}`);
+    expect(other).toHaveTextContent("9/49 troféus");
+  });
+
+  it("desvincula e permite vincular à mão um jogo da outra plataforma", async () => {
+    const user = userEvent.setup();
+    renderRoutes({ routes: gameRoutes, path: `/games/${HADES_MAIN}` });
+    const panel = await screen.findByRole("region", { name: "Outras plataformas" }, { timeout: 3000 });
+    await user.click(within(panel).getByRole("button", { name: "Desvincular" }));
+    await user.click(await within(panel).findByRole("button", { name: "Vincular jogo da PlayStation" }));
+    const search = within(panel).getByRole("searchbox", { name: "Buscar jogo na PlayStation" });
+    await user.clear(search);
+    await user.type(search, "god of war");
+    await user.click(await within(panel).findByRole("button", { name: "Vincular a God of War Ragnarök" }, { timeout: 3000 }));
+    const link = await within(panel).findByRole("link", {}, { timeout: 3000 });
+    expect(link).toHaveAttribute("href", `/games/${GOW_PSN}`);
+    expect(within(panel).getByText(/vínculo manual/)).toBeInTheDocument();
+  });
+
+  it("sem vínculo, oferece buscar na outra plataforma", async () => {
+    renderRoutes({ routes: gameRoutes, path: `/games/${ELDEN_MAIN}` });
+    const panel = await screen.findByRole("region", { name: "Outras plataformas" }, { timeout: 3000 });
+    expect(within(panel).getByRole("button", { name: "Vincular jogo da PlayStation" })).toHaveAttribute("aria-expanded", "false");
+    expect(within(panel).queryByRole("link")).not.toBeInTheDocument();
   });
 });

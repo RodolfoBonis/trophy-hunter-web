@@ -1,5 +1,5 @@
 import { http, HttpResponse, type HttpHandler } from "msw";
-import type { EnqueueResponse, GameAccount, Integration, SyncRun } from "@/api/schemas";
+import type { CrossPlatformGame, EnqueueResponse, GameAccount, Integration, SyncRun } from "@/api/schemas";
 import { db } from "../data/db";
 import type { MockGameRow } from "../data/fixtures";
 import { API, apiError, scenarioGate } from "../http";
@@ -31,6 +31,29 @@ function accountsOf(row: MockGameRow, only?: string | null): GameAccount[] {
     .filter((g) => gameKey(g) === gameKey(row) && (!only || g.integration_id === only))
     .sort(moreAdvancedFirst)
     .map(toAccount);
+}
+
+function toCross(g: MockGameRow): CrossPlatformGame {
+  return {
+    game_id: g.id,
+    platform: g.platform,
+    external_id: g.external_id,
+    title: g.title,
+    cover: g.cover ?? "",
+    hero: g.hero ?? "",
+    earned: g.progress.earned,
+    total: g.progress.total,
+    completion_pct: g.progress.completion_pct,
+    last_unlock_at: lastUnlockOf(g),
+  };
+}
+
+/** O mesmo jogo na outra plataforma (conta mais avançada), como CrossPlatformSiblings da API. */
+function crossOf(row: MockGameRow): CrossPlatformGame[] {
+  if (!row.unified_id) return [];
+  return bestRows()
+    .filter((g) => g.unified_id === row.unified_id && g.platform !== row.platform)
+    .map(toCross);
 }
 
 /** Cenário `library-many`: 130 jogos sintéticos (testa a rolagem infinita da biblioteca). */
@@ -203,9 +226,10 @@ export const handlers: HttpHandler[] = [
       if (!best.has(gameKey(row))) best.set(gameKey(row), row);
     }
     let items = [...best.values()].map((row) => {
-      const { groups: _g, integration_id: _i, account_label: _l, ...rest } = row;
+      const { groups: _g, integration_id: _i, account_label: _l, unified_id: _u, unify_locked: _k, ...rest } = row;
       return {
         ...rest,
+        cross_platform: crossOf(row).length > 0,
         counts: countsOf(row),
         last_unlock_at: lastUnlockOf(row),
         accounts: accountsOf(row, only),
@@ -220,7 +244,39 @@ export const handlers: HttpHandler[] = [
   http.get(`${API}/games/:id`, ({ params }) => {
     const game = db.games.find((g) => g.id === params.id);
     if (!game) return apiError(404, "not_found", "Jogo não encontrado.");
-    return HttpResponse.json({ ...game, accounts: accountsOf(game) });
+    const { unified_id: _u, ...rest } = game;
+    return HttpResponse.json({ ...rest, unify_locked: game.unify_locked ?? false, accounts: accountsOf(game), cross_platform: crossOf(game) });
+  }),
+
+  /* Unificação cross-platform (vale para todas as contas do jogo e trava a decisão) */
+  http.post(`${API}/games/:id/link`, async ({ params, request }) => {
+    const a = db.games.find((g) => g.id === params.id);
+    const { other_game_id } = (await request.json()) as { other_game_id: string };
+    const b = db.games.find((g) => g.id === other_game_id);
+    if (!a || !b) return apiError(404, "not_found", "Jogo não encontrado.");
+    if (a.platform === b.platform) return apiError(422, "validation", "Vincule a um jogo de OUTRA plataforma.");
+    const target = a.unified_id ?? b.unified_id ?? `u-${a.id}`;
+    db.games = db.games.map((g) =>
+      gameKey(g) === gameKey(a) || gameKey(g) === gameKey(b) ? { ...g, unified_id: target, unify_locked: true } : g,
+    );
+    return new HttpResponse(null, { status: 204 });
+  }),
+  http.delete(`${API}/games/:id/link`, ({ params }) => {
+    const a = db.games.find((g) => g.id === params.id);
+    if (!a) return apiError(404, "not_found", "Jogo não encontrado.");
+    db.games = db.games.map((g) => (gameKey(g) === gameKey(a) ? { ...g, unified_id: null, unify_locked: true } : g));
+    return new HttpResponse(null, { status: 204 });
+  }),
+  http.get(`${API}/games/:id/link-candidates`, ({ params, request }) => {
+    const a = db.games.find((g) => g.id === params.id);
+    if (!a) return apiError(404, "not_found", "Jogo não encontrado.");
+    const q = (new URL(request.url).searchParams.get("q") || a.title).toLowerCase();
+    return HttpResponse.json(
+      bestRows()
+        .filter((g) => g.platform !== a.platform && g.title.toLowerCase().includes(q))
+        .slice(0, 10)
+        .map(toCross),
+    );
   }),
 
   http.post(`${API}/games/:id/sync`, ({ params }) => {

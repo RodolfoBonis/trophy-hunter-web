@@ -32,6 +32,8 @@ export interface GameCardProps {
   abandoned?: boolean;
   /** Conteúdo extra na linha de contadores (ex.: chip de contas). */
   extra?: ReactNode;
+  /** Vinculado ao mesmo jogo na outra plataforma (selo "Steam + PSN"). */
+  crossPlatform?: boolean;
   /** Nome da view transition (arte compartilhada card → página do jogo). */
   transitionName?: string;
 }
@@ -57,6 +59,7 @@ export function GameCard({
   lastUnlockAt,
   abandoned = false,
   extra,
+  crossPlatform = false,
   transitionName,
 }: GameCardProps) {
   const ref = useRef<HTMLAnchorElement>(null);
@@ -102,7 +105,7 @@ export function GameCard({
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
       className={cn("gcard", complete && "is-plat")}
-      aria-label={`${title}, ${isPsn ? "PlayStation" : "Steam"}, ${complete ? (isPsn ? "platinado" : "100% concluído") : `${Math.round(pct)}% concluído`}`}
+      aria-label={`${title}, ${isPsn ? "PlayStation" : "Steam"}${crossPlatform ? " (também na outra plataforma)" : ""}, ${complete ? (isPsn ? "platinado" : "100% concluído") : `${Math.round(pct)}% concluído`}`}
     >
       <div className="halo" aria-hidden />
       <div className="edge" aria-hidden />
@@ -140,6 +143,12 @@ export function GameCard({
             <div className="tcounts">
               {counts && <TypeCounters counts={counts} platform={platform} earned={earned} total={total} complete={complete} />}
               {extra}
+              {crossPlatform && (
+                <span className="text-neon-violet-text" title="Também na outra plataforma — veja lado a lado na página do jogo">
+                  <Glyph id="i-link" />
+                  Steam + PSN
+                </span>
+              )}
             </div>
           </div>
           <ProgressRing value={pct} platinum={complete} color={isPsn ? undefined : "var(--color-steam)"} />

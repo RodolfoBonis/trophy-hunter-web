@@ -1,6 +1,7 @@
 import type { ApiClient } from "./client";
 import {
   alertListSchema,
+  crossPlatformListSchema,
   enqueueResponseSchema,
   gameSchema,
   nextPlatinumSchema,
@@ -40,6 +41,14 @@ export const api = {
   games: (c: ApiClient, params: GamesQuery = {}, signal?: AbortSignal) =>
     c.request("/games", { query: { ...params }, schema: gameListPageSchema, signal }),
   game: (c: ApiClient, id: string) => c.request(`/games/${encodeURIComponent(id)}`, { schema: gameDetailSchema }),
+
+  /* Unificação cross-platform */
+  /** Vincula ao mesmo jogo na outra plataforma (decisão manual, travada). */
+  linkGame: (c: ApiClient, id: string, otherGameId: string) =>
+    c.request(`/games/${encodeURIComponent(id)}/link`, { method: "POST", body: { other_game_id: otherGameId } }),
+  unlinkGame: (c: ApiClient, id: string) => c.request(`/games/${encodeURIComponent(id)}/link`, { method: "DELETE" }),
+  linkCandidates: (c: ApiClient, id: string, q: string, signal?: AbortSignal) =>
+    c.request(`/games/${encodeURIComponent(id)}/link-candidates`, { query: { q }, schema: crossPlatformListSchema, signal }),
 
   /* Integrações */
   integrations: (c: ApiClient) => c.request("/integrations", { schema: integrationListSchema }),
@@ -98,4 +107,5 @@ export const queryKeys = {
   next: ["next"] as const,
   timeline: ["timeline"] as const,
   alerts: ["alerts"] as const,
+  linkCandidates: (id: string, q: string) => ["link-candidates", id, q] as const,
 } as const;

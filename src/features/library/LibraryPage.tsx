@@ -192,6 +192,7 @@ export default function LibraryPage() {
                         </span>
                       ) : null
                     }
+                    crossPlatform={game.cross_platform}
                   />
                 </li>
               );

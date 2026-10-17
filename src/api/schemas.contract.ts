@@ -6,6 +6,7 @@
 import type { components } from "./generated/schema";
 import type {
   ConnectSteamRequest,
+  CrossPlatformGame,
   EnqueueResponse,
   Game,
   GameAccount,
@@ -60,4 +61,5 @@ export type ContractChecks = [
   AssertNever<MissingKeys<Gen["RemainingTrophy"], RemainingTrophy>>,
   AssertNever<MissingKeys<Gen["TimelinePage"], TimelinePage>>,
   AssertNever<MissingKeys<Gen["Alert"], Alert>>,
+  AssertNever<MissingKeys<Gen["CrossPlatformGame"], CrossPlatformGame>>,
 ];

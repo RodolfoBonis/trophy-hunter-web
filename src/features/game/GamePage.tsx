@@ -7,6 +7,7 @@ import { ProgressRing } from "@/design-system/components/ProgressRing";
 import { RarityBadge } from "@/design-system/components/RarityBadge";
 import { TrophyIcon } from "@/design-system/components/TrophyIcon";
 import { cn } from "@/lib/utils";
+import { CrossPlatform } from "./CrossPlatform";
 import { GameAnnotations, TAG_LABEL, TrophyMarks } from "./GameAnnotations";
 import { useGame } from "./queries";
 
@@ -364,6 +365,8 @@ export default function GamePage() {
       </div>
 
       <AccountSwitcher accounts={game.accounts} currentGameId={game.id} platform={game.platform} />
+
+      <CrossPlatform game={game} />
 
       <GameAnnotations game={game} />
 

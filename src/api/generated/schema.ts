@@ -54,6 +54,44 @@ export interface paths {
         patch: operations["patchGame"];
         trace?: never;
     };
+    "/games/{id}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Vincula o jogo ao mesmo título na OUTRA plataforma (Steam ↔ PSN).
+         * @description Vale para todas as contas que possuem cada jogo e trava a decisão — a unificação automática (match exato de título normalizado) não desfaz nem refaz vínculos manuais.
+         */
+        post: operations["linkGame"];
+        /** Desfaz o vínculo cross-platform do jogo (decisão travada). */
+        delete: operations["unlinkGame"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games/{id}/link-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Jogos da OUTRA plataforma para vincular, por similaridade de título (até 10). */
+        get: operations["linkCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/games/{id}/sync": {
         parameters: {
             query?: never;
@@ -323,6 +361,21 @@ export interface components {
             /** @description SteamID64 (17 dígitos) ou a vanity URL (nome do perfil). */
             steam_id_or_vanity: string;
         };
+        CrossPlatformGame: {
+            /** @description 0–1, pelo critério da plataforma. */
+            completion_pct: number;
+            cover: string;
+            earned: number;
+            external_id: string;
+            /** Format: uuid */
+            game_id: string;
+            hero: string;
+            /** Format: date-time */
+            last_unlock_at: string | null;
+            platform: components["schemas"]["Platform"];
+            title: string;
+            total: number;
+        };
         EnqueueResponse: {
             /** @description false quando já havia um job idêntico pendente (dedupe). */
             enqueued: boolean;
@@ -368,6 +421,8 @@ export interface components {
             account_label: string;
             /** @description Todas as contas que possuem o jogo (mais avançada primeiro). */
             accounts: components["schemas"]["GameAccount"][];
+            /** @description O mesmo jogo na outra plataforma (conta mais avançada), para ver lado a lado. */
+            cross_platform: components["schemas"]["CrossPlatformGame"][];
             groups: components["schemas"]["TrophyGroup"][];
             /**
              * Format: uuid
@@ -375,11 +430,15 @@ export interface components {
              */
             integration_id: string;
             progress: components["schemas"]["ProgressDetail"];
+            /** @description Vínculo decidido manualmente (a unificação automática não mexe). */
+            unify_locked: boolean;
         };
         /** @description Um item por jogo (platform + external_id). Game/progress são da conta MAIS AVANÇADA (id = game_id dela); accounts lista todas as contas que possuem o jogo, mais avançada primeiro. */
         GameListItem: components["schemas"]["Game"] & {
             accounts: components["schemas"]["GameAccount"][];
             counts: components["schemas"]["TypeCounts"];
+            /** @description O jogo está vinculado ao mesmo título na outra plataforma. */
+            cross_platform: boolean;
             /**
              * Format: date-time
              * @description Desbloqueio mais recente (conta best).
@@ -411,6 +470,13 @@ export interface components {
         };
         /** @enum {string} */
         IntegrationStatus: "connected" | "needs_reconnect" | "error_private" | "error" | "disabled";
+        LinkGameRequest: {
+            /**
+             * Format: uuid
+             * @description Jogo da outra plataforma.
+             */
+            other_game_id: string;
+        };
         NextPlatinum: {
             items: {
                 avg_remaining_rarity: number;
@@ -799,6 +865,83 @@ export interface operations {
             401: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
             422: components["responses"]["Problem"];
+        };
+    };
+    linkGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["GameIDPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkGameRequest"];
+            };
+        };
+        responses: {
+            /** @description Vinculado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+        };
+    };
+    unlinkGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["GameIDPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Desvinculado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    linkCandidates: {
+        parameters: {
+            query?: {
+                /** @description Busca por título (padrão = título do jogo). */
+                q?: string;
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["GameIDPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrossPlatformGame"][];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
         };
     };
     syncGame: {

@@ -203,6 +203,26 @@ const accountListSchema = z
   .nullable()
   .transform((a) => a ?? []);
 
+/** O mesmo jogo na outra plataforma (conta mais avançada) — lado a lado / candidatos a vínculo. */
+export const crossPlatformGameSchema = z.object({
+  game_id: z.string(),
+  platform: platformSchema,
+  external_id: z.string(),
+  title: z.string(),
+  cover: z.string(),
+  hero: z.string(),
+  earned: z.number().int(),
+  total: z.number().int(),
+  /** 0–1, pelo critério da plataforma. */
+  completion_pct: z.number(),
+  last_unlock_at: timestamp.nullish(),
+});
+export type CrossPlatformGame = z.infer<typeof crossPlatformGameSchema>;
+export const crossPlatformListSchema = z
+  .array(crossPlatformGameSchema)
+  .nullable()
+  .transform((a) => a ?? []);
+
 /**
  * Um item por jogo: Game/progress são da conta MAIS AVANÇADA (id = game_id dela); accounts lista
  * todas as contas que possuem o jogo, mais avançada primeiro.
@@ -213,6 +233,8 @@ export const gameListItemSchema = gameSchema.extend({
   last_unlock_at: timestamp.nullish(),
   counts: typeCountsSchema,
   accounts: accountListSchema,
+  /** Vinculado ao mesmo título na outra plataforma. */
+  cross_platform: z.boolean().default(false),
 });
 export type GameListItem = z.infer<typeof gameListItemSchema>;
 
@@ -273,6 +295,10 @@ export const gameDetailSchema = gameSchema.extend({
     .array(trophyGroupSchema)
     .nullable()
     .transform((g) => g ?? []),
+  /** O mesmo jogo na outra plataforma, para ver lado a lado. */
+  cross_platform: crossPlatformListSchema,
+  /** Vínculo decidido à mão (a unificação automática não mexe). */
+  unify_locked: z.boolean().default(false),
 });
 export type GameDetail = z.infer<typeof gameDetailSchema>;
 

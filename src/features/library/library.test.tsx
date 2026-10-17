@@ -9,19 +9,29 @@ describe("LibraryPage", () => {
     renderRoutes({ routes: libraryRoutes, path: "/library" });
     expect(await screen.findByRole("link", { name: /^ELDEN RING,/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^God of War Ragnarök,/ })).toBeInTheDocument();
-    expect(screen.getByText(/^3 jogos/)).toBeInTheDocument();
+    expect(screen.getByText(/^4 jogos/)).toBeInTheDocument();
   });
 
   it("mostra UM card por jogo, pela conta mais avançada, com o total de contas", async () => {
     renderRoutes({ routes: libraryRoutes, path: "/library" });
     const hades = await screen.findByRole("link", { name: /^Hades, Steam/ });
-    expect(screen.getAllByRole("link", { name: /^Hades,/ })).toHaveLength(1);
+    expect(screen.getAllByRole("link", { name: /^Hades, Steam/ })).toHaveLength(1);
     // Hades: a Alt (41/49) é a mais avançada.
     expect(hades).toHaveTextContent("41/49 conquistas");
     expect(hades).toHaveTextContent("Alt · 2 contas");
     expect(hades).toHaveAccessibleName(/84% concluído/);
     // ELDEN RING: a Principal é a mais avançada.
     expect(screen.getByText("Principal · 2 contas")).toBeInTheDocument();
+  });
+});
+
+describe("LibraryPage — cross-platform", () => {
+  it("marca com o selo Steam + PSN os jogos vinculados à outra plataforma", async () => {
+    renderRoutes({ routes: libraryRoutes, path: "/library" });
+    const steam = await screen.findByRole("link", { name: /^Hades, Steam \(também na outra plataforma\)/ });
+    expect(steam).toHaveTextContent("Steam + PSN");
+    expect(screen.getByRole("link", { name: /^Hades, PlayStation \(também na outra plataforma\)/ })).toHaveTextContent("Steam + PSN");
+    expect(screen.getByRole("link", { name: /^ELDEN RING,/ })).not.toHaveTextContent("Steam + PSN");
   });
 });
 

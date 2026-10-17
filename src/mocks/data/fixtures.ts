@@ -12,8 +12,14 @@ export const STEAM_MAIN = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 export const STEAM_ALT = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
 export const PSN_MAIN = "cccccccc-cccc-cccc-cccc-cccccccccccc";
 
-/** Linha de jogo no mock (uma por conta); `accounts` é derivado pelos handlers, como na API. */
-export type MockGameRow = Omit<GameDetail, "accounts">;
+/**
+ * Linha de jogo no mock (uma por conta); `accounts` e `cross_platform` são derivados pelos handlers,
+ * como na API. `unified_id` espelha games.unified_game_id (mesmo jogo em Steam e PSN).
+ */
+export type MockGameRow = Omit<GameDetail, "accounts" | "cross_platform" | "unify_locked"> & {
+  unified_id?: string | null;
+  unify_locked?: boolean;
+};
 
 export const mockIntegrations: Integration[] = [
   {
@@ -168,6 +174,7 @@ export const mockGames: MockGameRow[] = [
     platform: "steam",
     external_id: "1145360",
     title: "Hades",
+    unified_id: "u-hades",
     cover: "https://cdn.cloudflare.steamstatic.com/steam/apps/1145360/library_600x900.jpg",
     hero: "https://cdn.cloudflare.steamstatic.com/steam/apps/1145360/header.jpg",
     has_achievements: true,
@@ -190,6 +197,7 @@ export const mockGames: MockGameRow[] = [
     platform: "steam",
     external_id: "1145360",
     title: "Hades",
+    unified_id: "u-hades",
     cover: "https://cdn.cloudflare.steamstatic.com/steam/apps/1145360/library_600x900.jpg",
     hero: "https://cdn.cloudflare.steamstatic.com/steam/apps/1145360/header.jpg",
     has_achievements: true,
@@ -212,6 +220,23 @@ export const mockGames: MockGameRow[] = [
     last_played_at: ago(60 * DAY),
     progress: { total: 42, earned: 6, remaining: 36, completion_pct: 0.143, status: "in_progress" },
     groups: [{ id: "g-elden-alt-base", external_id: "base", name: "Jogo base", is_base: true, trophies: [] }],
+  },
+  /* Hades também na PSN: unificado com o da Steam (lado a lado na página do jogo). */
+  {
+    id: "66666666-6666-6666-6666-666666666666",
+    integration_id: PSN_MAIN,
+    account_label: "rb_lab",
+    platform: "psn",
+    external_id: "NPWR21236_00",
+    np_service_name: "trophy2",
+    title: "Hades",
+    unified_id: "u-hades",
+    cover: "https://image.api.playstation.com/trophy/np/NPWR21236_00_00A8BD6D0B5E9D2BCB4E3BC2B5A96E6E8D7A1D4C29/placeholder.png",
+    has_achievements: true,
+    has_platinum: true,
+    last_played_at: ago(120 * DAY),
+    progress: { total: 49, earned: 9, remaining: 40, completion_pct: 0.18, status: "in_progress" },
+    groups: [{ id: "g-hades-psn-base", external_id: "default", name: "Jogo base", is_base: true, trophies: [] }],
   },
 ];
 
