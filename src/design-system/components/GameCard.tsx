@@ -32,7 +32,7 @@ export interface GameCardProps {
   abandoned?: boolean;
   /** Conteúdo extra na linha de contadores (ex.: chip de contas). */
   extra?: ReactNode;
-  /** Vinculado ao mesmo jogo na outra plataforma (selo "Steam + PSN"). */
+  /** Vinculado ao mesmo jogo na outra plataforma (badge das duas plataformas na capa). */
   crossPlatform?: boolean;
   /** Nome da view transition (arte compartilhada card → página do jogo). */
   transitionName?: string;
@@ -116,7 +116,10 @@ export function GameCard({
           </div>
           <div className="fx" aria-hidden />
           <div className="glare" aria-hidden />
-          <PlatformBadge platform={platform} />
+          <div className="pbadges">
+            <PlatformBadge platform={platform} />
+            {crossPlatform && <PlatformBadge platform={isPsn ? "steam" : "psn"} className="is-linked" />}
+          </div>
           {!complete && !abandoned && remaining > 0 && remaining <= ALMOST_THERE && (
             <RarityBadge
               mini
@@ -143,12 +146,6 @@ export function GameCard({
             <div className="tcounts">
               {counts && <TypeCounters counts={counts} platform={platform} earned={earned} total={total} complete={complete} />}
               {extra}
-              {crossPlatform && (
-                <span className="text-neon-violet-text" title="Também na outra plataforma — veja lado a lado na página do jogo">
-                  <Glyph id="i-link" />
-                  Steam + PSN
-                </span>
-              )}
             </div>
           </div>
           <ProgressRing value={pct} platinum={complete} color={isPsn ? undefined : "var(--color-steam)"} />

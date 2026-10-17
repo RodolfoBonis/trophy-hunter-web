@@ -183,6 +183,8 @@ h3.sub{font-family:var(--font-display);font-weight:600;font-size:var(--text-h4);
 .cover .glare{position:absolute;inset:-50%;background:radial-gradient(circle at var(--gx) var(--gy),rgb(255 255 255 / .22),transparent 35%);opacity:0;transition:opacity var(--dur-fast) var(--ease-out);mix-blend-mode:overlay}
 .gcard:hover .glare{opacity:1}
 .cover .pbadge{position:absolute;top:12px;left:12px}
+.cover .pbadges{position:absolute;top:12px;left:12px;z-index:2;display:flex;gap:6px}
+.cover .pbadges .pbadge{position:static}
 .cover .plat-ready{position:absolute;top:12px;right:12px}
 .cover .ctitle{position:absolute;left:16px;bottom:10px;right:16px;font-family:var(--font-display);font-weight:700;font-size:15px;letter-spacing:.32em;text-transform:uppercase;color:rgb(255 255 255 / .78);text-shadow:0 2px 12px rgb(0 0 0 / .7)}
 .gbody{padding:var(--space-4) var(--space-4) var(--space-5);display:grid;grid-template-columns:1fr auto;gap:var(--space-3);align-items:center}

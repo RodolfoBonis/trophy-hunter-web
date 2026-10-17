@@ -26,12 +26,14 @@ describe("LibraryPage", () => {
 });
 
 describe("LibraryPage — cross-platform", () => {
-  it("marca com o selo Steam + PSN os jogos vinculados à outra plataforma", async () => {
+  it("mostra os badges das duas plataformas na capa dos jogos vinculados", async () => {
     renderRoutes({ routes: libraryRoutes, path: "/library" });
     const steam = await screen.findByRole("link", { name: /^Hades, Steam \(também na outra plataforma\)/ });
-    expect(steam).toHaveTextContent("Steam + PSN");
-    expect(screen.getByRole("link", { name: /^Hades, PlayStation \(também na outra plataforma\)/ })).toHaveTextContent("Steam + PSN");
-    expect(screen.getByRole("link", { name: /^ELDEN RING,/ })).not.toHaveTextContent("Steam + PSN");
+    expect(steam.querySelectorAll(".pbadges .pbadge")).toHaveLength(2);
+    expect(steam.querySelector(".pbadges")).toHaveTextContent("SteamPSN");
+    const psn = screen.getByRole("link", { name: /^Hades, PlayStation \(também na outra plataforma\)/ });
+    expect(psn.querySelector(".pbadges")).toHaveTextContent("PSNSteam");
+    expect(screen.getByRole("link", { name: /^ELDEN RING,/ }).querySelectorAll(".pbadge")).toHaveLength(1);
   });
 });
 
