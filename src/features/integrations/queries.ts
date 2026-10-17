@@ -75,3 +75,31 @@ export function useSyncNow() {
     },
   });
 }
+
+function useInvalidateAccounts() {
+  const qc = useQueryClient();
+  return () => {
+    void qc.invalidateQueries({ queryKey: queryKeys.integrations });
+    void qc.invalidateQueries({ queryKey: ["sync-runs"] });
+  };
+}
+
+/** Conecta uma conta PSN pelo NPSSO. */
+export function useConnectPSN() {
+  const client = useApi();
+  const invalidate = useInvalidateAccounts();
+  return useMutation({
+    mutationFn: (body: { label?: string; npsso: string }) => api.connectPSN(client, body),
+    onSuccess: invalidate,
+  });
+}
+
+/** Reconecta uma conta PSN expirada (NPSSO novo). */
+export function useReconnect() {
+  const client = useApi();
+  const invalidate = useInvalidateAccounts();
+  return useMutation({
+    mutationFn: ({ id, npsso }: { id: string; npsso: string }) => api.reconnectIntegration(client, id, npsso),
+    onSuccess: invalidate,
+  });
+}

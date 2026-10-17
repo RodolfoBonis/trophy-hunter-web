@@ -106,6 +106,23 @@ export interface paths {
         patch: operations["updateIntegration"];
         trace?: never;
     };
+    "/integrations/{id}/reconnect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reconecta uma conta PSN expirada com um NPSSO novo (precisa ser a mesma conta). */
+        post: operations["reconnectIntegration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/integrations/{id}/sync": {
         parameters: {
             query?: never;
@@ -117,6 +134,26 @@ export interface paths {
         put?: never;
         /** Enfileira uma sincronização da conta. */
         post: operations["syncIntegration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/psn": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Conecta uma conta PSN pelo NPSSO.
+         * @description Troca o NPSSO (cookie do login em playstation.com; ver https://ca.account.sony.com/api/v1/ssocookie) por access/refresh tokens e enfileira um full sync. O NPSSO nunca é gravado nem retornado; as renovações usam só o refresh token.
+         */
+        post: operations["connectPSN"];
         delete?: never;
         options?: never;
         head?: never;
@@ -271,6 +308,12 @@ export interface components {
             priority?: number;
             server_shutdown_risk?: boolean;
             tags?: components["schemas"]["TrophyTag"][];
+        };
+        ConnectPSNRequest: {
+            /** @description Apelido; vazio → online ID. */
+            label?: string;
+            /** @description Cookie npsso do login em playstation.com. Nunca é gravado. */
+            npsso: string;
         };
         ConnectSteamRequest: {
             /** @description Steam Web API key (https://steamcommunity.com/dev/apikey). Obrigatória só na primeira conta Steam; nas seguintes, omitida → reaproveita a key existente. Nunca é retornada. */
@@ -863,6 +906,38 @@ export interface operations {
             };
         };
     };
+    reconnectIntegration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IntegrationIDPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    npsso: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Reconectada; sync incremental enfileirado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Integration"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+            502: components["responses"]["Problem"];
+        };
+    };
     syncIntegration: {
         parameters: {
             query?: never;
@@ -889,6 +964,34 @@ export interface operations {
             };
             401: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
+        };
+    };
+    connectPSN: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConnectPSNRequest"];
+            };
+        };
+        responses: {
+            /** @description Conta conectada; full sync enfileirado. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Integration"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+            502: components["responses"]["Problem"];
         };
     };
     connectSteam: {

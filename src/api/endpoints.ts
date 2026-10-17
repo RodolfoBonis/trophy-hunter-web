@@ -46,6 +46,12 @@ export const api = {
   /** Conecta uma NOVA conta Steam: valida contra a Steam e enfileira full sync. Nunca retorna o segredo. */
   connectSteam: (c: ApiClient, body: ConnectSteamRequest) =>
     c.request("/integrations/steam", { method: "POST", body, schema: integrationSchema }),
+  /** Conecta uma conta PSN pelo NPSSO (nunca gravado). */
+  connectPSN: (c: ApiClient, body: { label?: string; npsso: string }) =>
+    c.request("/integrations/psn", { method: "POST", body, schema: integrationSchema }),
+  /** Reconecta uma conta PSN expirada com um NPSSO novo (mesma conta). */
+  reconnectIntegration: (c: ApiClient, id: string, npsso: string) =>
+    c.request(`/integrations/${encodeURIComponent(id)}/reconnect`, { method: "POST", body: { npsso }, schema: integrationSchema }),
   /** Renomeia a conta e/ou troca a API key. */
   updateIntegration: (c: ApiClient, id: string, body: { label?: string; api_key?: string }) =>
     c.request(`/integrations/${encodeURIComponent(id)}`, { method: "PATCH", body, schema: integrationSchema }),

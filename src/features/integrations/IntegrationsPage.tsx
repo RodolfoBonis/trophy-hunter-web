@@ -13,8 +13,10 @@ import { Label } from "@/design-system/components/ui/label";
 import { Skeleton } from "@/design-system/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
+  useConnectPSN,
   useConnectSteam,
   useIntegrations,
+  useReconnect,
   useLatestRuns,
   useRemoveIntegration,
   useRenameIntegration,
@@ -175,11 +177,9 @@ function IntegrationCard({ integration, runningRun }: { integration: Integration
       {needsAttention && integration.last_error && (
         <Banner tone="danger" title={integration.status === "needs_reconnect" ? "Reconexão necessária" : "Falha na integração"}>
           {integration.last_error}
-          {integration.platform === "psn" && integration.status === "needs_reconnect" && (
-            <> Cole um novo NPSSO para reconectar (fluxo da Fase 2).</>
-          )}
         </Banner>
       )}
+      {integration.platform === "psn" && integration.status === "needs_reconnect" && <ReconnectPSN integrationId={integration.id} />}
       {integration.status === "error_private" && (
         <Banner tone="warning" title="Perfil privado">
           Libere &quot;Detalhes do jogo&quot; como público na Steam para sincronizar.
@@ -326,7 +326,133 @@ export default function IntegrationsPage() {
           <IntegrationCard key={integration.id} integration={integration} runningRun={runningFor(integration.id)} />
         ))}
       </div>
-      {query.data && <ConnectSteamForm hasSteamAccount={hasSteamAccount} />}
+      {query.data && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <ConnectSteamForm hasSteamAccount={hasSteamAccount} />
+          <ConnectPSNForm />
+        </div>
+      )}
     </section>
+  );
+}
+
+/** Como obter o NPSSO (mostrado nos formulários da PSN). */
+function NpssoHelp({ id }: { id: string }) {
+  return (
+    <ol id={id} className="m-0 grid list-decimal gap-1 pl-5 text-caption text-text-3">
+      <li>
+        Entre em{" "}
+        <a href="https://www.playstation.com" target="_blank" rel="noopener noreferrer">
+          playstation.com
+        </a>{" "}
+        com a sua conta.
+      </li>
+      <li>
+        Na mesma janela, abra{" "}
+        <a href="https://ca.account.sony.com/api/v1/ssocookie" target="_blank" rel="noopener noreferrer">
+          ca.account.sony.com/api/v1/ssocookie
+        </a>{" "}
+        e copie o valor de <span className="mono">npsso</span>.
+      </li>
+      <li>O NPSSO só é trocado por tokens — nunca fica gravado. Ele expira em semanas; aí é só colar outro.</li>
+    </ol>
+  );
+}
+
+/** Conecta uma conta PSN pelo NPSSO. */
+export function ConnectPSNForm() {
+  const connect = useConnectPSN();
+  const [label, setLabel] = useState("");
+  const [npsso, setNpsso] = useState("");
+  const error = connect.error && isApiError(connect.error) ? connect.error : null;
+
+  function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    connect.mutate(
+      { npsso: npsso.trim(), ...(label.trim() ? { label: label.trim() } : {}) },
+      {
+        onSuccess: () => {
+          setLabel("");
+          setNpsso("");
+        },
+      },
+    );
+  }
+
+  return (
+    <Panel className="flex flex-col gap-4">
+      <h2 className="font-display text-h4 font-bold uppercase tracking-[0.02em] text-text-1">Conectar PSN</h2>
+      <form onSubmit={onSubmit} className="flex max-w-md flex-col gap-4">
+        <div className="field">
+          <label htmlFor="psn-label">Apelido da conta PSN (opcional)</label>
+          <Input id="psn-label" value={label} onChange={(e) => setLabel(e.target.value)} maxLength={40} placeholder="Principal" autoComplete="off" />
+        </div>
+        <div className="field">
+          <label htmlFor="psn-npsso">NPSSO</label>
+          <Input
+            id="psn-npsso"
+            icon="i-key"
+            type="password"
+            value={npsso}
+            onChange={(e) => setNpsso(e.target.value)}
+            required
+            autoComplete="off"
+            spellCheck={false}
+            aria-describedby="psn-npsso-help"
+            placeholder="cole o valor de npsso"
+          />
+          <NpssoHelp id="psn-npsso-help" />
+        </div>
+        {error && (
+          <p role="alert" className="text-sm text-danger">
+            {error.message || "Não foi possível conectar."}
+          </p>
+        )}
+        {connect.isSuccess && <p className="text-sm text-success">PSN conectada — o sync completo já começou.</p>}
+        <Button type="submit" variant="psn" disabled={connect.isPending} className="self-start">
+          {connect.isPending ? "Conectando…" : "Conectar PSN"}
+        </Button>
+      </form>
+    </Panel>
+  );
+}
+
+/** Reconexão inline de uma conta PSN expirada. */
+function ReconnectPSN({ integrationId }: { integrationId: string }) {
+  const reconnect = useReconnect();
+  const [npsso, setNpsso] = useState("");
+  const error = reconnect.error && isApiError(reconnect.error) ? reconnect.error : null;
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        reconnect.mutate({ id: integrationId, npsso: npsso.trim() }, { onSuccess: () => setNpsso("") });
+      }}
+      className="flex flex-col gap-3"
+    >
+      <div className="field !max-w-none">
+        <label htmlFor={`reconnect-${integrationId}`}>Novo NPSSO</label>
+        <Input
+          id={`reconnect-${integrationId}`}
+          icon="i-key"
+          type="password"
+          value={npsso}
+          onChange={(e) => setNpsso(e.target.value)}
+          required
+          autoComplete="off"
+          spellCheck={false}
+          aria-describedby={`reconnect-help-${integrationId}`}
+        />
+        <NpssoHelp id={`reconnect-help-${integrationId}`} />
+      </div>
+      {error && (
+        <p role="alert" className="text-sm text-danger">
+          {error.message || "Não foi possível reconectar."}
+        </p>
+      )}
+      <Button type="submit" variant="psn" size="sm" disabled={reconnect.isPending} className="self-start">
+        {reconnect.isPending ? "Reconectando…" : "Reconectar"}
+      </Button>
+    </form>
   );
 }

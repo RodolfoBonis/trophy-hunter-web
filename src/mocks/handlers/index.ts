@@ -270,6 +270,36 @@ export const handlers: HttpHandler[] = [
     return HttpResponse.json(created, { status: 201 });
   }),
 
+  http.post(`${API}/integrations/psn`, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as { label?: string; npsso?: string };
+    if (!body.npsso || body.npsso === "BAD") {
+      return apiError(422, "validation_error", "NPSSO inválido ou expirado.", [{ field: "npsso", code: "invalid" }]);
+    }
+    const created: Integration = {
+      id: crypto.randomUUID(),
+      label: body.label?.trim() || "psn_mock",
+      platform: "psn",
+      status: "connected",
+      account_id: `acc-${Date.now()}`,
+      display_name: "psn_mock",
+      last_synced_at: null,
+    };
+    db.integrations = [...db.integrations, created];
+    return HttpResponse.json(created, { status: 201 });
+  }),
+
+  http.post(`${API}/integrations/:id/reconnect`, async ({ params, request }) => {
+    const body = (await request.json().catch(() => ({}))) as { npsso?: string };
+    const integ = db.integrations.find((i) => i.id === params.id);
+    if (!integ) return apiError(404, "not_found", "Integração não encontrada.");
+    if (!body.npsso || body.npsso === "BAD") {
+      return apiError(422, "validation_error", "NPSSO inválido ou expirado.", [{ field: "npsso", code: "invalid" }]);
+    }
+    integ.status = "connected";
+    integ.last_error = "";
+    return HttpResponse.json(integ);
+  }),
+
   http.patch(`${API}/integrations/:id`, async ({ params, request }) => {
     const body = (await request.json().catch(() => ({}))) as { label?: string };
     const integ = db.integrations.find((i) => i.id === params.id);

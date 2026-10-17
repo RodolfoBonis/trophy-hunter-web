@@ -55,3 +55,26 @@ describe("ConnectSteamForm", () => {
     expect(screen.getByLabelText("Steam Web API key")).toBeRequired();
   });
 });
+
+describe("PSN", () => {
+  it("conecta pelo NPSSO e mostra o erro de NPSSO inválido", async () => {
+    const user = userEvent.setup();
+    renderRoutes({ routes: integrationsRoutes, path: PATH });
+    const npsso = await screen.findByLabelText("NPSSO", {}, { timeout: 3000 });
+    await user.type(npsso, "BAD");
+    await user.click(screen.getByRole("button", { name: "Conectar PSN" }));
+    expect(await screen.findByText(/NPSSO inválido/, {}, { timeout: 3000 })).toBeInTheDocument();
+    await user.clear(npsso);
+    await user.type(npsso, "GOOD-NPSSO");
+    await user.click(screen.getByRole("button", { name: "Conectar PSN" }));
+    expect((await screen.findAllByText(/PSN conectada/, {}, { timeout: 3000 })).length).toBeGreaterThan(0);
+  });
+
+  it("reconecta a conta expirada colando um NPSSO novo", async () => {
+    const user = userEvent.setup();
+    renderRoutes({ routes: integrationsRoutes, path: PATH });
+    await user.type(await screen.findByLabelText("Novo NPSSO", {}, { timeout: 3000 }), "NOVO");
+    await user.click(screen.getByRole("button", { name: "Reconectar" }));
+    await expect(screen.findByLabelText("Novo NPSSO", {}, { timeout: 1500 })).rejects.toThrow();
+  });
+});
