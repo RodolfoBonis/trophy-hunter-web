@@ -18,13 +18,13 @@ describe("loadConfig", () => {
     window.__APP_CONFIG__ = {
       oidcAuthority: "https://auth.rb.lab/realms/platform",
       oidcClientId: "trophy-hunter-web",
-      oidcScope: "openid profile email trophy-hunter-api",
+      oidcScope: "openid profile email",
       apiBase: "/api/",
     };
     const config = loadConfig();
     expect(config.apiBase).toBe("/api");
     expect(config.oidcClientId).toBe("trophy-hunter-web");
-    expect(config.oidcScope).toContain("trophy-hunter-api");
+    expect(config.oidcScope).toBe("openid profile email");
     delete window.__APP_CONFIG__;
   });
 

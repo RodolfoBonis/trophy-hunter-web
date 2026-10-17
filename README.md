@@ -75,7 +75,7 @@ partir destas envs:
 |---|---|---|---|
 | `OIDC_AUTHORITY` | sim | — | issuer do Keycloak (ex.: `https://auth.rb.lab/realms/platform`) |
 | `OIDC_CLIENT_ID` | não | `trophy-hunter-web` | client público PKCE |
-| `OIDC_SCOPE` | não | `openid profile email trophy-hunter-api` | scopes; `trophy-hunter-api` é o *audience scope* (injeta `aud` no token) |
+| `OIDC_SCOPE` | não | `openid profile email` | scopes; o `aud=trophy-hunter-api` vem do client scope *default* `aud-trophy-hunter-api` (não se pede) |
 | `API_BASE_URL` | sim | — | origem da API, no padrão `api.<app>.<domínio>` (ex.: `https://api.trophy.rb.lab`) — **sem caminho** |
 | `APP_ALLOW_HTTP` | não | `false` | permite `http://` na authority (só dev) |
 

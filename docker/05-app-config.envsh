@@ -8,7 +8,7 @@
 : "${OIDC_AUTHORITY:?defina OIDC_AUTHORITY (ex.: https://auth.rb.lab/realms/platform)}"
 : "${API_BASE_URL:?defina API_BASE_URL (ex.: https://api.trophy.rb.lab)}"
 OIDC_CLIENT_ID="${OIDC_CLIENT_ID:-trophy-hunter-web}"
-OIDC_SCOPE="${OIDC_SCOPE:-openid profile email trophy-hunter-api}"
+OIDC_SCOPE="${OIDC_SCOPE:-openid profile email}"
 
 fail() { echo "app-config: $1" >&2; exit 1; }
 # Valida formatos ANTES de usar: os valores vão para o JS e para a conf do nginx (evita injeção).

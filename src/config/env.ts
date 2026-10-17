@@ -16,10 +16,10 @@ const configSchema = z.object({
   oidcAuthority: z.url(),
   oidcClientId: z.string().min(1),
   /**
-   * Scopes OIDC. Além de `openid profile email`, pedimos o audience scope `trophy-hunter-api`:
-   * no Keycloak ele é um client scope do tipo "audience" (keycloak-audience-scope) que injeta
-   * `aud=trophy-hunter-api` no access token — é o que a API valida. O acesso em si vem da realm role
-   * `trophy-hunter-user` (concedida via /admins), não do scope.
+   * Scopes OIDC (`openid profile email`). O `aud=trophy-hunter-api` que a API valida vem do client
+   * scope `aud-trophy-hunter-api`, que é DEFAULT no client `trophy-hunter-web` — por isso não é pedido
+   * aqui (pedir um scope que não é optional dá "Invalid scopes"). O acesso vem da realm role
+   * `trophy-hunter-user` (concedida via /admins).
    */
   oidcScope: z.string().min(1),
   /** Base da API (origem do subdomínio api.<app>.<domínio> + "/api"; o client acrescenta /v1/...). */
@@ -57,7 +57,7 @@ export function loadConfig(): AppConfig {
   const config = configSchema.parse({
     oidcAuthority: blankToUndefined(runtime.oidcAuthority) ?? env.VITE_OIDC_AUTHORITY,
     oidcClientId: blankToUndefined(runtime.oidcClientId) ?? env.VITE_OIDC_CLIENT_ID ?? "trophy-hunter-web",
-    oidcScope: blankToUndefined(runtime.oidcScope) ?? env.VITE_OIDC_SCOPE ?? "openid profile email trophy-hunter-api",
+    oidcScope: blankToUndefined(runtime.oidcScope) ?? env.VITE_OIDC_SCOPE ?? "openid profile email",
     apiBase: blankToUndefined(runtime.apiBase) ?? env.VITE_API_BASE ?? "/api",
     // Os modos mock são decididos em build (não por runtime config) para nunca vazarem p/ produção.
     authMode: env.VITE_AUTH_MODE === "mock" ? "mock" : "oidc",

@@ -8,7 +8,7 @@ import { server } from "@/mocks/node";
 setConfigForTests({
   oidcAuthority: "https://auth.test/realms/platform",
   oidcClientId: "trophy-hunter-web",
-  oidcScope: "openid profile email trophy-hunter-api",
+  oidcScope: "openid profile email",
   apiBase: "/api",
   authMode: "mock",
   apiMock: true,
