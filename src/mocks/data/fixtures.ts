@@ -157,6 +157,19 @@ export const mockGames: GameDetail[] = [
 
 export const mockSyncRuns: SyncRun[] = [
   {
+    id: "run-0",
+    platform: "steam",
+    scope: "incremental",
+    trigger: "manual",
+    status: "running",
+    started_at: ago(30_000),
+    finished_at: null,
+    items_changed: 118,
+    games_total: 73,
+    games_done: 41,
+    games_failed: 2,
+  },
+  {
     id: "run-1",
     platform: "steam",
     scope: "incremental",
@@ -165,7 +178,9 @@ export const mockSyncRuns: SyncRun[] = [
     started_at: ago(2 * HOUR),
     finished_at: ago(2 * HOUR - 40_000),
     items_changed: 7,
-    games_touched: 2,
+    games_total: 2,
+    games_done: 2,
+    games_failed: 0,
   },
   {
     id: "run-2",
@@ -176,7 +191,9 @@ export const mockSyncRuns: SyncRun[] = [
     started_at: ago(5 * DAY),
     finished_at: ago(5 * DAY - 5_000),
     items_changed: 0,
-    games_touched: 0,
+    games_total: 0,
+    games_done: 0,
+    games_failed: 0,
     error: "invalid_grant: NPSSO expirado.",
   },
   {
@@ -188,6 +205,8 @@ export const mockSyncRuns: SyncRun[] = [
     started_at: ago(30 * DAY),
     finished_at: ago(30 * DAY - 120_000),
     items_changed: 842,
-    games_touched: 73,
+    games_total: 73,
+    games_done: 73,
+    games_failed: 0,
   },
 ];

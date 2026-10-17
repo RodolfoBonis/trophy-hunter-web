@@ -268,7 +268,12 @@ export interface components {
             error?: string;
             /** Format: date-time */
             finished_at?: string | null;
-            games_touched?: number;
+            /** @description Jogos cujo sync terminou (sucesso ou falha). */
+            games_done?: number;
+            /** @description Jogos cujo sync falhou. */
+            games_failed?: number;
+            /** @description Jogos a sincronizar no run (fan-out). */
+            games_total?: number;
             /** Format: uuid */
             id: string;
             items_changed?: number;

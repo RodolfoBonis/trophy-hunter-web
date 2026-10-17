@@ -92,7 +92,10 @@ export const syncRunSchema = z.object({
   started_at: timestamp,
   finished_at: timestamp.nullish(),
   items_changed: z.number().int().optional(),
-  games_touched: z.number().int().optional(),
+  /** Fan-out do run: jogos a sincronizar, concluídos e com falha. */
+  games_total: z.number().int().optional(),
+  games_done: z.number().int().optional(),
+  games_failed: z.number().int().optional(),
   error: z.string().optional(),
 });
 export type SyncRun = z.infer<typeof syncRunSchema>;
