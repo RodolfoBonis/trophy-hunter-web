@@ -11,6 +11,19 @@ export function useIntegrations() {
   });
 }
 
+/**
+ * Últimos runs de sync (para mostrar o progresso ao vivo por integração). Faz poll a cada 3s
+ * APENAS enquanto houver um run rodando; senão não re-busca (economiza requisições).
+ */
+export function useLatestRuns() {
+  const client = useApi();
+  return useQuery({
+    queryKey: ["sync-runs", "latest"],
+    queryFn: () => api.syncRuns(client, { limit: 20 }),
+    refetchInterval: (q) => (q.state.data?.some((r) => r.status === "running") ? 3000 : false),
+  });
+}
+
 export function useConnectSteam() {
   const client = useApi();
   const qc = useQueryClient();

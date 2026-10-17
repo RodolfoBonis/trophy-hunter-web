@@ -1,16 +1,17 @@
 import { KeyRound, RefreshCw } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { isApiError } from "@/api/errors";
-import type { Integration, IntegrationStatus } from "@/api/schemas";
+import type { Integration, IntegrationStatus, SyncRun } from "@/api/schemas";
 import { Banner } from "@/design-system/components/Banner";
 import { Panel } from "@/design-system/components/Panel";
 import { PlatformBadge } from "@/design-system/components/PlatformBadge";
+import { ProgressBar } from "@/design-system/components/ProgressBar";
 import { Button } from "@/design-system/components/ui/button";
 import { Input } from "@/design-system/components/ui/input";
 import { Label } from "@/design-system/components/ui/label";
 import { Skeleton } from "@/design-system/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { useConnectSteam, useIntegrations, useSyncNow } from "./queries";
+import { useConnectSteam, useIntegrations, useLatestRuns, useSyncNow } from "./queries";
 
 const STATUS: Record<IntegrationStatus, { label: string; cls: string }> = {
   connected: { label: "Conectado", cls: "text-success" },
@@ -30,7 +31,7 @@ function StatusChip({ status }: { status: IntegrationStatus }) {
   );
 }
 
-function IntegrationCard({ integration }: { integration: Integration }) {
+function IntegrationCard({ integration, runningRun }: { integration: Integration; runningRun?: SyncRun }) {
   const sync = useSyncNow();
   const needsAttention = integration.status === "needs_reconnect" || integration.status === "error";
   return (
@@ -44,6 +45,27 @@ function IntegrationCard({ integration }: { integration: Integration }) {
           <RefreshCw className={cn("size-4", sync.isPending && "animate-spin")} aria-hidden /> Sincronizar agora
         </Button>
       </div>
+
+      {runningRun && (
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between font-numeric text-xs tabular-nums text-text-2">
+            <span className="hud-label text-neon-cyan">Sincronizando…</span>
+            <span>
+              {runningRun.games_done ?? 0}/{runningRun.games_total ?? 0} jogos
+              {(runningRun.games_failed ?? 0) > 0 && (
+                <span className="ml-2 text-warning">· {runningRun.games_failed} falhas</span>
+              )}
+            </span>
+          </div>
+          <ProgressBar
+            value={
+              (runningRun.games_total ?? 0) > 0
+                ? ((runningRun.games_done ?? 0) / (runningRun.games_total ?? 1)) * 100
+                : 0
+            }
+          />
+        </div>
+      )}
 
       <dl className="grid gap-1 text-sm">
         {integration.display_name && (
@@ -153,6 +175,10 @@ function ConnectSteamForm() {
 /** Integrações — tela funcional (HUD). Lista integrações, conecta Steam e dispara sync manual. */
 export default function IntegrationsPage() {
   const query = useIntegrations();
+  const runs = useLatestRuns();
+  // Run em andamento mais recente por plataforma (a lista vem do mais novo para o mais antigo).
+  const runningFor = (platform: Integration["platform"]) =>
+    runs.data?.find((r) => r.platform === platform && r.status === "running");
   return (
     <section className="flex max-w-2xl flex-col gap-5">
       {query.isPending && <Skeleton className="h-40 w-full" />}
@@ -162,7 +188,11 @@ export default function IntegrationsPage() {
         </p>
       )}
       {query.data?.map((integration) => (
-        <IntegrationCard key={integration.platform} integration={integration} />
+        <IntegrationCard
+          key={integration.platform}
+          integration={integration}
+          runningRun={runningFor(integration.platform)}
+        />
       ))}
       <ConnectSteamForm />
     </section>
