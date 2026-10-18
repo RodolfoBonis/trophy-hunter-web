@@ -11,7 +11,8 @@ import { CacheFirst, NetworkOnly } from "workbox-strategies";
  * - precache dos assets do build (`self.__WB_MANIFEST`);
  * - CacheFirst para capas/ícones de jogos (hosts da Steam/PSN) com expiração ~30 dias;
  * - NetworkOnly para a API (paths .../v1/..., ex. api.rodolfodebonis.com.br/trophy/v1) e SSE — nunca cacheamos dados mutáveis;
- * - stubs de `push`/`notificationclick` (push real é a Fase 5).
+ * - Web Push: `push` mostra a notificação enviada pelo worker da API ({ title, body, url, tag, kind });
+ *   `notificationclick` foca uma aba aberta (navegando para a url) ou abre uma nova.
  */
 
 // `self` é Window+WebWorker com as duas libs ligadas; reduzimos ao tipo de SW aqui.
@@ -45,10 +46,10 @@ sw.addEventListener("message", (event) => {
   if ((event.data as { type?: string } | undefined)?.type === "SKIP_WAITING") void sw.skipWaiting();
 });
 
-/* ── Web Push (stub — Fase 5) ─────────────────────────────────────────────────────────────── */
+/* ── Web Push ──────────────────────────────────────────────────────────────────────────────── */
 
 sw.addEventListener("push", (event) => {
-  // Payload esperado (futuro): { title, body, url, tag }. Por ora, notificação genérica se houver dado.
+  // Payload da API (internal/push.Message): { title, body, url, tag, kind }.
   let data: { title?: string; body?: string; url?: string; tag?: string } = {};
   try {
     data = event.data?.json() ?? {};
@@ -60,8 +61,9 @@ sw.addEventListener("push", (event) => {
     sw.registration.showNotification(title, {
       body: data.body ?? "Novidade por aqui.",
       tag: data.tag,
-      icon: "/icons/icon-192.svg",
-      badge: "/icons/icon-192.svg",
+      // PNG: SVG não aparece como ícone de notificação no Android/macOS.
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
       data: { url: data.url ?? "/" },
     }),
   );

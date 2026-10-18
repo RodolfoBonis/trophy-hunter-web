@@ -95,3 +95,52 @@ export const unlockHandlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 ];
+
+/* Web push no mock: servidor "configurado", inscrições em memória. */
+let subs = new Set<string>();
+let prefs = {
+  unlocks: true,
+  completions: true,
+  reconnect: true,
+  errors: true,
+  ai_ready: true,
+};
+
+export function resetPush(): void {
+  subs = new Set();
+  prefs = {
+    unlocks: true,
+    completions: true,
+    reconnect: true,
+    errors: true,
+    ai_ready: true,
+  };
+}
+
+export const pushHandlers = [
+  http.get(`${API}/push/key`, () =>
+    HttpResponse.json({
+      enabled: !hasScenario("push-off"),
+      public_key: "BFakeKey_-",
+      subscriptions: subs.size,
+    }),
+  ),
+  http.post(`${API}/push/subscriptions`, async ({ request }) => {
+    const { endpoint } = (await request.json()) as { endpoint: string };
+    subs.add(endpoint);
+    return new HttpResponse(null, { status: 201 });
+  }),
+  http.delete(`${API}/push/subscriptions`, async ({ request }) => {
+    const { endpoint } = (await request.json()) as { endpoint: string };
+    subs.delete(endpoint);
+    return new HttpResponse(null, { status: 204 });
+  }),
+  http.post(`${API}/push/test`, () =>
+    HttpResponse.json({ sent: subs.size, failed: 0, removed: 0 }),
+  ),
+  http.get(`${API}/notifications/preferences`, () => HttpResponse.json(prefs)),
+  http.put(`${API}/notifications/preferences`, async ({ request }) => {
+    prefs = (await request.json()) as typeof prefs;
+    return HttpResponse.json(prefs);
+  }),
+];

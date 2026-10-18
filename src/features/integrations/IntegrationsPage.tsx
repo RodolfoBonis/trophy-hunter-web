@@ -4,6 +4,7 @@ import { isApiError } from "@/api/errors";
 import type { Integration, IntegrationStatus, SyncRun } from "@/api/schemas";
 import { Banner } from "@/design-system/components/Banner";
 import { SectionHead } from "@/design-system/components/SectionHead";
+import { NotificationsPanel } from "@/features/notifications/NotificationsPanel";
 import { Panel } from "@/design-system/components/Panel";
 import { PlatformBadge } from "@/design-system/components/PlatformBadge";
 import { ProgressBar } from "@/design-system/components/ProgressBar";
@@ -35,7 +36,10 @@ function StatusChip({ status }: { status: IntegrationStatus }) {
   const s = STATUS[status];
   return (
     <span className={cn("hud-label", s.cls)}>
-      <span className="mr-1.5 inline-block size-2 rounded-full bg-current align-middle" aria-hidden />
+      <span
+        className="mr-1.5 inline-block size-2 rounded-full bg-current align-middle"
+        aria-hidden
+      />
       {s.label}
     </span>
   );
@@ -54,7 +58,10 @@ function AccountLabel({ integration }: { integration: Integration }) {
       setEditing(false);
       return;
     }
-    rename.mutate({ id: integration.id, label }, { onSuccess: () => setEditing(false) });
+    rename.mutate(
+      { id: integration.id, label },
+      { onSuccess: () => setEditing(false) },
+    );
   }
 
   if (!editing) {
@@ -91,10 +98,22 @@ function AccountLabel({ integration }: { integration: Integration }) {
         autoFocus
         className="h-9 w-48"
       />
-      <Button type="submit" variant="ghost" size="icon" disabled={rename.isPending} aria-label="Salvar apelido">
+      <Button
+        type="submit"
+        variant="ghost"
+        size="icon"
+        disabled={rename.isPending}
+        aria-label="Salvar apelido"
+      >
         <Check className="size-4" aria-hidden />
       </Button>
-      <Button type="button" variant="ghost" size="icon" onClick={() => setEditing(false)} aria-label="Cancelar">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={() => setEditing(false)}
+        aria-label="Cancelar"
+      >
         <X className="size-4" aria-hidden />
       </Button>
     </form>
@@ -107,27 +126,54 @@ function RemoveAccount({ integration }: { integration: Integration }) {
   const [confirming, setConfirming] = useState(false);
   if (!confirming) {
     return (
-      <Button variant="ghost" size="sm" onClick={() => setConfirming(true)} className="text-text-3 hover:text-danger">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setConfirming(true)}
+        className="text-text-3 hover:text-danger"
+      >
         <Trash2 className="size-4" aria-hidden /> Remover
       </Button>
     );
   }
   return (
-    <div role="group" aria-label="Confirmar remoção" className="flex items-center gap-2">
-      <span className="text-sm text-text-2">Remover {integration.label} e os jogos dela?</span>
-      <Button variant="secondary" size="sm" onClick={() => setConfirming(false)}>
+    <div
+      role="group"
+      aria-label="Confirmar remoção"
+      className="flex items-center gap-2"
+    >
+      <span className="text-sm text-text-2">
+        Remover {integration.label} e os jogos dela?
+      </span>
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => setConfirming(false)}
+      >
         Cancelar
       </Button>
-      <Button variant="danger" size="sm" onClick={() => remove.mutate(integration.id)} disabled={remove.isPending}>
+      <Button
+        variant="danger"
+        size="sm"
+        onClick={() => remove.mutate(integration.id)}
+        disabled={remove.isPending}
+      >
         Remover conta
       </Button>
     </div>
   );
 }
 
-function IntegrationCard({ integration, runningRun }: { integration: Integration; runningRun?: SyncRun }) {
+function IntegrationCard({
+  integration,
+  runningRun,
+}: {
+  integration: Integration;
+  runningRun?: SyncRun;
+}) {
   const sync = useSyncNow();
-  const needsAttention = integration.status === "needs_reconnect" || integration.status === "error";
+  const needsAttention =
+    integration.status === "needs_reconnect" || integration.status === "error";
   return (
     <Panel className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -145,14 +191,18 @@ function IntegrationCard({ integration, runningRun }: { integration: Integration
             <span>
               {runningRun.games_done ?? 0}/{runningRun.games_total ?? 0} jogos
               {(runningRun.games_failed ?? 0) > 0 && (
-                <span className="ml-2 text-warning">· {runningRun.games_failed} falhas</span>
+                <span className="ml-2 text-warning">
+                  · {runningRun.games_failed} falhas
+                </span>
               )}
             </span>
           </div>
           <ProgressBar
             value={
               (runningRun.games_total ?? 0) > 0
-                ? ((runningRun.games_done ?? 0) / (runningRun.games_total ?? 1)) * 100
+                ? ((runningRun.games_done ?? 0) /
+                    (runningRun.games_total ?? 1)) *
+                  100
                 : 0
             }
           />
@@ -169,21 +219,37 @@ function IntegrationCard({ integration, runningRun }: { integration: Integration
         {integration.last_synced_at && (
           <div className="flex gap-2">
             <dt className="text-text-3">Último sync:</dt>
-            <dd className="text-text-2">{new Date(integration.last_synced_at).toLocaleString("pt-BR")}</dd>
+            <dd className="text-text-2">
+              {new Date(integration.last_synced_at).toLocaleString("pt-BR")}
+            </dd>
           </div>
         )}
       </dl>
 
       {needsAttention && integration.last_error && (
-        <Banner tone="danger" title={integration.status === "needs_reconnect" ? "Reconexão necessária" : "Falha na integração"}>
+        <Banner
+          tone="danger"
+          title={
+            integration.status === "needs_reconnect"
+              ? "Reconexão necessária"
+              : "Falha na integração"
+          }
+        >
           {integration.last_error}
         </Banner>
       )}
-      {integration.platform === "psn" && integration.status === "needs_reconnect" && <ReconnectPSN integrationId={integration.id} />}
-      {integration.platform === "psn" && integration.status !== "needs_reconnect" && <UpdateNpsso integrationId={integration.id} />}
+      {integration.platform === "psn" &&
+        integration.status === "needs_reconnect" && (
+          <ReconnectPSN integrationId={integration.id} />
+        )}
+      {integration.platform === "psn" &&
+        integration.status !== "needs_reconnect" && (
+          <UpdateNpsso integrationId={integration.id} />
+        )}
       {integration.status === "error_private" && (
         <Banner tone="warning" title="Perfil privado">
-          Libere &quot;Detalhes do jogo&quot; como público na Steam para sincronizar.
+          Libere &quot;Detalhes do jogo&quot; como público na Steam para
+          sincronizar.
         </Banner>
       )}
       {sync.isError && (
@@ -193,8 +259,17 @@ function IntegrationCard({ integration, runningRun }: { integration: Integration
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button variant="secondary" size="sm" onClick={() => sync.mutate(integration.id)} disabled={sync.isPending}>
-          <RefreshCw className={cn("size-4", sync.isPending && "animate-spin")} aria-hidden /> Sincronizar agora
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => sync.mutate(integration.id)}
+          disabled={sync.isPending}
+        >
+          <RefreshCw
+            className={cn("size-4", sync.isPending && "animate-spin")}
+            aria-hidden
+          />{" "}
+          Sincronizar agora
         </Button>
         <RemoveAccount integration={integration} />
       </div>
@@ -206,12 +281,17 @@ function IntegrationCard({ integration, runningRun }: { integration: Integration
  * Adiciona uma conta Steam. A API key só é obrigatória na 1ª conta: a mesma key lê qualquer perfil
  * público, então nas seguintes ela é opcional (a API reaproveita a existente).
  */
-export function ConnectSteamForm({ hasSteamAccount }: { hasSteamAccount: boolean }) {
+export function ConnectSteamForm({
+  hasSteamAccount,
+}: {
+  hasSteamAccount: boolean;
+}) {
   const connect = useConnectSteam();
   const [label, setLabel] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [account, setAccount] = useState("");
-  const fieldError = connect.error && isApiError(connect.error) ? connect.error : null;
+  const fieldError =
+    connect.error && isApiError(connect.error) ? connect.error : null;
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -255,7 +335,10 @@ export function ConnectSteamForm({ hasSteamAccount }: { hasSteamAccount: boolean
             Steam Web API key{hasSteamAccount && " (opcional)"}
           </Label>
           <div className="relative">
-            <KeyRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-3" aria-hidden />
+            <KeyRound
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-3"
+              aria-hidden
+            />
             <Input
               id="steam-api-key"
               type="password"
@@ -288,8 +371,8 @@ export function ConnectSteamForm({ hasSteamAccount }: { hasSteamAccount: boolean
             required
           />
           <p className="text-caption text-text-3">
-            17 dígitos = SteamID64; qualquer outra coisa é tratada como vanity. O perfil e os
-            &quot;Detalhes do jogo&quot; precisam estar públicos.
+            17 dígitos = SteamID64; qualquer outra coisa é tratada como vanity.
+            O perfil e os &quot;Detalhes do jogo&quot; precisam estar públicos.
           </p>
         </div>
         {fieldError && (
@@ -297,9 +380,21 @@ export function ConnectSteamForm({ hasSteamAccount }: { hasSteamAccount: boolean
             {fieldError.message || "Não foi possível conectar."}
           </p>
         )}
-        {connect.isSuccess && <p className="text-sm text-success">Conta conectada — o sync completo já começou.</p>}
-        <Button type="submit" disabled={connect.isPending} className="self-start">
-          {connect.isPending ? "Conectando…" : hasSteamAccount ? "Adicionar conta" : "Conectar"}
+        {connect.isSuccess && (
+          <p className="text-sm text-success">
+            Conta conectada — o sync completo já começou.
+          </p>
+        )}
+        <Button
+          type="submit"
+          disabled={connect.isPending}
+          className="self-start"
+        >
+          {connect.isPending
+            ? "Conectando…"
+            : hasSteamAccount
+              ? "Adicionar conta"
+              : "Conectar"}
         </Button>
       </form>
     </Panel>
@@ -311,11 +406,17 @@ export default function IntegrationsPage() {
   const query = useIntegrations();
   const runs = useLatestRuns();
   // Run em andamento mais recente por conta (a lista vem do mais novo para o mais antigo).
-  const runningFor = (id: string) => runs.data?.find((r) => r.integration_id === id && r.status === "running");
-  const hasSteamAccount = query.data?.some((i) => i.platform === "steam") ?? false;
+  const runningFor = (id: string) =>
+    runs.data?.find((r) => r.integration_id === id && r.status === "running");
+  const hasSteamAccount =
+    query.data?.some((i) => i.platform === "steam") ?? false;
   return (
     <section className="flex flex-col gap-6">
-      <SectionHead idx="05" title="Contas" subtitle="Contas da Steam e da PSN conectadas ao Trophy Hunter." />
+      <SectionHead
+        idx="05"
+        title="Contas"
+        subtitle="Contas da Steam e da PSN conectadas ao Trophy Hunter."
+      />
       {query.isPending && <Skeleton className="h-40 w-full" />}
       {query.isError && (
         <p role="alert" className="text-sm text-danger">
@@ -324,7 +425,11 @@ export default function IntegrationsPage() {
       )}
       <div className="grid gap-6 lg:grid-cols-2">
         {query.data?.map((integration) => (
-          <IntegrationCard key={integration.id} integration={integration} runningRun={runningFor(integration.id)} />
+          <IntegrationCard
+            key={integration.id}
+            integration={integration}
+            runningRun={runningFor(integration.id)}
+          />
         ))}
       </div>
       {query.data && (
@@ -333,6 +438,7 @@ export default function IntegrationsPage() {
           <ConnectPSNForm />
         </div>
       )}
+      <NotificationsPanel />
     </section>
   );
 }
@@ -340,22 +446,36 @@ export default function IntegrationsPage() {
 /** Como obter o NPSSO (mostrado nos formulários da PSN). */
 function NpssoHelp({ id }: { id: string }) {
   return (
-    <ol id={id} className="m-0 grid list-decimal gap-1 pl-5 text-caption text-text-3">
+    <ol
+      id={id}
+      className="m-0 grid list-decimal gap-1 pl-5 text-caption text-text-3"
+    >
       <li>
         Entre em{" "}
-        <a href="https://www.playstation.com" target="_blank" rel="noopener noreferrer">
+        <a
+          href="https://www.playstation.com"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           playstation.com
         </a>{" "}
         com a sua conta.
       </li>
       <li>
         Na mesma janela, abra{" "}
-        <a href="https://ca.account.sony.com/api/v1/ssocookie" target="_blank" rel="noopener noreferrer">
+        <a
+          href="https://ca.account.sony.com/api/v1/ssocookie"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           ca.account.sony.com/api/v1/ssocookie
         </a>{" "}
         e copie o valor de <span className="mono">npsso</span>.
       </li>
-      <li>O NPSSO só é trocado por tokens — nunca fica gravado. Ele expira em semanas; aí é só colar outro.</li>
+      <li>
+        O NPSSO só é trocado por tokens — nunca fica gravado. Ele expira em
+        semanas; aí é só colar outro.
+      </li>
     </ol>
   );
 }
@@ -365,7 +485,8 @@ export function ConnectPSNForm() {
   const connect = useConnectPSN();
   const [label, setLabel] = useState("");
   const [npsso, setNpsso] = useState("");
-  const error = connect.error && isApiError(connect.error) ? connect.error : null;
+  const error =
+    connect.error && isApiError(connect.error) ? connect.error : null;
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -382,11 +503,20 @@ export function ConnectPSNForm() {
 
   return (
     <Panel className="flex flex-col gap-4">
-      <h2 className="font-display text-h4 font-bold uppercase tracking-[0.02em] text-text-1">Conectar PSN</h2>
+      <h2 className="font-display text-h4 font-bold uppercase tracking-[0.02em] text-text-1">
+        Conectar PSN
+      </h2>
       <form onSubmit={onSubmit} className="flex max-w-md flex-col gap-4">
         <div className="field">
           <label htmlFor="psn-label">Apelido da conta PSN (opcional)</label>
-          <Input id="psn-label" value={label} onChange={(e) => setLabel(e.target.value)} maxLength={40} placeholder="Principal" autoComplete="off" />
+          <Input
+            id="psn-label"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            maxLength={40}
+            placeholder="Principal"
+            autoComplete="off"
+          />
         </div>
         <div className="field">
           <label htmlFor="psn-npsso">NPSSO</label>
@@ -409,8 +539,17 @@ export function ConnectPSNForm() {
             {error.message || "Não foi possível conectar."}
           </p>
         )}
-        {connect.isSuccess && <p className="text-sm text-success">PSN conectada — o sync completo já começou.</p>}
-        <Button type="submit" variant="psn" disabled={connect.isPending} className="self-start">
+        {connect.isSuccess && (
+          <p className="text-sm text-success">
+            PSN conectada — o sync completo já começou.
+          </p>
+        )}
+        <Button
+          type="submit"
+          variant="psn"
+          disabled={connect.isPending}
+          className="self-start"
+        >
           {connect.isPending ? "Conectando…" : "Conectar PSN"}
         </Button>
       </form>
@@ -419,10 +558,17 @@ export function ConnectPSNForm() {
 }
 
 /** Reconexão inline de uma conta PSN expirada. */
-function ReconnectPSN({ integrationId, onDone }: { integrationId: string; onDone?: () => void }) {
+function ReconnectPSN({
+  integrationId,
+  onDone,
+}: {
+  integrationId: string;
+  onDone?: () => void;
+}) {
   const reconnect = useReconnect();
   const [npsso, setNpsso] = useState("");
-  const error = reconnect.error && isApiError(reconnect.error) ? reconnect.error : null;
+  const error =
+    reconnect.error && isApiError(reconnect.error) ? reconnect.error : null;
   return (
     <form
       onSubmit={(e) => {
@@ -459,7 +605,13 @@ function ReconnectPSN({ integrationId, onDone }: { integrationId: string; onDone
           {error.message || "Não foi possível reconectar."}
         </p>
       )}
-      <Button type="submit" variant="psn" size="sm" disabled={reconnect.isPending} className="self-start">
+      <Button
+        type="submit"
+        variant="psn"
+        size="sm"
+        disabled={reconnect.isPending}
+        className="self-start"
+      >
         {reconnect.isPending ? "Reconectando…" : "Reconectar"}
       </Button>
     </form>
@@ -476,11 +628,17 @@ function UpdateNpsso({ integrationId }: { integrationId: string }) {
     return (
       <p className="caption flex flex-wrap items-center gap-2">
         Sessão renovada automaticamente pelo NPSSO guardado (cifrado).
-        <button type="button" className="label cursor-pointer !text-neon-cyan" onClick={() => setOpen(true)}>
+        <button
+          type="button"
+          className="label cursor-pointer !text-neon-cyan"
+          onClick={() => setOpen(true)}
+        >
           Atualizar NPSSO
         </button>
       </p>
     );
   }
-  return <ReconnectPSN integrationId={integrationId} onDone={() => setOpen(false)} />;
+  return (
+    <ReconnectPSN integrationId={integrationId} onDone={() => setOpen(false)} />
+  );
 }

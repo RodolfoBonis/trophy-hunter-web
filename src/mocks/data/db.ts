@@ -1,5 +1,5 @@
 import type { AIGuide, ChatMessage, Integration, SyncRun } from "@/api/schemas";
-import { resetUnlocks } from "../handlers/unlocks";
+import { resetPush, resetUnlocks } from "../handlers/unlocks";
 import { mockGames, mockIntegrations, mockSyncRuns, type MockGameRow } from "./fixtures";
 
 /** Estado mutável do modo mock: connectSteam/syncNow alteram e os testes resetam entre casos. */
@@ -28,6 +28,7 @@ export const db: MockDb = seed();
 
 export function resetMockDb(): void {
   resetUnlocks();
+  resetPush();
   const fresh = seed();
   db.integrations = fresh.integrations;
   db.games = fresh.games;

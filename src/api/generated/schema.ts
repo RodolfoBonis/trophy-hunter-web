@@ -363,6 +363,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/notifications/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Quais tipos de notificação estão ligados (padrão = todos). */
+        get: operations["getNotificationPreferences"];
+        /** Grava as preferências (objeto completo). */
+        put: operations["putNotificationPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/key": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Se o web push está ligado, a chave pública VAPID e quantos aparelhos estão inscritos. */
+        get: operations["pushStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Grava (ou atualiza) a inscrição deste navegador (PushSubscription.toJSON()). */
+        post: operations["subscribePush"];
+        /** Remove a inscrição deste navegador. */
+        delete: operations["unsubscribePush"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Envia agora uma notificação de teste para todos os aparelhos. */
+        post: operations["testPush"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/stats": {
         parameters: {
             query?: never;
@@ -678,6 +748,18 @@ export interface components {
                 trophies: components["schemas"]["RemainingTrophy"][];
             } | null;
         };
+        NotificationPreferences: {
+            /** @description Guia/roadmap pronto. */
+            ai_ready: boolean;
+            /** @description Platina / 100%. */
+            completions: boolean;
+            /** @description Sync com erro, IA sem cota. */
+            errors: boolean;
+            /** @description Conta precisa ser reconectada. */
+            reconnect: boolean;
+            /** @description Troféus novos. */
+            unlocks: boolean;
+        };
         /** @enum {string} */
         Platform: "steam" | "psn";
         Problem: {
@@ -716,6 +798,21 @@ export interface components {
             remaining: number;
             status: components["schemas"]["GameStatus"];
             total: number;
+        };
+        PushStatus: {
+            /** @description false = chaves VAPID não configuradas no servidor. */
+            enabled: boolean;
+            /** @description applicationServerKey (base64url). */
+            public_key: string;
+            subscriptions: number;
+        };
+        PushSubscriptionRequest: {
+            /** @description URL https do push service do navegador. */
+            endpoint: string;
+            keys: {
+                auth: string;
+                p256dh: string;
+            };
         };
         /** @description Troféus GANHOS por tier — lendário < 1%, épico 1–5%, raro 5–20%, incomum 20–50%, comum ≥ 50%. */
         RarityEarned: {
@@ -1672,6 +1769,151 @@ export interface operations {
                 };
             };
             401: components["responses"]["Problem"];
+        };
+    };
+    getNotificationPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPreferences"];
+                };
+            };
+            401: components["responses"]["Problem"];
+        };
+    };
+    putNotificationPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationPreferences"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPreferences"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+        };
+    };
+    pushStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushStatus"];
+                };
+            };
+            401: components["responses"]["Problem"];
+        };
+    };
+    subscribePush: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushSubscriptionRequest"];
+            };
+        };
+        responses: {
+            /** @description Inscrito */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+        };
+    };
+    unsubscribePush: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    endpoint: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Removida */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+        };
+    };
+    testPush: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Resultado do envio */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        failed: number;
+                        /** @description Inscrições expiradas (404/410) removidas. */
+                        removed: number;
+                        sent: number;
+                    };
+                };
+            };
+            401: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     getStats: {

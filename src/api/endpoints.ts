@@ -1,5 +1,9 @@
 import type { ApiClient } from "./client";
 import {
+  notificationPreferencesSchema,
+  pushStatusSchema,
+  pushTestResultSchema,
+  type NotificationPreferences,
   unlockEventListSchema,
   aiGuideEnvelopeSchema,
   aiGuideSchema,
@@ -58,6 +62,15 @@ export const api = {
   /* Avisos de troféu */
   unseenUnlocks: (c: ApiClient) => c.request("/events/unseen", { schema: unlockEventListSchema }),
   markUnlocksSeen: (c: ApiClient, ids: string[]) => c.request("/events/seen", { method: "POST", body: { ids } }),
+
+  /* Web push */
+  pushStatus: (c: ApiClient) => c.request("/push/key", { schema: pushStatusSchema }),
+  subscribePush: (c: ApiClient, sub: PushSubscriptionJSON) => c.request("/push/subscriptions", { method: "POST", body: sub }),
+  unsubscribePush: (c: ApiClient, endpoint: string) => c.request("/push/subscriptions", { method: "DELETE", body: { endpoint } }),
+  testPush: (c: ApiClient) => c.request("/push/test", { method: "POST", schema: pushTestResultSchema }),
+  notificationPrefs: (c: ApiClient) => c.request("/notifications/preferences", { schema: notificationPreferencesSchema }),
+  saveNotificationPrefs: (c: ApiClient, prefs: NotificationPreferences) =>
+    c.request("/notifications/preferences", { method: "PUT", body: prefs, schema: notificationPreferencesSchema }),
 
   /* IA (geração assíncrona; a resposta chega por stream — ver useAIStream) */
   trophyGuide: (c: ApiClient, trophyId: string) =>
@@ -137,4 +150,6 @@ export const queryKeys = {
   roadmap: (gameId: string) => ["ai-guide", "roadmap", gameId] as const,
   chat: (gameId: string) => ["ai-chat", gameId] as const,
   unlocks: ["unlocks", "unseen"] as const,
+  pushStatus: ["push", "status"] as const,
+  notificationPrefs: ["push", "preferences"] as const,
 } as const;

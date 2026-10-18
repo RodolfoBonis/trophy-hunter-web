@@ -565,3 +565,24 @@ export const unlockEventListSchema = z
   .array(unlockEventSchema)
   .nullable()
   .transform((a) => a ?? []);
+
+/* ── Web push ──────────────────────────────────────────────────────────────────────────── */
+
+export const pushStatusSchema = z.object({
+  /** false = servidor sem chaves VAPID. */
+  enabled: z.boolean(),
+  public_key: z.string(),
+  subscriptions: z.number().int(),
+});
+export type PushStatus = z.infer<typeof pushStatusSchema>;
+
+export const notificationPreferencesSchema = z.object({
+  unlocks: z.boolean(),
+  completions: z.boolean(),
+  reconnect: z.boolean(),
+  errors: z.boolean(),
+  ai_ready: z.boolean(),
+});
+export type NotificationPreferences = z.infer<typeof notificationPreferencesSchema>;
+
+export const pushTestResultSchema = z.object({ sent: z.number().int(), failed: z.number().int(), removed: z.number().int() });
