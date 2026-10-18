@@ -4,6 +4,7 @@ import { APP_ROLE, useSession } from "@/auth/session";
 import { clearLoginRedirectMark } from "@/auth/redirectGuard";
 import { Button, buttonClasses } from "@/design-system/components/ui/button";
 import { reportError } from "@/lib/observability";
+import { isStaleChunkError, reloadOnceForNewVersion } from "@/lib/staleChunk";
 
 function FullScreen({ title, description, children }: { title: string; description?: string; children?: ReactNode }) {
   return (
@@ -71,9 +72,23 @@ export function CrashScreen({ onRetry }: { onRetry: () => void }) {
 /** errorElement do router: erros de render/lazy dentro das rotas. */
 export function RouteErrorScreen() {
   const error = useRouteError();
+  const stale = isStaleChunkError(error);
   useEffect(() => {
+    // Versão nova publicada com a aba aberta: recarrega sozinho (uma vez) em vez de mostrar erro.
+    if (stale && reloadOnceForNewVersion()) return;
     reportError(error, { boundary: "route" });
-  }, [error]);
+  }, [error, stale]);
+  if (stale) {
+    return (
+      <div className="p-6">
+        <h2 className="text-base font-semibold text-text">Saiu uma versão nova do app</h2>
+        <p className="mt-1 text-sm text-muted">Recarregue para continuar com a versão atualizada.</p>
+        <Button className="mt-4" size="sm" onClick={() => window.location.reload()}>
+          Recarregar
+        </Button>
+      </div>
+    );
+  }
   return (
     <div className="p-6">
       <h2 className="text-base font-semibold text-text">Esta tela não carregou</h2>

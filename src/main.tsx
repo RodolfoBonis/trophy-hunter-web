@@ -5,6 +5,7 @@ import { App } from "./app/App";
 import { BootError } from "./app/BootError";
 import { registerPwa } from "./app/pwa";
 import { getConfig } from "./config/env";
+import { installStaleChunkGuard } from "./lib/staleChunk";
 
 async function enableApiMocks(): Promise<void> {
   // Import dinâmico: em produção (VITE_API_MOCK ausente) o MSW nem entra no bundle.
@@ -14,6 +15,7 @@ async function enableApiMocks(): Promise<void> {
 }
 
 async function boot(): Promise<void> {
+  installStaleChunkGuard();
   const root = createRoot(document.getElementById("root")!);
   let config;
   try {
