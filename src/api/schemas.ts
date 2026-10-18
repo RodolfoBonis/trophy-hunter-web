@@ -44,12 +44,44 @@ export type SyncScope = z.infer<typeof syncScopeSchema>;
 
 /* ── Perfil ─────────────────────────────────────────────────────────────────────────────── */
 
+export const userRoleSchema = z.enum(["owner", "member"]);
+/** pending = entrou mas ainda não aceitou convite; removed = o dono revogou o acesso. */
+export const userStatusSchema = z.enum(["pending", "active", "removed"]);
+
 export const userSchema = z.object({
+  id: z.string(),
   subject: z.string(),
   email: z.string().optional(),
   name: z.string().optional(),
+  role: userRoleSchema,
+  status: userStatusSchema,
 });
 export type User = z.infer<typeof userSchema>;
+
+/** Link de convite. `url` só vem na criação (a API guarda só o hash do código). */
+export const inviteSchema = z.object({
+  id: z.string(),
+  expires_at: z.string().nullable(),
+  max_uses: z.number(),
+  used_count: z.number(),
+  created_at: z.string().nullable(),
+  url: z.string().optional(),
+});
+export type Invite = z.infer<typeof inviteSchema>;
+export const inviteListSchema = z.array(inviteSchema);
+
+export const memberSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  name: z.string(),
+  role: userRoleSchema,
+  status: userStatusSchema,
+  accounts: z.number(),
+  last_seen_at: z.string().nullable(),
+  created_at: z.string().nullable(),
+});
+export type Member = z.infer<typeof memberSchema>;
+export const memberListSchema = z.array(memberSchema);
 
 /* ── Integrações ────────────────────────────────────────────────────────────────────────── */
 

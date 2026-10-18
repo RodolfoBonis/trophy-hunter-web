@@ -2,6 +2,75 @@
 /** Gerado por `pnpm gen:api` a partir de /Users/rodolfodebonis/Documents/projects/trophy-hunter-api/api/openapi.yaml. Não edite à mão. */
 
 export interface paths {
+    "/admin/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Convites ainda válidos. Só o dono. */
+        get: operations["listInvites"];
+        put?: never;
+        /** Cria um link de convite (uso único, válido por 7 dias). Só o dono. */
+        post: operations["createInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/invites/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoga um convite. Só o dono. */
+        delete: operations["revokeInvite"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Quem já entrou (ativos e removidos), dono primeiro. Só o dono. */
+        get: operations["listMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/members/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoga o acesso de um membro; com purge=true apaga a pessoa e todos os dados dela. */
+        delete: operations["removeMember"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ai/guides/{id}": {
         parameters: {
             query?: never;
@@ -329,6 +398,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/invites/{code}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Aceita um convite — quem está "pending" (ou foi removido sem purge) vira membro ativo. */
+        post: operations["acceptInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me": {
         parameters: {
             query?: never;
@@ -610,7 +696,7 @@ export interface components {
             npsso: string;
         };
         ConnectSteamRequest: {
-            /** @description Steam Web API key (https://steamcommunity.com/dev/apikey). Obrigatória só na primeira conta Steam; nas seguintes, omitida → reaproveita a key existente. Nunca é retornada. */
+            /** @description Steam Web API key (https://steamcommunity.com/dev/apikey). Opcional: omitida → usa a key de outra conta Steam da mesma pessoa ou a key do servidor (basta informar o perfil). Nunca é retornada. */
             api_key?: string;
             /** @description Apelido da conta. Vazio → nome do perfil na Steam. */
             label?: string;
@@ -726,12 +812,40 @@ export interface components {
         };
         /** @enum {string} */
         IntegrationStatus: "connected" | "needs_reconnect" | "error_private" | "error" | "disabled";
+        Invite: {
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            expires_at: string | null;
+            /** Format: uuid */
+            id: string;
+            max_uses: number;
+            /** @description Link do convite — só na criação (o código não fica guardado). */
+            url?: string;
+            used_count: number;
+        };
         LinkGameRequest: {
             /**
              * Format: uuid
              * @description Jogo da outra plataforma.
              */
             other_game_id: string;
+        };
+        Member: {
+            /** @description Contas Steam/PSN conectadas. */
+            accounts: number;
+            /** Format: date-time */
+            created_at: string | null;
+            email: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            last_seen_at: string | null;
+            name: string;
+            /** @enum {string} */
+            role: "owner" | "member";
+            /** @enum {string} */
+            status: "pending" | "active" | "removed";
         };
         NextPlatinum: {
             items: {
@@ -781,6 +895,8 @@ export interface components {
         /** @enum {string} */
         Platform: "steam" | "psn";
         Problem: {
+            /** @description Código estável para a UI reagir: not_invited (sem convite aceito), member_removed (acesso revogado), invite_invalid, ai_daily_limit (teto diário de IA do membro). */
+            code?: string;
             detail?: string;
             errors?: {
                 code?: string;
@@ -1096,9 +1212,16 @@ export interface components {
             api_key?: string;
             label?: string;
         };
+        /** @description Usuário do app. status pending = logou mas ainda não aceitou convite (só /me e o aceite funcionam; o resto responde 403 code not_invited); removed = acesso revogado pelo dono. */
         User: {
-            email?: string;
-            name?: string;
+            email: string;
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            role: "owner" | "member";
+            /** @enum {string} */
+            status: "pending" | "active" | "removed";
             subject: string;
         };
     };
@@ -1123,6 +1246,118 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listInvites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invite"][];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    createInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Convite criado (url só aparece aqui) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invite"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    revokeInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["GameIDPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revogado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    listMembers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Member"][];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    removeMember: {
+        parameters: {
+            query?: {
+                purge?: boolean;
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["GameIDPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removido */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
     editGuide: {
         parameters: {
             query?: never;
@@ -1770,6 +2005,30 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+        };
+    };
+    acceptInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Membro ativo */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
         };
     };
     getMe: {

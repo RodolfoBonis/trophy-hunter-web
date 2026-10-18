@@ -22,6 +22,13 @@ describe("toApiError (RFC 7807)", () => {
     expect(error.isConflict).toBe(true);
   });
 
+  it("prefere o `code` de negócio do problem ao derivado do type", async () => {
+    const error = await toApiError(
+      problem({ type: "about:blank", title: "Forbidden", status: 403, detail: "peça um convite", code: "not_invited" }, 403),
+    );
+    expect(error.code).toBe("not_invited");
+  });
+
   it("mapeia errors[] por campo (422)", async () => {
     const error = await toApiError(
       problem(

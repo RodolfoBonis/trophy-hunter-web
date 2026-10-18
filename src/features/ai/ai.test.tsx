@@ -115,6 +115,16 @@ describe("Guia de IA do troféu", () => {
       "A IA não conseguiu responder",
     );
   });
+
+  it("avisa quando o membro atinge o limite diário de IA", async () => {
+    window.localStorage.setItem("mock:scenario", "ai-daily-limit");
+    const user = userEvent.setup();
+    await openTrophyGuide(user);
+    await user.click(screen.getByRole("button", { name: "Gerar guia com IA" }));
+    expect(await screen.findByRole("alert", {}, T)).toHaveTextContent(
+      "limite de pedidos de IA de hoje",
+    );
+  });
 });
 
 describe("Roadmap e chat", () => {

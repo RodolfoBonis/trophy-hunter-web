@@ -39,7 +39,7 @@ export function TrophyGuidePanel({ trophyId }: { trophyId: string }) {
       )}
       onGenerate={() => generate.mutate()}
       generating={generate.isPending}
-      generateError={generate.isError}
+      generateError={generate.error}
       onSaveEdit={(content) =>
         guide.data && edit.mutate({ id: guide.data.id, content })
       }
@@ -79,7 +79,7 @@ export function RoadmapPanel({
       )}
       onGenerate={() => generate.mutate()}
       generating={generate.isPending}
-      generateError={generate.isError}
+      generateError={generate.error}
       onSaveEdit={(content) =>
         roadmap.data && edit.mutate({ id: roadmap.data.id, content })
       }

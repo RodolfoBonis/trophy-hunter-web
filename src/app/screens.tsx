@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { useRouteError } from "react-router";
-import { APP_ROLE, useSession } from "@/auth/session";
+import { useSession } from "@/auth/session";
 import { clearLoginRedirectMark } from "@/auth/redirectGuard";
 import { Button, buttonClasses } from "@/design-system/components/ui/button";
 import { reportError } from "@/lib/observability";
@@ -16,11 +16,11 @@ function FullScreen({ title, description, children }: { title: string; descripti
   );
 }
 
-export function SessionLoadingScreen() {
+export function SessionLoadingScreen({ message = "Autenticando" }: { message?: string }) {
   return (
     <FullScreen title="Entrando…">
       <p role="status" className="font-mono text-xs uppercase tracking-wide text-muted">
-        Autenticando no Keycloak
+        {message}
       </p>
     </FullScreen>
   );
@@ -42,20 +42,48 @@ export function SessionErrorScreen({ error }: { error: Error }) {
   );
 }
 
-export function NoAccessScreen() {
+/** Entrou, mas ainda não aceitou um convite (`/me` pending ou 403 not_invited). */
+export function NoAccessScreen({
+  title = "Você ainda não tem acesso",
+  description,
+  children,
+}: {
+  title?: string;
+  description?: string;
+  children?: ReactNode;
+}) {
   const session = useSession();
   const email = session.status === "authenticated" ? session.user.email : "";
   return (
     <FullScreen
-      title="Sem acesso"
-      description={`A conta ${email} entrou, mas não tem a permissão ${APP_ROLE}. Conceda o papel no Keycloak (via /admins).`}
+      title={title}
+      description={
+        description ??
+        `Você entrou${email ? ` como ${email}` : ""}, mas o Trophy Hunter é só para convidados. Peça um link de convite a quem administra o app e abra-o com esta conta.`
+      }
     >
-      {session.status === "authenticated" && (
-        <Button size="sm" variant="secondary" onClick={() => void session.signOut()}>
-          Sair e trocar de conta
-        </Button>
-      )}
+      {children}
+      <SignOutButton />
     </FullScreen>
+  );
+}
+
+/** O dono revogou o acesso deste usuário. */
+export function RemovedScreen() {
+  return (
+    <FullScreen title="Acesso removido" description="Quem administra o Trophy Hunter removeu o seu acesso. Um convite novo devolve o acesso.">
+      <SignOutButton />
+    </FullScreen>
+  );
+}
+
+function SignOutButton() {
+  const session = useSession();
+  if (session.status !== "authenticated") return null;
+  return (
+    <Button size="sm" variant="secondary" onClick={() => void session.signOut()}>
+      Sair e trocar de conta
+    </Button>
   );
 }
 

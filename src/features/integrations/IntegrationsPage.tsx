@@ -278,8 +278,8 @@ function IntegrationCard({
 }
 
 /**
- * Adiciona uma conta Steam. A API key só é obrigatória na 1ª conta: a mesma key lê qualquer perfil
- * público, então nas seguintes ela é opcional (a API reaproveita a existente).
+ * Adiciona uma conta Steam: basta o perfil. A API key é opcional (avançado) — sem ela, a API usa a
+ * key de outra conta Steam da pessoa ou a key do servidor; qualquer key lê perfis públicos.
  */
 export function ConnectSteamForm({
   hasSteamAccount,
@@ -331,34 +331,6 @@ export function ConnectSteamForm({
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="steam-api-key" className="hud-label">
-            Steam Web API key{hasSteamAccount && " (opcional)"}
-          </Label>
-          <div className="relative">
-            <KeyRound
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-3"
-              aria-hidden
-            />
-            <Input
-              id="steam-api-key"
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="••••••••••••••••••••••••••••••••"
-              autoComplete="off"
-              spellCheck={false}
-              required={!hasSteamAccount}
-              aria-describedby="steam-api-key-hint"
-              className="pl-10"
-            />
-          </div>
-          <p id="steam-api-key-hint" className="text-caption text-text-3">
-            {hasSteamAccount
-              ? "Deixe em branco para reaproveitar a key da conta já conectada — ela lê qualquer perfil público."
-              : "Gere em steamcommunity.com/dev/apikey."}
-          </p>
-        </div>
-        <div className="flex flex-col gap-1.5">
           <Label htmlFor="steam-account" className="hud-label">
             SteamID64 ou vanity
           </Label>
@@ -375,6 +347,37 @@ export function ConnectSteamForm({
             O perfil e os &quot;Detalhes do jogo&quot; precisam estar públicos.
           </p>
         </div>
+        <details className="group flex flex-col gap-1.5">
+          <summary className="cursor-pointer text-caption text-text-3 hover:text-text-1">
+            Avançado: usar a sua própria Steam Web API key
+          </summary>
+          <div className="mt-2 flex flex-col gap-1.5">
+            <Label htmlFor="steam-api-key" className="hud-label">
+              Steam Web API key (opcional)
+            </Label>
+            <div className="relative">
+              <KeyRound
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-3"
+                aria-hidden
+              />
+              <Input
+                id="steam-api-key"
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="••••••••••••••••••••••••••••••••"
+                autoComplete="off"
+                spellCheck={false}
+                aria-describedby="steam-api-key-hint"
+                className="pl-10"
+              />
+            </div>
+            <p id="steam-api-key-hint" className="text-caption text-text-3">
+              Em branco, o app usa {hasSteamAccount ? "a key da sua outra conta ou " : ""}a key do
+              servidor — ela lê qualquer perfil público. Gere a sua em steamcommunity.com/dev/apikey.
+            </p>
+          </div>
+        </details>
         {fieldError && (
           <p role="alert" className="text-sm text-danger">
             {fieldError.message || "Não foi possível conectar."}

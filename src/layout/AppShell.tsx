@@ -8,6 +8,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { useAuthenticatedSession } from "@/auth/session";
 import { cn } from "@/lib/utils";
+import { useIsOwner } from "@/features/members/queries";
 import { NAV_ITEMS, isNavActive } from "./nav";
 
 function Glyph({ id, size = 18 }: { id: string; size?: number }) {
@@ -38,6 +39,7 @@ function Brand() {
 /** Menu do usuário (nome, e-mail, sair) — popover simples acessível por teclado. */
 function UserMenu() {
   const session = useAuthenticatedSession();
+  const isOwner = useIsOwner();
   const [open, setOpen] = useState(false);
   const soundOn = useSoundOn();
   const ref = useRef<HTMLDivElement>(null);
@@ -91,6 +93,16 @@ function UserMenu() {
             >
               Contas conectadas
             </Link>
+            {isOwner && (
+              <Link
+                role="menuitem"
+                to="/settings/members"
+                className="label !text-text-2 no-underline hover:!text-text-1"
+                onClick={() => setOpen(false)}
+              >
+                Membros e convites
+              </Link>
+            )}
             <Link
               role="menuitem"
               to="/sync"

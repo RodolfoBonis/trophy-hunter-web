@@ -10,6 +10,7 @@ import { TrophyIcon } from "@/design-system/components/TrophyIcon";
 import { useIntegrations, useSyncNow } from "@/features/integrations/queries";
 import { setSoundOn, useSoundOn } from "@/features/unlocks/sound";
 import { NAV_ITEMS } from "@/layout/nav";
+import { useIsOwner } from "@/features/members/queries";
 
 function Glyph({ id }: { id: string }) {
   return (
@@ -67,6 +68,7 @@ export function CommandPalette({
   const [q, setQ] = useState("");
   const term = useDeferredValue(q.trim());
   const integrations = useIntegrations();
+  const isOwner = useIsOwner();
   const syncNow = useSyncNow();
   const soundOn = useSoundOn();
 
@@ -98,6 +100,13 @@ export function CommandPalette({
       icon: "i-sync",
       run: () => accounts.forEach((a) => syncNow.mutate(a.id)),
       hidden: accounts.length === 0,
+    },
+    {
+      id: "members",
+      label: "Membros e convites",
+      icon: "i-key",
+      run: () => go("/settings/members"),
+      hidden: !isOwner,
     },
     {
       id: "sound",

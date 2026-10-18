@@ -34,6 +34,8 @@ import type {
   TypeCount,
   TypeCounts,
   User,
+  Invite,
+  Member,
   Alert,
   NextPlatinum,
   RemainingTrophy,
@@ -49,6 +51,8 @@ type AssertNever<T extends never> = T;
 
 export type ContractChecks = [
   AssertNever<MissingKeys<Gen["User"], User>>,
+  AssertNever<MissingKeys<Gen["Invite"], Invite>>,
+  AssertNever<MissingKeys<Gen["Member"], Member>>,
   AssertNever<MissingKeys<Gen["Integration"], Integration>>,
   AssertNever<MissingKeys<Gen["ConnectSteamRequest"], ConnectSteamRequest>>,
   AssertNever<MissingKeys<Gen["EnqueueResponse"], EnqueueResponse>>,

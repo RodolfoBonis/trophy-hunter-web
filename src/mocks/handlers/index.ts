@@ -11,6 +11,7 @@ import type { MockGameRow } from "../data/fixtures";
 import { API, apiError, scenarioGate } from "../http";
 import { hasScenario } from "../scenario";
 import { aiHandlers } from "./ai";
+import { memberHandlers } from "./members";
 import { pushHandlers, unlockHandlers } from "./unlocks";
 
 /* Espelha a API: o mesmo jogo (platform + external_id) em várias contas vira UM item, representado
@@ -346,18 +347,10 @@ function mockAlerts() {
 }
 
 export const handlers: HttpHandler[] = [
+  ...memberHandlers,
   ...aiHandlers,
   ...unlockHandlers,
   ...pushHandlers,
-  /* Perfil */
-  http.get(`${API}/me`, () =>
-    HttpResponse.json({
-      subject: "mock-user",
-      name: "Rodolfo de Bonis",
-      email: "rodolfo@rb.lab",
-    }),
-  ),
-
   /* Busca (paleta): mesma regra da API — conta mais avançada; oculto não obtido não aparece. */
   http.get(`${API}/search`, ({ request }) => {
     const q = (new URL(request.url).searchParams.get("q") ?? "")
@@ -541,21 +534,11 @@ export const handlers: HttpHandler[] = [
       api_key?: string;
       steam_id_or_vanity?: string;
     };
-    const hasSteam = db.integrations.some((i) => i.platform === "steam");
-    if (!body.steam_id_or_vanity || (!body.api_key && !hasSteam)) {
-      return apiError(
-        422,
-        "validation_error",
-        "Informe o SteamID (ou vanity) e, na 1ª conta, a API key.",
-        [
-          ...(body.steam_id_or_vanity
-            ? []
-            : [{ field: "steam_id_or_vanity", code: "required" }]),
-          ...(body.api_key || hasSteam
-            ? []
-            : [{ field: "api_key", code: "required" }]),
-        ],
-      );
+    // Sem api_key → key do servidor (mesma regra da API): só o perfil é obrigatório.
+    if (!body.steam_id_or_vanity) {
+      return apiError(422, "validation_error", "Informe o SteamID (ou vanity).", [
+        { field: "steam_id_or_vanity", code: "required" },
+      ]);
     }
     const accountId = /^\d{17}$/.test(body.steam_id_or_vanity)
       ? body.steam_id_or_vanity

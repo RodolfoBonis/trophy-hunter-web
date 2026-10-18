@@ -23,7 +23,7 @@ export function apiError(
   errors?: { field: string; code: string }[],
 ) {
   return HttpResponse.json(
-    { type: `https://trophy.rb.lab/errors/${code}`, title: code, status, detail: message, ...(errors ? { errors } : {}) },
+    { type: `https://trophy.rb.lab/errors/${code}`, title: code, status, detail: message, code, ...(errors ? { errors } : {}) },
     { status, headers: { "Content-Type": "application/problem+json" } },
   );
 }

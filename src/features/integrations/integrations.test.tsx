@@ -49,10 +49,12 @@ describe("IntegrationsPage", () => {
 });
 
 describe("ConnectSteamForm", () => {
-  it("exige a API key na 1ª conta Steam", () => {
+  it("conecta a 1ª conta Steam só com o perfil (API key fica em 'avançado')", () => {
     renderRoutes({ routes: [{ path: "/", element: <ConnectSteamForm hasSteamAccount={false} /> }], path: "/" });
     expect(screen.getByText("Conectar Steam")).toBeInTheDocument();
-    expect(screen.getByLabelText("Steam Web API key")).toBeRequired();
+    expect(screen.getByLabelText("SteamID64 ou vanity")).toBeRequired();
+    expect(screen.getByLabelText(/Steam Web API key/)).not.toBeRequired();
+    expect(screen.getByText(/usar a sua própria Steam Web API key/)).toBeInTheDocument();
   });
 });
 

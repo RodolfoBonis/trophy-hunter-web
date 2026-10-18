@@ -1,5 +1,6 @@
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
-import { CLIENT_ERROR, isApiError } from "@/api/errors";
+import { queryKeys } from "@/api/endpoints";
+import { API_ERROR, CLIENT_ERROR, isApiError } from "@/api/errors";
 import { addBreadcrumb, reportError } from "@/lib/observability";
 
 /**
@@ -23,10 +24,25 @@ function reportUnhandled(error: unknown, source: "query" | "mutation", key: unkn
  * rede/5xx.
  */
 export function createQueryClient(): QueryClient {
-  return new QueryClient({
-    queryCache: new QueryCache({ onError: (error, query) => reportUnhandled(error, "query", query.queryKey) }),
+  // Acesso revogado no meio da sessão: qualquer chamada recebe 403 member_removed/not_invited →
+  // refaz o /me e o MemberGate troca a tela sozinho (em vez de erro genérico em cada tela).
+  const onAccessLost = (error: unknown, key: unknown) => {
+    if (!isApiError(error) || (error.code !== API_ERROR.memberRemoved && error.code !== API_ERROR.notInvited)) return;
+    if (JSON.stringify(key) === JSON.stringify(queryKeys.me)) return;
+    void client.invalidateQueries({ queryKey: queryKeys.me });
+  };
+  const client: QueryClient = new QueryClient({
+    queryCache: new QueryCache({
+      onError: (error, query) => {
+        reportUnhandled(error, "query", query.queryKey);
+        onAccessLost(error, query.queryKey);
+      },
+    }),
     mutationCache: new MutationCache({
-      onError: (error, _vars, _ctx, mutation) => reportUnhandled(error, "mutation", mutation.options.mutationKey),
+      onError: (error, _vars, _ctx, mutation) => {
+        reportUnhandled(error, "mutation", mutation.options.mutationKey);
+        onAccessLost(error, mutation.options.mutationKey);
+      },
     }),
     defaultOptions: {
       queries: {
@@ -40,4 +56,5 @@ export function createQueryClient(): QueryClient {
       mutations: { retry: false },
     },
   });
+  return client;
 }

@@ -25,6 +25,9 @@ import {
   integrationSchema,
   syncRunListSchema,
   userSchema,
+  inviteSchema,
+  inviteListSchema,
+  memberListSchema,
   type ConnectSteamRequest,
   type GameStatus,
   type Platform,
@@ -46,6 +49,18 @@ export interface GamesQuery {
 /** Endpoints da API do Trophy Hunter (um por função). Caminhos/shapes do openapi.yaml. */
 export const api = {
   me: (c: ApiClient) => c.request("/me", { schema: userSchema }),
+  /** Aceita um link de convite (uso único); devolve o usuário já ativo. */
+  acceptInvite: (c: ApiClient, code: string) =>
+    c.request(`/invites/${encodeURIComponent(code)}/accept`, { method: "POST", schema: userSchema }),
+
+  /* Administração (só o dono) */
+  invites: (c: ApiClient) => c.request("/admin/invites", { schema: inviteListSchema }),
+  createInvite: (c: ApiClient) => c.request("/admin/invites", { method: "POST", schema: inviteSchema }),
+  revokeInvite: (c: ApiClient, id: string) => c.request(`/admin/invites/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  members: (c: ApiClient) => c.request("/admin/members", { schema: memberListSchema }),
+  /** Revoga o acesso; com `purge`, apaga também as contas e os dados do membro. */
+  removeMember: (c: ApiClient, id: string, purge = false) =>
+    c.request(`/admin/members/${encodeURIComponent(id)}`, { method: "DELETE", query: { purge: purge || undefined } }),
 
   /* Biblioteca */
   games: (c: ApiClient, params: GamesQuery = {}, signal?: AbortSignal) =>
@@ -141,6 +156,8 @@ export const api = {
 /** Chaves do TanStack Query, centralizadas para invalidação consistente. */
 export const queryKeys = {
   me: ["me"] as const,
+  invites: ["admin", "invites"] as const,
+  members: ["admin", "members"] as const,
   games: (params: object) => ["games", params] as const,
   game: (id: string) => ["game", id] as const,
   integrations: ["integrations"] as const,

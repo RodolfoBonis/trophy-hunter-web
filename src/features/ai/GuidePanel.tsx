@@ -7,6 +7,7 @@ import { parsePartialJSON } from "@/lib/partialJson";
 import { cn } from "@/lib/utils";
 import { AIDisclaimer } from "./GuideViews";
 import { useAIStream } from "./useAIStream";
+import { aiRequestError } from "./aiErrors";
 
 function Glyph({ id, size = 14 }: { id: string; size?: number }) {
   return (
@@ -88,7 +89,8 @@ export interface GuidePanelProps<T> {
   ) => ReactNode;
   onGenerate: () => void;
   generating: boolean;
-  generateError?: boolean;
+  /** Erro do último pedido (null/undefined = sem erro). */
+  generateError?: unknown;
   onSaveEdit: (content: T | null) => void;
   savingEdit: boolean;
   noun: string;
@@ -137,9 +139,12 @@ export function GuidePanel<T>(p: GuidePanelProps<T>) {
             {p.generating ? "Pedindo…" : `Gerar ${p.noun} com IA`}
           </button>
         </div>
-        {p.generateError && (
+        {p.generateError != null && (
           <p role="alert" className="m-0 text-sm text-danger">
-            Não foi possível pedir o {p.noun}. Tente de novo.
+            {aiRequestError(
+              p.generateError,
+              `Não foi possível pedir o ${p.noun}. Tente de novo.`,
+            )}
           </p>
         )}
       </div>

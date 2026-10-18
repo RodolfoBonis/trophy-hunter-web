@@ -15,6 +15,7 @@ import { AIDisclaimer } from "./GuideViews";
 import { Markdown } from "./Markdown";
 import { useChat, useResetChat, useSendChat } from "./queries";
 import { useAIStream } from "./useAIStream";
+import { aiRequestError } from "./aiErrors";
 
 const SUGGESTIONS = [
   "Perdi algum troféu perdível até aqui?",
@@ -193,7 +194,10 @@ export function ChatPanel({ gameId }: { gameId: string }) {
       </form>
       {send.isError && (
         <p role="alert" className="m-0 text-sm text-danger">
-          Não foi possível enviar. Tente de novo.
+          {aiRequestError(
+            send.error,
+            "Não foi possível enviar. Tente de novo.",
+          )}
         </p>
       )}
       <AIDisclaimer />

@@ -11,7 +11,7 @@ import {
   singleFlight,
 } from "./redirectGuard";
 import { currentReturnTo, safeReturnTo } from "./returnTo";
-import { APP_ROLE, SessionContext, firstNameOf, rolesFromAccessToken, type Session } from "./session";
+import { SessionContext, firstNameOf, type Session } from "./session";
 
 /** Volta para a rota pedida antes do login (só mesmo origin) e limpa ?code&state da URL. */
 export function handleSigninCallback(user: User | undefined): void {
@@ -118,18 +118,15 @@ function OidcSessionBridge({ children }: { children: ReactNode }) {
     if (!auth.isAuthenticated || !auth.user) return { status: "loading" };
     const profile = auth.user.profile;
     const name = profile.name ?? profile.preferred_username ?? profile.email ?? "Jogador";
-    const roles = rolesFromAccessToken(auth.user.access_token);
     const user = {
       sub: profile.sub,
       name,
       firstName: profile.given_name ?? firstNameOf(name),
       email: profile.email ?? "",
-      roles,
     };
     return {
       status: "authenticated",
       user,
-      hasAccess: roles.includes(APP_ROLE),
       getAccessToken: () => tokenRef.current,
       signOut: async () => {
         clearLoginRedirectMark();

@@ -1,11 +1,10 @@
 import { useMemo, type ReactNode } from "react";
-import { hasScenario } from "@/mocks/scenario";
-import { APP_ROLE, SessionContext, type AuthenticatedSession, type Session } from "./session";
+import { SessionContext, type AuthenticatedSession, type Session } from "./session";
 
 /**
  * Sessão fake para `--mode mock` (dev sem Keycloak e e2e). Só é importado dinamicamente quando
  * VITE_AUTH_MODE=mock, então não entra no bundle de produção.
- * Cenário `no-access` simula um usuário sem a realm role trophy-hunter-user.
+ * Quem decide o acesso é o `/me` da API (cenários `no-access`/`member-removed`/`member` no mock).
  */
 export function MockSessionProvider({
   children,
@@ -16,8 +15,6 @@ export function MockSessionProvider({
   overrides?: Partial<AuthenticatedSession>;
 }) {
   const session = useMemo<Session>(() => {
-    const noAccess = hasScenario("no-access");
-    const roles = noAccess ? ["offline_access"] : ["offline_access", APP_ROLE];
     return {
       status: "authenticated",
       user: {
@@ -25,9 +22,7 @@ export function MockSessionProvider({
         name: "Rodolfo de Bonis",
         firstName: "Rodolfo",
         email: "rodolfo@rb.lab",
-        roles,
       },
-      hasAccess: !noAccess,
       getAccessToken: () => "mock-access-token",
       signOut: async () => {
         window.location.assign("/");

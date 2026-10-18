@@ -2,7 +2,8 @@ import { z } from "zod";
 
 /**
  * Erros da API Go no formato RFC 7807 (`application/problem+json`): ver `Problem` no openapi.yaml.
- * `code` é sintético (derivado de `type` ou do status) para a UI ramificar sem depender da string.
+ * `code` vem do campo `code` do problem (ex.: `not_invited`, `ai_daily_limit`) ou, sem ele, é derivado
+ * de `type`/status — a UI ramifica por ele sem depender do texto.
  */
 const problemSchema = z.object({
   type: z.string(),
@@ -11,6 +12,7 @@ const problemSchema = z.object({
   detail: z.string().optional(),
   instance: z.string().optional(),
   trace_id: z.string().optional(),
+  code: z.string().optional(),
   errors: z
     .array(z.object({ field: z.string().optional(), code: z.string().optional() }))
     .nullish(),
@@ -72,6 +74,14 @@ export class ApiError extends Error {
   }
 }
 
+/** Códigos de negócio que a API manda no `code` do problem+json. */
+export const API_ERROR = {
+  notInvited: "not_invited",
+  memberRemoved: "member_removed",
+  inviteInvalid: "invite_invalid",
+  aiDailyLimit: "ai_daily_limit",
+} as const;
+
 export function isApiError(error: unknown): error is ApiError {
   return error instanceof ApiError;
 }
@@ -99,7 +109,7 @@ export async function toApiError(response: Response): Promise<ApiError> {
       const p = problem.data;
       const fields: Record<string, string> = {};
       for (const e of p.errors ?? []) if (e.field) fields[e.field] = e.code ?? "invalid";
-      return new ApiError(p.status || response.status, codeFromType(p.type, p.status || response.status), p.detail ?? p.title, fields, p.trace_id ?? requestId, headerRetry);
+      return new ApiError(p.status || response.status, p.code || codeFromType(p.type, p.status || response.status), p.detail ?? p.title, fields, p.trace_id ?? requestId, headerRetry);
     }
   }
   if (response.status === 404 && !contentType.includes("json")) {
