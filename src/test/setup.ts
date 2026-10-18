@@ -37,3 +37,12 @@ afterEach(() => {
   if (typeof window !== "undefined") window.localStorage.clear();
 });
 afterAll(() => server.close());
+
+// jsdom não implementa ResizeObserver nem scrollIntoView (usados pelo cmdk da paleta de comandos).
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+globalThis.ResizeObserver ??= ResizeObserverStub as unknown as typeof ResizeObserver;
+Element.prototype.scrollIntoView ??= function scrollIntoView() {};

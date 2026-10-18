@@ -1,5 +1,6 @@
 import type { ApiClient } from "./client";
 import {
+  searchResultSchema,
   notificationPreferencesSchema,
   pushStatusSchema,
   pushTestResultSchema,
@@ -62,6 +63,9 @@ export const api = {
   /* Avisos de troféu */
   unseenUnlocks: (c: ApiClient) => c.request("/events/unseen", { schema: unlockEventListSchema }),
   markUnlocksSeen: (c: ApiClient, ids: string[]) => c.request("/events/seen", { method: "POST", body: { ids } }),
+
+  /* Busca (paleta de comandos) */
+  search: (c: ApiClient, q: string, signal?: AbortSignal) => c.request("/search", { query: { q }, schema: searchResultSchema, signal }),
 
   /* Web push */
   pushStatus: (c: ApiClient) => c.request("/push/key", { schema: pushStatusSchema }),
@@ -151,5 +155,6 @@ export const queryKeys = {
   chat: (gameId: string) => ["ai-chat", gameId] as const,
   unlocks: ["unlocks", "unseen"] as const,
   pushStatus: ["push", "status"] as const,
+  search: (q: string) => ["search", q] as const,
   notificationPrefs: ["push", "preferences"] as const,
 } as const;

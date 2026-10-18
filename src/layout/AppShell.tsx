@@ -1,3 +1,7 @@
+import {
+  CommandPalette,
+  PALETTE_SHORTCUT,
+} from "@/features/command-palette/CommandPalette";
 import { setSoundOn, useSoundOn } from "@/features/unlocks/sound";
 import { UnlockNotices } from "@/features/unlocks/UnlockNotices";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -125,6 +129,7 @@ function UserMenu() {
  */
 export function AppShell() {
   const { pathname } = useLocation();
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -159,6 +164,16 @@ export function AppShell() {
             })}
           </nav>
           <div className="controls">
+            <button
+              type="button"
+              className="cmdk-trigger"
+              onClick={() => setPaletteOpen(true)}
+              aria-label={`Buscar (${PALETTE_SHORTCUT})`}
+            >
+              <Glyph id="i-target" size={14} />
+              <span className="t">Buscar</span>
+              <kbd>{PALETTE_SHORTCUT}</kbd>
+            </button>
             <UserMenu />
           </div>
         </div>
@@ -175,6 +190,7 @@ export function AppShell() {
       </main>
 
       <UnlockNotices />
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
 
       <nav aria-label="Navegação" className="tabbar">
         {NAV_ITEMS.filter((i) => i.mobile).map((item) => {

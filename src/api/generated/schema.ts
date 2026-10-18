@@ -433,6 +433,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Busca da paleta de comandos — jogos (até 8) e troféus (até 12). Mínimo de 2 caracteres.
+         * @description Só a conta mais avançada de cada jogo. Troféus ocultos ainda não obtidos não aparecem.
+         */
+        get: operations["search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/stats": {
         parameters: {
             query?: never;
@@ -851,6 +871,31 @@ export interface components {
             missables: string[];
             title: string;
             trophies: string[];
+        };
+        SearchResult: {
+            games: {
+                completion_pct: number;
+                cover: string;
+                external_id: string;
+                hero: string;
+                /** Format: uuid */
+                id: string;
+                platform: components["schemas"]["Platform"];
+                title: string;
+            }[];
+            trophies: {
+                earned: boolean;
+                /** Format: uuid */
+                game_id: string;
+                game_title: string;
+                icon: string;
+                /** Format: uuid */
+                id: string;
+                name: string;
+                platform: components["schemas"]["Platform"];
+                rarity_pct: number | null;
+                type: components["schemas"]["TrophyType"];
+            }[];
         };
         Stats: {
             completions: {
@@ -1914,6 +1959,30 @@ export interface operations {
             };
             401: components["responses"]["Problem"];
             503: components["responses"]["Problem"];
+        };
+    };
+    search: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResult"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
         };
     };
     getStats: {

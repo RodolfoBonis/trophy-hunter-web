@@ -586,3 +586,39 @@ export const notificationPreferencesSchema = z.object({
 export type NotificationPreferences = z.infer<typeof notificationPreferencesSchema>;
 
 export const pushTestResultSchema = z.object({ sent: z.number().int(), failed: z.number().int(), removed: z.number().int() });
+
+/* ── Busca (paleta de comandos) ────────────────────────────────────────────────────────── */
+
+export const searchResultSchema = z.object({
+  games: z
+    .array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        platform: platformSchema,
+        external_id: z.string(),
+        cover: z.string(),
+        hero: z.string(),
+        completion_pct: z.number(),
+      }),
+    )
+    .nullable()
+    .transform((a) => a ?? []),
+  trophies: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        type: trophyTypeSchema,
+        icon: z.string(),
+        earned: z.boolean(),
+        rarity_pct: z.number().nullish(),
+        game_id: z.string(),
+        game_title: z.string(),
+        platform: platformSchema,
+      }),
+    )
+    .nullable()
+    .transform((a) => a ?? []),
+});
+export type SearchResult = z.infer<typeof searchResultSchema>;

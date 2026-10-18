@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Link, useParams } from "react-router";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useParams } from "react-router";
 import type {
   GameAccount,
   GameDetail,
@@ -133,6 +133,7 @@ function TrophyRow({ trophy }: { trophy: Trophy }) {
 
   return (
     <li
+      id={`trophy-${trophy.id}`}
       className={cn(
         "trow",
         trophy.earned ? "unlocked" : "locked",
@@ -400,6 +401,28 @@ export default function GamePage() {
   const [show, setShow] = useState<Show>("all");
   const [order, setOrder] = useState<Order>("default");
   const [tab, setTab] = useState<Tab>("trophies");
+  const { hash } = useLocation();
+
+  // Troféu aberto pela paleta (#trophy-<id>): mostra a lista completa, rola até ele e destaca.
+  useEffect(() => {
+    if (!hash.startsWith("#trophy-") || !query.data) return;
+    setTab("trophies");
+    setShow("all");
+    const t = window.setTimeout(() => {
+      const el = document.getElementById(hash.slice(1));
+      if (!el) return;
+      el.scrollIntoView({
+        block: "center",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+      });
+      el.classList.remove("is-target");
+      void el.offsetWidth; // reinicia a animação se o mesmo troféu for aberto de novo
+      el.classList.add("is-target");
+    }, 50);
+    return () => window.clearTimeout(t);
+  }, [hash, query.data]);
 
   const groups = useMemo(() => {
     if (!query.data) return [];

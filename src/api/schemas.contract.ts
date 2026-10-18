@@ -15,6 +15,7 @@ import type {
   UnlockEvent,
   NotificationPreferences,
   PushStatus,
+  SearchResult,
   CrossPlatformGame,
   EnqueueResponse,
   Game,
@@ -79,5 +80,6 @@ export type ContractChecks = [
   AssertNever<MissingKeys<Gen["ChatThread"], ChatThread>>,
   AssertNever<MissingKeys<Gen["UnlockEvent"], UnlockEvent>>,
   AssertNever<MissingKeys<Gen["PushStatus"], PushStatus>>,
+  AssertNever<MissingKeys<Gen["SearchResult"], SearchResult>>,
   AssertNever<MissingKeys<Gen["NotificationPreferences"], NotificationPreferences>>,
 ];
