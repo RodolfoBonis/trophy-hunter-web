@@ -19,8 +19,7 @@ const PREFS: [keyof NotificationPreferences, string, string][] = [
     "Quando o sync encontrar troféus/conquistas que você acabou de pegar.",
   ],
   ["completions", "Platina e 100%", "Quando um jogo fechar."],
-  ["reconnect", "Conta para reconectar", "Ex.: a sessão da PSN expirou."],
-  ["errors", "Erros", "Sync falhando ou IA sem cota."],
+  ["reconnect", "Conta precisa de você", "Ex.: reautenticar a PSN ou deixar o perfil Steam público."],
   ["ai_ready", "Guia pronto", "Quando um guia ou roadmap de IA terminar."],
 ];
 

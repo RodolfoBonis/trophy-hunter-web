@@ -102,7 +102,6 @@ let prefs = {
   unlocks: true,
   completions: true,
   reconnect: true,
-  errors: true,
   ai_ready: true,
 };
 
@@ -112,7 +111,6 @@ export function resetPush(): void {
     unlocks: true,
     completions: true,
     reconnect: true,
-    errors: true,
     ai_ready: true,
   };
 }

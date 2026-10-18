@@ -580,7 +580,6 @@ export const notificationPreferencesSchema = z.object({
   unlocks: z.boolean(),
   completions: z.boolean(),
   reconnect: z.boolean(),
-  errors: z.boolean(),
   ai_ready: z.boolean(),
 });
 export type NotificationPreferences = z.infer<typeof notificationPreferencesSchema>;

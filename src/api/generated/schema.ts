@@ -773,9 +773,7 @@ export interface components {
             ai_ready: boolean;
             /** @description Platina / 100%. */
             completions: boolean;
-            /** @description Sync com erro, IA sem cota. */
-            errors: boolean;
-            /** @description Conta precisa ser reconectada. */
+            /** @description Conta precisa de ação (reautenticar a PSN, perfil Steam privado). */
             reconnect: boolean;
             /** @description Troféus novos. */
             unlocks: boolean;
