@@ -27,6 +27,9 @@ export default defineConfig(() => {
         injectRegister: null,
         injectManifest: {
           globPatterns: ["**/*.{js,css,html,svg,woff2,png}"],
+          // config.js é a configuração de RUNTIME (gerada pelo nginx a partir das envs): nunca no
+          // precache, senão o navegador fica preso à config do build (ex.: realm antigo do login).
+          globIgnores: ["config.js", "mockServiceWorker.js"],
         },
         manifest: false, // servimos um manifest.webmanifest estático de public/.
         devOptions: { enabled: false },

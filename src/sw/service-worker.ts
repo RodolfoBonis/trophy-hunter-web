@@ -23,6 +23,9 @@ precacheAndRoute((self as any).__WB_MANIFEST ?? []);
 cleanupOutdatedCaches();
 clientsClaim();
 
+// Configuração de runtime: sempre da rede (o nginx serve com no-store).
+registerRoute(({ url }) => url.origin === sw.location.origin && url.pathname === "/config.js", new NetworkOnly());
+
 // A API nunca é cacheada (inclui SSE). Deixa passar direto para a rede. Ela vive em outra origem
 // (rota do gateway, ex. api.rodolfodebonis.com.br/trophy/v1/...) ou em /api/v1 no dev local.
 registerRoute(({ url }) => /\/(api\/)?v1\//.test(url.pathname), new NetworkOnly());
