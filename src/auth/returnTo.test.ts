@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { safeReturnTo } from "./returnTo";
+import { loginPromptFor, safeReturnTo } from "./returnTo";
 
 describe("safeReturnTo", () => {
   const origin = "https://trophy.rb.lab";
@@ -14,5 +14,16 @@ describe("safeReturnTo", () => {
   it("cai em / para valores vazios/inválidos", () => {
     expect(safeReturnTo(undefined, origin)).toBe("/");
     expect(safeReturnTo("", origin)).toBe("/");
+  });
+});
+
+describe("loginPromptFor", () => {
+  it("abre o cadastro para quem vem de um convite", () => {
+    expect(loginPromptFor("/convite/abc123")).toBe("create");
+  });
+  it("login normal no resto", () => {
+    expect(loginPromptFor("/")).toBeUndefined();
+    expect(loginPromptFor("/games/1")).toBeUndefined();
+    expect(loginPromptFor("/convite/")).toBeUndefined();
   });
 });

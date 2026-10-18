@@ -10,7 +10,7 @@ import {
   markLoginRedirect,
   singleFlight,
 } from "./redirectGuard";
-import { currentReturnTo, safeReturnTo } from "./returnTo";
+import { currentReturnTo, loginPromptFor, safeReturnTo } from "./returnTo";
 import { SessionContext, firstNameOf, type Session } from "./session";
 
 /** Volta para a rota pedida antes do login (só mesmo origin) e limpa ?code&state da URL. */
@@ -67,7 +67,7 @@ function OidcSessionBridge({ children }: { children: ReactNode }) {
   const redirectToLogin = useCallback((returnTo: string = currentReturnTo()) => {
     if (redirecting.current) return;
     redirecting.current = true;
-    authRef.current.signinRedirect({ state: { returnTo } }).catch((error: unknown) => {
+    authRef.current.signinRedirect({ state: { returnTo }, prompt: loginPromptFor(returnTo) }).catch((error: unknown) => {
       redirecting.current = false;
       reportError(error, { auth: "signin_redirect" });
     });

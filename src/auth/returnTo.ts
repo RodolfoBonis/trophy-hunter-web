@@ -17,3 +17,11 @@ export function safeReturnTo(returnTo: unknown, origin: string = window.location
 export function currentReturnTo(): string {
   return `${window.location.pathname}${window.location.search}${window.location.hash}`;
 }
+
+/**
+ * Quem chega por um link de convite (`/convite/<código>`) ainda não tem conta: o login abre direto o
+ * cadastro do Keycloak (`prompt=create`). A tela de login não oferece cadastro — só o convite leva lá.
+ */
+export function loginPromptFor(returnTo: string): "create" | undefined {
+  return /^\/convite\/[^/?#]+/.test(returnTo) ? "create" : undefined;
+}
