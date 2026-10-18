@@ -1,0 +1,97 @@
+import { http, HttpResponse } from "msw";
+import type { UnlockEvent } from "@/api/schemas";
+import { API } from "../http";
+import { hasScenario } from "../scenario";
+
+/* Avisos de troféu no mock: vazio por padrão (não atrapalha as outras telas/testes). Cenário
+ * `unlocks` = 2 troféus + uma platina; `unlocks-many` = 6 troféus (vira aviso agrupado). */
+
+const base = {
+  detected_at: new Date().toISOString(),
+  earned_at: new Date().toISOString(),
+  icon: "",
+  description: null,
+  hero: "",
+};
+
+const GOW = {
+  game_id: "22222222-2222-2222-2222-222222222222",
+  game_title: "God of War Ragnarök",
+  platform: "psn" as const,
+  external_id: "NPWR21234_00",
+  cover: "",
+};
+const ELDEN = {
+  game_id: "11111111-1111-1111-1111-111111111111",
+  game_title: "ELDEN RING",
+  platform: "steam" as const,
+  external_id: "1245620",
+  cover:
+    "https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/library_600x900.jpg",
+};
+
+function events(): UnlockEvent[] {
+  if (hasScenario("unlocks-many")) {
+    return Array.from({ length: 6 }, (_, i) => ({
+      ...base,
+      ...ELDEN,
+      id: `ev-m${i}`,
+      trophy_id: `t-m${i}`,
+      name: `Conquista ${i + 1}`,
+      type: "achievement",
+      rarity_pct: 30,
+      completes_game: false,
+    }));
+  }
+  if (!hasScenario("unlocks")) return [];
+  return [
+    {
+      ...base,
+      ...ELDEN,
+      id: "ev-1",
+      trophy_id: "t-e1",
+      name: "Mestre das Grandes Runas",
+      type: "achievement",
+      rarity_pct: 3.4,
+      completes_game: false,
+    },
+    {
+      ...base,
+      ...GOW,
+      id: "ev-2",
+      trophy_id: "t-g1",
+      name: "Senhor da Guerra",
+      type: "gold",
+      rarity_pct: 18.2,
+      completes_game: false,
+    },
+    {
+      ...base,
+      ...GOW,
+      id: "ev-3",
+      trophy_id: "t-g2",
+      name: "Pai e filho",
+      type: "platinum",
+      rarity_pct: 6.1,
+      completes_game: true,
+    },
+  ];
+}
+
+let seen = new Set<string>();
+
+/** Zera os vistos entre testes (chamado no reset do mock). */
+export function resetUnlocks(): void {
+  seen = new Set();
+}
+
+export const unlockHandlers = [
+  http.get(`${API}/events/unseen`, () =>
+    HttpResponse.json(events().filter((e) => !seen.has(e.id))),
+  ),
+  http.post(`${API}/events/seen`, async ({ request }) => {
+    const { ids } = (await request.json()) as { ids: string[] };
+    ids.forEach((id) => seen.add(id));
+    return new HttpResponse(null, { status: 204 });
+  }),
+];

@@ -538,3 +538,30 @@ export const chatThreadSchema = z.object({
 export type ChatThread = z.infer<typeof chatThreadSchema>;
 
 export const sendChatResponseSchema = z.object({ user: chatMessageSchema, assistant: chatMessageSchema });
+
+/* ── Avisos de troféu ──────────────────────────────────────────────────────────────────── */
+
+/** Troféu recém-desbloqueado (toast). completes_game = fechou o jogo (platina/100%) → cerimônia. */
+export const unlockEventSchema = z.object({
+  id: z.string(),
+  detected_at: timestamp.nullish(),
+  trophy_id: z.string(),
+  name: z.string(),
+  description: z.string().nullish(),
+  type: trophyTypeSchema,
+  icon: z.string(),
+  rarity_pct: z.number().nullish(),
+  earned_at: timestamp.nullish(),
+  game_id: z.string(),
+  game_title: z.string(),
+  platform: platformSchema,
+  external_id: z.string(),
+  cover: z.string(),
+  hero: z.string(),
+  completes_game: z.boolean(),
+});
+export type UnlockEvent = z.infer<typeof unlockEventSchema>;
+export const unlockEventListSchema = z
+  .array(unlockEventSchema)
+  .nullable()
+  .transform((a) => a ?? []);

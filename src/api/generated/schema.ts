@@ -56,6 +56,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/events/seen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Marca avisos como exibidos. */
+        post: operations["markUnlocksSeen"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/unseen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Troféus desbloqueados ainda não exibidos (avisos/cerimônia), mais antigos primeiro (até 100).
+         * @description Só desbloqueios detectados DEPOIS do sync inicial de cada conta. completes_game = o troféu fechou o jogo (PSN: platina; Steam: 100%).
+         */
+        get: operations["listUnseenUnlocks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/games": {
         parameters: {
             query?: never;
@@ -890,6 +927,30 @@ export interface components {
             rarity: components["schemas"]["RarityEarned"];
             silver: components["schemas"]["TypeCount"];
         };
+        UnlockEvent: {
+            /** @description Fechou o jogo (platina/100%) → cerimônia. */
+            completes_game: boolean;
+            cover: string;
+            description: string | null;
+            /** Format: date-time */
+            detected_at: string | null;
+            /** Format: date-time */
+            earned_at: string | null;
+            external_id: string;
+            /** Format: uuid */
+            game_id: string;
+            game_title: string;
+            hero: string;
+            icon: string;
+            /** Format: uuid */
+            id: string;
+            name: string;
+            platform: components["schemas"]["Platform"];
+            rarity_pct: number | null;
+            /** Format: uuid */
+            trophy_id: string;
+            type: components["schemas"]["TrophyType"];
+        };
         UpdateIntegrationRequest: {
             /** @description Nova Steam Web API key (validada contra a conta). */
             api_key?: string;
@@ -996,6 +1057,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Alert"][];
+                };
+            };
+            401: components["responses"]["Problem"];
+        };
+    };
+    markUnlocksSeen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    ids: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Marcados */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+        };
+    };
+    listUnseenUnlocks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnlockEvent"][];
                 };
             };
             401: components["responses"]["Problem"];

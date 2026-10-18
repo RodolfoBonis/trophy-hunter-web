@@ -1,3 +1,5 @@
+import { setSoundOn, useSoundOn } from "@/features/unlocks/sound";
+import { UnlockNotices } from "@/features/unlocks/UnlockNotices";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { useAuthenticatedSession } from "@/auth/session";
@@ -14,7 +16,11 @@ function Glyph({ id, size = 18 }: { id: string; size?: number }) {
 
 function Brand() {
   return (
-    <Link to="/" className="brand text-text-1 no-underline" aria-label="Trophy Hunter — início">
+    <Link
+      to="/"
+      className="brand text-text-1 no-underline"
+      aria-label="Trophy Hunter — início"
+    >
       <svg aria-hidden style={{ color: "var(--color-plat-2)" }}>
         <use href="#t-plat" />
       </svg>
@@ -29,6 +35,7 @@ function Brand() {
 function UserMenu() {
   const session = useAuthenticatedSession();
   const [open, setOpen] = useState(false);
+  const soundOn = useSoundOn();
   const ref = useRef<HTMLDivElement>(null);
   const initials = (session.user.name ?? session.user.email ?? "?")
     .split(/\s+/)
@@ -63,17 +70,46 @@ function UserMenu() {
         {initials}
       </button>
       {open && (
-        <div role="menu" className="panel sm absolute right-0 top-12 z-[var(--z-overlay)] w-64">
-          <p className="truncate font-display text-sm font-semibold text-text-1">{session.user.name}</p>
+        <div
+          role="menu"
+          className="panel sm absolute right-0 top-12 z-[var(--z-overlay)] w-64"
+        >
+          <p className="truncate font-display text-sm font-semibold text-text-1">
+            {session.user.name}
+          </p>
           <p className="caption truncate">{session.user.email}</p>
           <div className="mt-3 flex flex-col gap-1 border-t border-border-subtle pt-3">
-            <Link role="menuitem" to="/settings/integrations" className="label !text-text-2 no-underline hover:!text-text-1" onClick={() => setOpen(false)}>
+            <Link
+              role="menuitem"
+              to="/settings/integrations"
+              className="label !text-text-2 no-underline hover:!text-text-1"
+              onClick={() => setOpen(false)}
+            >
               Contas conectadas
             </Link>
-            <Link role="menuitem" to="/sync" className="label !text-text-2 no-underline hover:!text-text-1" onClick={() => setOpen(false)}>
+            <Link
+              role="menuitem"
+              to="/sync"
+              className="label !text-text-2 no-underline hover:!text-text-1"
+              onClick={() => setOpen(false)}
+            >
               Log de sync
             </Link>
-            <button role="menuitem" type="button" className="label text-left !text-danger" onClick={() => void session.signOut()}>
+            <button
+              role="menuitemcheckbox"
+              aria-checked={soundOn}
+              type="button"
+              className="label text-left !text-text-2 hover:!text-text-1"
+              onClick={() => setSoundOn(!soundOn)}
+            >
+              Som dos avisos: {soundOn ? "ligado" : "desligado"}
+            </button>
+            <button
+              role="menuitem"
+              type="button"
+              className="label text-left !text-danger"
+              onClick={() => void session.signOut()}
+            >
               Sair
             </button>
           </div>
@@ -110,7 +146,12 @@ export function AppShell() {
             {NAV_ITEMS.map((item) => {
               const active = isNavActive(item.to, pathname);
               return (
-                <NavLink key={item.to} to={item.to} aria-current={active ? "page" : undefined} className={cn(active && "on")}>
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(active && "on")}
+                >
                   <Glyph id={item.icon} size={16} />
                   {item.label}
                 </NavLink>
@@ -123,17 +164,28 @@ export function AppShell() {
         </div>
       </header>
 
-      <main id="conteudo" tabIndex={-1} className="wrap pb-28 pt-8 outline-none md:pb-16">
+      <main
+        id="conteudo"
+        tabIndex={-1}
+        className="wrap pb-28 pt-8 outline-none md:pb-16"
+      >
         <Suspense fallback={<div className="label">Carregando…</div>}>
           <Outlet />
         </Suspense>
       </main>
 
+      <UnlockNotices />
+
       <nav aria-label="Navegação" className="tabbar">
         {NAV_ITEMS.filter((i) => i.mobile).map((item) => {
           const active = isNavActive(item.to, pathname);
           return (
-            <NavLink key={item.to} to={item.to} aria-current={active ? "page" : undefined} className={cn(active && "on")}>
+            <NavLink
+              key={item.to}
+              to={item.to}
+              aria-current={active ? "page" : undefined}
+              className={cn(active && "on")}
+            >
               <Glyph id={item.icon} size={20} />
               {item.short}
             </NavLink>

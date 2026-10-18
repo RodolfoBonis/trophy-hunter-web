@@ -1,5 +1,6 @@
 import type { ApiClient } from "./client";
 import {
+  unlockEventListSchema,
   aiGuideEnvelopeSchema,
   aiGuideSchema,
   chatThreadSchema,
@@ -53,6 +54,10 @@ export const api = {
   unlinkGame: (c: ApiClient, id: string) => c.request(`/games/${encodeURIComponent(id)}/link`, { method: "DELETE" }),
   linkCandidates: (c: ApiClient, id: string, q: string, signal?: AbortSignal) =>
     c.request(`/games/${encodeURIComponent(id)}/link-candidates`, { query: { q }, schema: crossPlatformListSchema, signal }),
+
+  /* Avisos de troféu */
+  unseenUnlocks: (c: ApiClient) => c.request("/events/unseen", { schema: unlockEventListSchema }),
+  markUnlocksSeen: (c: ApiClient, ids: string[]) => c.request("/events/seen", { method: "POST", body: { ids } }),
 
   /* IA (geração assíncrona; a resposta chega por stream — ver useAIStream) */
   trophyGuide: (c: ApiClient, trophyId: string) =>
@@ -131,4 +136,5 @@ export const queryKeys = {
   trophyGuide: (trophyId: string) => ["ai-guide", "trophy", trophyId] as const,
   roadmap: (gameId: string) => ["ai-guide", "roadmap", gameId] as const,
   chat: (gameId: string) => ["ai-chat", gameId] as const,
+  unlocks: ["unlocks", "unseen"] as const,
 } as const;

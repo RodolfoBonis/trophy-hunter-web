@@ -12,6 +12,7 @@ import type {
   RoadmapContent,
   RoadmapStage,
   TrophyGuideContent,
+  UnlockEvent,
   CrossPlatformGame,
   EnqueueResponse,
   Game,
@@ -74,4 +75,5 @@ export type ContractChecks = [
   AssertNever<MissingKeys<Gen["RoadmapStage"], RoadmapStage>>,
   AssertNever<MissingKeys<Gen["ChatMessage"], ChatMessage>>,
   AssertNever<MissingKeys<Gen["ChatThread"], ChatThread>>,
+  AssertNever<MissingKeys<Gen["UnlockEvent"], UnlockEvent>>,
 ];
