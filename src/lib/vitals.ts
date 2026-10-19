@@ -29,6 +29,8 @@ export function routeGroup(pathname: string): string {
 }
 
 export function startVitals(endpoint: string): void {
+  // Navegador automatizado (teste sintético, Playwright) não é usuário: não entra nas métricas.
+  if (navigator.webdriver) return;
   const queue: { name: string; value: number; route: string }[] = [];
   const device = window.matchMedia("(max-width: 900px)").matches ? "mobile" : "desktop";
   const add = (m: Metric) => queue.push({ name: m.name, value: Math.round(m.value * 1000) / 1000, route: routeGroup(window.location.pathname) });
