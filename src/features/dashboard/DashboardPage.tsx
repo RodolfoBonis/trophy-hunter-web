@@ -10,6 +10,7 @@ import { SectionHead } from "@/design-system/components/SectionHead";
 import { TrophyIcon } from "@/design-system/components/TrophyIcon";
 import { useChallenges, useFeed, useSharing } from "@/features/social/queries";
 import { FeedRow } from "@/features/social/SocialBits";
+import { WeeklyRecapPanel } from "@/features/recap/WeeklyRecapPanel";
 import { useAlerts, useNext, useStats } from "./queries";
 
 const nf = new Intl.NumberFormat("pt-BR");
@@ -327,6 +328,7 @@ export default function DashboardPage() {
         <>
           <Hero stats={stats.data} />
           <ChallengeInvites />
+          <WeeklyRecapPanel compact />
           <Alerts />
           <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
             <div className="panel flex flex-col gap-3">

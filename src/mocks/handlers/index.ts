@@ -12,6 +12,7 @@ import { API, apiError, scenarioGate } from "../http";
 import { hasScenario } from "../scenario";
 import { aiHandlers } from "./ai";
 import { memberHandlers } from "./members";
+import { recapHandlers } from "./recap";
 import { makeSocialHandlers } from "./social";
 import { pushHandlers, unlockHandlers } from "./unlocks";
 
@@ -373,6 +374,7 @@ function mockAlerts() {
 
 export const handlers: HttpHandler[] = [
   ...memberHandlers,
+  ...recapHandlers,
   ...makeSocialHandlers({ mockStats, toListItem: (row) => toListItem(row) }),
   ...aiHandlers,
   ...unlockHandlers,

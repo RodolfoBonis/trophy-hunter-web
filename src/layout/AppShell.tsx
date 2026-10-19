@@ -160,7 +160,7 @@ export function AppShell() {
         <div className="wrap">
           <Brand />
           <nav aria-label="Navegação principal" className="nav app-nav">
-            {NAV_ITEMS.map((item) => {
+            {NAV_ITEMS.filter((item) => item.topbar !== false).map((item) => {
               const active = isNavActive(item.to, pathname);
               return (
                 <NavLink
@@ -168,9 +168,13 @@ export function AppShell() {
                   to={item.to}
                   aria-current={active ? "page" : undefined}
                   className={cn(active && "on")}
+                  title={item.label}
                 >
                   <Glyph id={item.icon} size={16} />
-                  {item.label}
+                  {/* A barra (largura máxima do layout) não comporta os nomes longos: rótulo curto, nome
+                      completo no title e para leitor de tela. */}
+                  <span aria-hidden>{item.short}</span>
+                  <span className="sr-only">{item.label}</span>
                 </NavLink>
               );
             })}

@@ -104,6 +104,7 @@ let prefs = {
   reconnect: true,
   ai_ready: true,
   challenges: true,
+  weekly_recap: false,
 };
 
 export function resetPush(): void {
@@ -114,6 +115,7 @@ export function resetPush(): void {
     reconnect: true,
     ai_ready: true,
     challenges: true,
+    weekly_recap: false,
   };
 }
 

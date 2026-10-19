@@ -7,6 +7,8 @@ export interface NavItem {
   icon: string;
   /** Aparece na tab bar inferior do celular (máx. 5). */
   mobile: boolean;
+  /** Fica fora da barra superior (cabe no menu da conta/paleta) — a barra comporta ~7 itens. */
+  topbar?: false;
 }
 
 /** Navegação do app (copy em pt-BR). Ordem = prioridade no fluxo de uso. */
@@ -16,9 +18,10 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/next", label: "Próxima Platina", short: "Próxima", icon: "t-plat", mobile: true },
   { to: "/timeline", label: "Linha do tempo", short: "Tempo", icon: "i-play", mobile: true },
   { to: "/friends", label: "Amigos", short: "Amigos", icon: "i-user", mobile: true },
+  { to: "/recap", label: "Retrospectiva", short: "Retro", icon: "i-target", mobile: false },
   // No celular, Contas fica no menu da conta (a tab bar comporta 5).
   { to: "/settings/integrations", label: "Contas", short: "Contas", icon: "i-key", mobile: false },
-  { to: "/sync", label: "Sync", short: "Sync", icon: "i-sync", mobile: false },
+  { to: "/sync", label: "Sync", short: "Sync", icon: "i-sync", mobile: false, topbar: false },
 ];
 
 export function isNavActive(to: string, pathname: string): boolean {

@@ -1,6 +1,7 @@
 import type { AIGuide, ChatMessage, Integration, SyncRun } from "@/api/schemas";
 import { resetMembers } from "../handlers/members";
 import { resetSocial } from "../handlers/social";
+import { resetRecap } from "../handlers/recap";
 import { resetPush, resetUnlocks } from "../handlers/unlocks";
 import { mockGames, mockIntegrations, mockSyncRuns, type MockGameRow } from "./fixtures";
 
@@ -33,6 +34,7 @@ export function resetMockDb(): void {
   resetPush();
   resetMembers();
   resetSocial();
+  resetRecap();
   const fresh = seed();
   db.integrations = fresh.integrations;
   db.games = fresh.games;

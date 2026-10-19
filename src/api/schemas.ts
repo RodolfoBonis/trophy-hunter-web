@@ -632,6 +632,8 @@ export const notificationPreferencesSchema = z.object({
   reconnect: z.boolean(),
   ai_ready: z.boolean(),
   challenges: z.boolean().default(true),
+  /** Resumo semanal da IA — opt-in (liga a geração e o aviso). */
+  weekly_recap: z.boolean().default(false),
 });
 export type NotificationPreferences = z.infer<typeof notificationPreferencesSchema>;
 
@@ -814,3 +816,81 @@ export const gameCompareSchema = z.object({
   trophies: z.array(compareTrophySchema),
 });
 export type GameCompare = z.infer<typeof gameCompareSchema>;
+
+/* ── Retrospectiva e resumo semanal ─────────────────────────────────────────────────────── */
+
+export const recapSchema = z.object({
+  period: z.string(),
+  label: z.string(),
+  partial: z.boolean(),
+  earned: z.number(),
+  previous_earned: z.number(),
+  platinum: z.number(),
+  gold: z.number(),
+  silver: z.number(),
+  bronze: z.number(),
+  achievements: z.number(),
+  rare: z.number(),
+  games: z.number(),
+  active_days: z.number(),
+  longest_streak: z.number(),
+  favorite_weekday: z.string(),
+  best_day: z.string().nullable(),
+  best_day_count: z.number(),
+  top_games: z.array(
+    z.object({
+      game_id: z.string(),
+      title: z.string(),
+      platform: platformSchema,
+      external_id: z.string(),
+      cover: z.string(),
+      hero: z.string(),
+      unlocked: z.number(),
+      earned: z.number(),
+      total: z.number(),
+    }),
+  ),
+  rarest: z.array(
+    z.object({
+      name: z.string(),
+      type: trophyTypeSchema,
+      hidden: z.boolean(),
+      icon: z.string(),
+      rarity_pct: z.number(),
+      earned_at: z.string().nullable(),
+      game_title: z.string(),
+      platform: platformSchema,
+    }),
+  ),
+  completions: z.array(
+    z.object({
+      game_id: z.string(),
+      title: z.string(),
+      platform: platformSchema,
+      external_id: z.string(),
+      cover: z.string(),
+      hero: z.string(),
+      total: z.number(),
+      completed_at: z.string().nullish(),
+    }),
+  ),
+});
+export type Recap = z.infer<typeof recapSchema>;
+
+export const weeklyRecapContentSchema = z.object({
+  headline: z.string(),
+  highlights: z.array(z.string()),
+  suggestions: z.array(z.object({ game: z.string(), why: z.string(), trophies: z.array(z.string()) })),
+  encouragement: z.string(),
+});
+export type WeeklyRecapContent = z.infer<typeof weeklyRecapContentSchema>;
+
+export const weeklyRecapSchema = z.object({
+  week: z.string(),
+  status: z.enum(["pending", "ready", "error"]),
+  content: weeklyRecapContentSchema.nullable(),
+  error: z.string().nullable(),
+  updated_at: z.string().nullable(),
+});
+export type WeeklyRecap = z.infer<typeof weeklyRecapSchema>;
+export const weeklyRecapEnvelopeSchema = z.object({ recap: weeklyRecapSchema.nullable() });

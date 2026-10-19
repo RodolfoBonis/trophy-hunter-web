@@ -587,6 +587,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/recap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Retrospectiva ("Wrapped") de um mês ou ano. */
+        get: operations["getRecap"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/recap/weekly": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resumo semanal da IA mais recente (recap null = nunca houve). */
+        get: operations["getWeeklyRecap"];
+        put?: never;
+        /** Gera o resumo desta semana agora (se ainda não houver). Não conta no teto diário. */
+        post: operations["generateWeeklyRecap"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/search": {
         parameters: {
             query?: never;
@@ -1251,6 +1286,8 @@ export interface components {
             reconnect: boolean;
             /** @description Troféus novos. */
             unlocks: boolean;
+            /** @description Resumo semanal da IA (domingo à noite). Opt-in: liga a geração e o aviso. */
+            weekly_recap: boolean;
         };
         /** @enum {string} */
         Platform: "steam" | "psn";
@@ -1315,6 +1352,66 @@ export interface components {
             legendary: number;
             rare: number;
             uncommon: number;
+        };
+        /** @description Retrospectiva do período (calculada na hora; fuso de Brasília; jogos pela conta mais avançada). */
+        Recap: {
+            achievements: number;
+            active_days: number;
+            /** Format: date-time */
+            best_day: string | null;
+            best_day_count: number;
+            bronze: number;
+            completions: {
+                /** Format: date-time */
+                completed_at?: string | null;
+                cover: string;
+                external_id: string;
+                /** Format: uuid */
+                game_id: string;
+                hero: string;
+                platform: components["schemas"]["Platform"];
+                title: string;
+                total: number;
+            }[];
+            earned: number;
+            favorite_weekday: string;
+            games: number;
+            gold: number;
+            /** @example outubro de 2026 */
+            label: string;
+            longest_streak: number;
+            /** @description O período ainda não acabou. */
+            partial: boolean;
+            /** @example 2026-10 */
+            period: string;
+            platinum: number;
+            /** @description Mesmo total no período anterior. */
+            previous_earned: number;
+            rare: number;
+            rarest: {
+                /** Format: date-time */
+                earned_at: string | null;
+                game_title: string;
+                hidden: boolean;
+                icon: string;
+                name: string;
+                platform: components["schemas"]["Platform"];
+                rarity_pct: number;
+                type: components["schemas"]["TrophyType"];
+            }[];
+            silver: number;
+            top_games: {
+                cover: string;
+                earned: number;
+                external_id: string;
+                /** Format: uuid */
+                game_id: string;
+                hero: string;
+                platform: components["schemas"]["Platform"];
+                title: string;
+                total: number;
+                unlocked: number;
+            }[];
         };
         RemainingTrophy: {
             description?: string | null;
@@ -1591,6 +1688,29 @@ export interface components {
             /** @enum {string} */
             status: "pending" | "active" | "removed";
             subject: string;
+        };
+        WeeklyRecap: {
+            content: components["schemas"]["WeeklyRecapContent"] | null;
+            error: string | null;
+            /** @enum {string} */
+            status: "pending" | "ready" | "error";
+            /** Format: date-time */
+            updated_at: string | null;
+            /**
+             * Format: date
+             * @description Segunda-feira da semana.
+             */
+            week: string;
+        };
+        WeeklyRecapContent: {
+            encouragement: string;
+            headline: string;
+            highlights: string[];
+            suggestions: {
+                game: string;
+                trophies: string[];
+                why: string;
+            }[];
         };
     };
     responses: {
@@ -2699,6 +2819,75 @@ export interface operations {
                 };
             };
             401: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    getRecap: {
+        parameters: {
+            query?: {
+                /** @description AAAA-MM ou AAAA (padrão: mês corrente). */
+                period?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Recap"];
+                };
+            };
+            400: components["responses"]["Problem"];
+        };
+    };
+    getWeeklyRecap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        recap: components["schemas"]["WeeklyRecap"] | null;
+                    };
+                };
+            };
+        };
+    };
+    generateWeeklyRecap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pendente ou já existente */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        recap: components["schemas"]["WeeklyRecap"];
+                    };
+                };
+            };
             503: components["responses"]["Problem"];
         };
     };

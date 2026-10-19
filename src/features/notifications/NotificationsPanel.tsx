@@ -22,6 +22,7 @@ const PREFS: [keyof NotificationPreferences, string, string][] = [
   ["reconnect", "Conta precisa de você", "Ex.: reautenticar a PSN ou deixar o perfil Steam público."],
   ["ai_ready", "Guia pronto", "Quando um guia ou roadmap de IA terminar."],
   ["challenges", "Desafios", "Convites, quando um amigo avança e o resultado."],
+  ["weekly_recap", "Resumo semanal da IA", "Domingo à noite: destaques da semana e o que caçar na próxima. Ligar também faz a IA gerar o resumo."],
 ];
 
 const UNSUPPORTED_TEXT = {

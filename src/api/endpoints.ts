@@ -35,6 +35,8 @@ import {
   challengeSummarySchema,
   challengeDetailSchema,
   gameCompareSchema,
+  recapSchema,
+  weeklyRecapEnvelopeSchema,
   type CreateChallengeRequest,
   type LeaderboardPeriod,
   type ConnectSteamRequest,
@@ -163,6 +165,11 @@ export const api = {
   syncGame: (c: ApiClient, id: string) =>
     c.request(`/games/${encodeURIComponent(id)}/sync`, { method: "POST", schema: enqueueResponseSchema }),
 
+  /* Retrospectiva e resumo semanal da IA */
+  recap: (c: ApiClient, period?: string) => c.request("/recap", { query: { period }, schema: recapSchema }),
+  weeklyRecap: (c: ApiClient) => c.request("/recap/weekly", { schema: weeklyRecapEnvelopeSchema }),
+  generateWeeklyRecap: (c: ApiClient) => c.request("/recap/weekly", { method: "POST", schema: weeklyRecapEnvelopeSchema }),
+
   /* Insights */
   stats: (c: ApiClient) => c.request("/stats", { schema: statsSchema }),
   next: (c: ApiClient) => c.request("/next", { schema: nextPlatinumSchema }),
@@ -192,6 +199,8 @@ export const queryKeys = {
   friendGames: (id: string, params: object) => ["social", "friend", id, "games", params] as const,
   gameFriends: (gameId: string) => ["social", "game", gameId] as const,
   challenges: ["social", "challenges"] as const,
+  recap: (period: string) => ["recap", period] as const,
+  weeklyRecap: ["recap", "weekly"] as const,
   challenge: (id: string) => ["social", "challenges", id] as const,
   compare: (gameId: string, friendId: string) => ["social", "compare", gameId, friendId] as const,
   games: (params: object) => ["games", params] as const,
