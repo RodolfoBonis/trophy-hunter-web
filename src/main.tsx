@@ -5,7 +5,8 @@ import { App } from "./app/App";
 import { BootError } from "./app/BootError";
 import { registerPwa } from "./app/pwa";
 import { getConfig } from "./config/env";
-import { installStaleChunkGuard } from "./lib/staleChunk";
+import { configureErrorReporting, installGlobalErrorHandlers } from "./lib/observability";
+import { installStaleChunkGuard, isStaleChunkError } from "./lib/staleChunk";
 
 async function enableApiMocks(): Promise<void> {
   // Import dinâmico: em produção (VITE_API_MOCK ausente) o MSW nem entra no bundle.
@@ -24,6 +25,14 @@ async function boot(): Promise<void> {
     root.render(<BootError error={error} />);
     return;
   }
+  // Produção: erros do navegador vão para a API (log + métrica + alerta). Mock/dev: só console.
+  if (import.meta.env.VITE_API_MOCK !== "true" && !import.meta.env.DEV) {
+    configureErrorReporting({
+      endpoint: `${config.apiBase}/v1/client-errors`,
+      release: import.meta.env.VITE_APP_RELEASE ?? "dev",
+    });
+  }
+  installGlobalErrorHandlers(isStaleChunkError);
   await enableApiMocks();
   root.render(
     <StrictMode>

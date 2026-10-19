@@ -17,7 +17,7 @@ FROM base AS build
 ARG VERSION=dev
 COPY --from=deps /app/ ./
 COPY . .
-RUN pnpm build \
+RUN VITE_APP_RELEASE=${VERSION} pnpm build \
     # O worker do MSW só existe para o modo mock (dev/e2e) — não vai para a imagem.
     && rm -f dist/mockServiceWorker.js
 

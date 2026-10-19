@@ -8,6 +8,8 @@ interface ImportMetaEnv {
   readonly VITE_API_BASE?: string;
   readonly VITE_AUTH_MODE?: "oidc" | "mock";
   readonly VITE_API_MOCK?: "true" | "false";
+  /** Versão da imagem (tag do release), injetada no build do Dockerfile. */
+  readonly VITE_APP_RELEASE?: string;
 }
 
 interface ImportMeta {
