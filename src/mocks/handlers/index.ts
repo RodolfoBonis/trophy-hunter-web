@@ -252,12 +252,15 @@ function mockNext() {
     .map((r) => {
       const c = r.progress.completion_pct;
       const remaining = r.progress.total - r.progress.earned;
+      const total_h = r.estimate?.completionist_h ?? null;
+      const left_h = total_h != null ? Math.max(0.5, Math.round(total_h * (1 - c) * 10) / 10) : null;
       const factors = {
         completion: 0.45 * c,
         remaining: 0.25 / (1 + remaining / 8),
         ease: 0.3 * 0.32,
         priority: 0.05 * (r.priority ?? 0),
         urgency: 0,
+        time: left_h != null ? 0.1 / (1 + left_h / 10) : 0,
       };
       return {
         game_id: r.id,
@@ -276,6 +279,8 @@ function mockNext() {
         remaining_online: 0,
         priority: r.priority ?? 0,
         last_unlock_at: lastUnlockOf(r),
+        hours_total: total_h,
+        hours_left: left_h,
         score: Object.values(factors).reduce((a, b) => a + b, 0),
         factors,
       };
@@ -455,6 +460,7 @@ export const handlers: HttpHandler[] = [
     const { unified_id: _u, ...rest } = game;
     return HttpResponse.json({
       ...rest,
+      estimate: game.estimate ?? null,
       unify_locked: game.unify_locked ?? false,
       accounts: accountsOf(game),
       cross_platform: crossOf(game),

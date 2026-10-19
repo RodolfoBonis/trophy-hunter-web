@@ -7,6 +7,7 @@ import { ProgressBar } from "@/design-system/components/ProgressBar";
 import { RarityBadge } from "@/design-system/components/RarityBadge";
 import { SectionHead } from "@/design-system/components/SectionHead";
 import { TrophyIcon } from "@/design-system/components/TrophyIcon";
+import { formatHours } from "@/lib/hours";
 import { cn } from "@/lib/utils";
 import { useAlerts, useNext } from "@/features/dashboard/queries";
 
@@ -17,7 +18,16 @@ const FACTORS = [
   { key: "ease", label: "Facilidade", max: 0.3, color: "var(--color-success)" },
   { key: "priority", label: "Prioridade", max: 0.15, color: "var(--color-neon-violet)" },
   { key: "urgency", label: "Urgência", max: 0.05, color: "var(--color-warning)" },
+  { key: "time", label: "Tempo", max: 0.1, color: "var(--color-plat-3)" },
 ] as const;
+
+/** Filtros por tempo restante (HowLongToBeat). Jogo sem estimativa só aparece em "Todos". */
+const TIME_FILTERS = [
+  { key: "all", label: "Todos", max: Infinity },
+  { key: "quick", label: "Platinas rápidas", max: 15, hint: "< 15 h" },
+  { key: "weekend", label: "Cabe no fim de semana", max: 6, hint: "< 6 h" },
+] as const;
+type TimeFilter = (typeof TIME_FILTERS)[number]["key"];
 
 /** Troféu que falta (linha `.trow` do tile), com spoiler guard para ocultos. */
 function RemainingRow({ trophy }: { trophy: RemainingTrophy }) {
@@ -68,6 +78,7 @@ function Today({ item, trophies }: { item: NextItem; trophies: RemainingTrophy[]
           <p className="muted mt-2">
             Faltam <span className="num text-text-1">{item.remaining}</span> para {item.platform === "psn" ? "a platina" : "100%"} ·{" "}
             {Math.round(item.completion_pct * 100)}% concluído
+            {item.hours_left != null && <> · ~{formatHours(item.hours_left)} de jogo</>}
           </p>
           <div className="mt-3 max-w-sm">
             <ProgressBar value={item.completion_pct * 100} />
@@ -113,6 +124,12 @@ function RankRow({ item, pos }: { item: NextItem; pos: number }) {
         </Link>
         <p className="caption mt-1">
           {item.earned}/{item.total} · faltam {item.remaining} · raridade média do que falta {item.avg_remaining_rarity.toFixed(1).replace(".", ",")}%
+          {item.hours_left != null && (
+            <>
+              {" "}
+              · <b className="text-text-1">~{formatHours(item.hours_left)}</b> para {item.platform === "psn" ? "a platina" : "100%"}
+            </>
+          )}
         </p>
         <div className="mt-2">
           <ProgressBar value={item.completion_pct * 100} />
@@ -140,8 +157,11 @@ function RankRow({ item, pos }: { item: NextItem; pos: number }) {
 export default function NextPlatinumPage() {
   const next = useNext();
   const alerts = useAlerts();
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
   const items = next.data?.items ?? [];
   const top = items[0];
+  const maxHours = TIME_FILTERS.find((f) => f.key === timeFilter)!.max;
+  const shown = timeFilter === "all" ? items : items.filter((it) => it.hours_left != null && it.hours_left < maxHours);
   return (
     <section className="flex flex-col gap-6">
       <SectionHead
@@ -175,9 +195,24 @@ export default function NextPlatinumPage() {
       )}
 
       {items.length > 0 && (
-        <ol className="m-0 flex list-none flex-col gap-3 p-0">
-          {items.map((it, i) => (
-            <RankRow key={it.game_id} item={it} pos={i + 1} />
+        <div className="seg self-start" role="group" aria-label="Tempo restante">
+          <span className="seg-l" aria-hidden>
+            Tempo
+          </span>
+          {TIME_FILTERS.map((f) => (
+            <button key={f.key} type="button" aria-pressed={f.key === timeFilter} onClick={() => setTimeFilter(f.key)} title={"hint" in f ? f.hint : undefined}>
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
+      {items.length > 0 && shown.length === 0 && (
+        <p className="text-sm text-text-2">Nenhum jogo da fila com estimativa nessa faixa de tempo. As estimativas (HowLongToBeat) chegam aos poucos.</p>
+      )}
+      {shown.length > 0 && (
+        <ol className="m-0 flex list-none flex-col gap-3 p-0" aria-label="Fila de platinas">
+          {shown.map((it) => (
+            <RankRow key={it.game_id} item={it} pos={items.indexOf(it) + 1} />
           ))}
         </ol>
       )}

@@ -333,8 +333,20 @@ export const gameDetailSchema = gameSchema.extend({
   cross_platform: crossPlatformListSchema,
   /** Vínculo decidido à mão (a unificação automática não mexe). */
   unify_locked: z.boolean().default(false),
+  /** Tempos do HowLongToBeat (horas); null = ainda sem estimativa. */
+  estimate: z
+    .object({
+      main_h: z.number().nullable(),
+      extra_h: z.number().nullable(),
+      completionist_h: z.number().nullable(),
+      hours_left: z.number().nullable(),
+      source_url: z.string(),
+    })
+    .nullable()
+    .default(null),
 });
 export type GameDetail = z.infer<typeof gameDetailSchema>;
+export type GameEstimate = NonNullable<GameDetail["estimate"]>;
 
 /* ── Insights (dashboard, próxima platina, linha do tempo, alertas) ─────────────────────── */
 
@@ -415,6 +427,9 @@ export const nextItemSchema = z.object({
   remaining_online: z.number().int(),
   priority: z.number().int(),
   last_unlock_at: timestamp.nullish(),
+  /** Horas para 100% / que faltam (HowLongToBeat); null = sem estimativa. */
+  hours_total: z.number().nullable().default(null),
+  hours_left: z.number().nullable().default(null),
   score: z.number(),
   factors: z.object({
     completion: z.number(),
@@ -422,6 +437,7 @@ export const nextItemSchema = z.object({
     ease: z.number(),
     priority: z.number(),
     urgency: z.number(),
+    time: z.number().default(0),
   }),
 });
 export type NextItem = z.infer<typeof nextItemSchema>;

@@ -1,4 +1,9 @@
-import type { GameDetail, Integration, SyncRun } from "@/api/schemas";
+import type {
+  GameDetail,
+  GameEstimate,
+  Integration,
+  SyncRun,
+} from "@/api/schemas";
 import { ago, DAY, HOUR } from "../http";
 
 /**
@@ -16,9 +21,10 @@ export const PSN_MAIN = "cccccccc-cccc-cccc-cccc-cccccccccccc";
  * Linha de jogo no mock (uma por conta); `accounts` e `cross_platform` são derivados pelos handlers,
  * como na API. `unified_id` espelha games.unified_game_id (mesmo jogo em Steam e PSN).
  */
-export type MockGameRow = Omit<GameDetail, "accounts" | "cross_platform" | "unify_locked"> & {
+export type MockGameRow = Omit<GameDetail, "accounts" | "cross_platform" | "unify_locked" | "estimate"> & {
   unified_id?: string | null;
   unify_locked?: boolean;
+  estimate?: GameEstimate | null;
 };
 
 export const mockIntegrations: Integration[] = [
@@ -61,6 +67,7 @@ export const mockGames: MockGameRow[] = [
     platform: "steam",
     external_id: "1245620",
     title: "ELDEN RING",
+    estimate: { main_h: 60.1, extra_h: 101.4, completionist_h: 136.2, hours_left: 44.9, source_url: "https://howlongtobeat.com/game/68151" },
     cover: "https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/library_600x900.jpg",
     hero: "https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg",
     icon: "https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/capsule_184x69.jpg",
@@ -174,6 +181,7 @@ export const mockGames: MockGameRow[] = [
     platform: "steam",
     external_id: "1145360",
     title: "Hades",
+    estimate: { main_h: 22.4, extra_h: 49.1, completionist_h: 95.3, hours_left: 4.2, source_url: "https://howlongtobeat.com/game/62941" },
     unified_id: "u-hades",
     cover: "https://cdn.cloudflare.steamstatic.com/steam/apps/1145360/library_600x900.jpg",
     hero: "https://cdn.cloudflare.steamstatic.com/steam/apps/1145360/header.jpg",

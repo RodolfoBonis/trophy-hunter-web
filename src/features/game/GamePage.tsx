@@ -17,6 +17,7 @@ import { ChatPanel } from "@/features/ai/ChatPanel";
 import { RoadmapPanel, TrophyGuidePanel } from "@/features/ai/AIGuides";
 import { GameFriendsPanel } from "@/features/social/GameFriendsPanel";
 import { CrossPlatform } from "./CrossPlatform";
+import { GameEstimatePanel } from "./GameEstimate";
 import { GameAnnotations, TAG_LABEL, TrophyMarks } from "./GameAnnotations";
 import { useGame } from "./queries";
 
@@ -549,6 +550,7 @@ export default function GamePage() {
         platform={game.platform}
       />
 
+      <GameEstimatePanel game={game} />
       <CrossPlatform game={game} />
       <GameFriendsPanel gameId={game.id} />
 

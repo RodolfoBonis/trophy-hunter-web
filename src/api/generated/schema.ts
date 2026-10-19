@@ -125,6 +125,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/client-errors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Erro do app no navegador (aberto, sem token; limite por origem). Vira log e métrica. */
+        post: operations["reportClientError"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/events/seen": {
         parameters: {
             query?: never;
@@ -897,6 +914,7 @@ export interface components {
             accounts: components["schemas"]["GameAccount"][];
             /** @description O mesmo jogo na outra plataforma (conta mais avançada), para ver lado a lado. */
             cross_platform: components["schemas"]["CrossPlatformGame"][];
+            estimate: components["schemas"]["GameEstimate"] | null;
             groups: components["schemas"]["TrophyGroup"][];
             /**
              * Format: uuid
@@ -906,6 +924,18 @@ export interface components {
             progress: components["schemas"]["ProgressDetail"];
             /** @description Vínculo decidido manualmente (a unificação automática não mexe). */
             unify_locked: boolean;
+        };
+        /** @description Tempos do HowLongToBeat para o título (horas). Preenchido em segundo plano. */
+        GameEstimate: {
+            /** @description 100% (platina). */
+            completionist_h: number | null;
+            /** @description História + extras. */
+            extra_h: number | null;
+            /** @description Quanto falta para 100% (proporcional ao progresso). */
+            hours_left: number | null;
+            /** @description História principal. */
+            main_h: number | null;
+            source_url: string;
         };
         GameFriend: {
             completion_pct: number;
@@ -1025,11 +1055,17 @@ export interface components {
                     ease: number;
                     priority: number;
                     remaining: number;
+                    /** @description Bônus de poucas horas restantes (0 sem estimativa). */
+                    time: number;
                     urgency: number;
                 };
                 /** Format: uuid */
                 game_id: string;
                 hero: string;
+                /** @description Horas que faltam (proporcional ao progresso). */
+                hours_left: number | null;
+                /** @description Horas para 100% (HowLongToBeat); null = sem estimativa. */
+                hours_total: number | null;
                 /** Format: date-time */
                 last_unlock_at?: string | null;
                 min_remaining_rarity: number;
@@ -1609,6 +1645,46 @@ export interface operations {
                 };
             };
             401: components["responses"]["Problem"];
+        };
+    };
+    reportClientError: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    kind?: "render" | "unhandled" | "api_contract" | "network" | "other";
+                    message: string;
+                    /** @description Versão do web. */
+                    release?: string;
+                    /** @description Path da tela (sem query). */
+                    route?: string;
+                    stack?: string;
+                    user_agent?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Registrado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problem"];
+            /** @description Limite por origem excedido */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     markUnlocksSeen: {

@@ -63,3 +63,13 @@ describe("GamePage — cross-platform", () => {
     expect(within(panel).queryByRole("link")).not.toBeInTheDocument();
   });
 });
+
+describe("tempo estimado (HowLongToBeat)", () => {
+  it("mostra história/extras/100% e quanto falta", async () => {
+    renderRoutes({ routes: gameRoutes, path: "/games/11111111-1111-1111-1111-111111111111" });
+    const panel = await screen.findByLabelText("Tempo estimado", {}, { timeout: 4000 });
+    expect(panel).toHaveTextContent("História 60 h");
+    expect(panel).toHaveTextContent("100% 136 h");
+    expect(panel).toHaveTextContent(/faltam ~\d+ h/);
+  });
+});
