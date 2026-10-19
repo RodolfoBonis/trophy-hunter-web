@@ -24,6 +24,7 @@ const PREFS: [keyof NotificationPreferences, string, string][] = [
   ["ai_ready", "Guia pronto", "Quando um guia ou roadmap de IA terminar."],
   ["challenges", "Desafios", "Convites, quando um amigo avança e o resultado."],
   ["badges", "Medalhas", "Quando você ganhar uma medalha ou fechar a temporada do mês."],
+  ["deals", "Promoções", "Quando um jogo da sua lista chegar no preço que você quer ou no menor preço que já teve."],
   ["weekly_recap", "Resumo semanal da IA", "Domingo à noite: destaques da semana e o que caçar na próxima. Ligar também faz a IA gerar o resumo."],
 ];
 

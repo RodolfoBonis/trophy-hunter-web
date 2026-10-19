@@ -10,6 +10,7 @@ export const PAGES = [
   { name: "jogo", path: "/games/11111111-1111-1111-1111-111111111111", heading: "ELDEN RING" },
   { name: "cacada", path: "/games/11111111-1111-1111-1111-111111111111/hunt", heading: "ELDEN RING" },
   { name: "proxima", path: "/next", heading: "Próxima Platina" },
+  { name: "para-comprar", path: "/next?tab=comprar", heading: "Próxima Platina" },
   { name: "linha-do-tempo", path: "/timeline", heading: "Linha do tempo" },
   { name: "amigos", path: "/friends", heading: "Amigos" },
   { name: "retrospectiva", path: "/recap", heading: "Retrospectiva" },

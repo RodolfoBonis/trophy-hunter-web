@@ -27,6 +27,8 @@ import {
   userSchema,
   huntSchema,
   myBadgesSchema,
+  catalogSchema,
+  wishlistSchema,
   friendBadgesSchema,
   accountExportSchema,
   inviteSchema,
@@ -169,6 +171,14 @@ export const api = {
       body: scope ? { scope } : undefined,
       schema: enqueueResponseSchema,
     }),
+  catalogSearch: (c: ApiClient, q: string, signal?: AbortSignal) =>
+    c.request("/catalog/search", { query: { q }, schema: catalogSchema, signal }),
+  wishlist: (c: ApiClient) => c.request("/wishlist", { schema: wishlistSchema }),
+  addWishlist: (c: ApiClient, item: { platform: string; store_id: string; title: string; cover: string }) =>
+    c.request("/wishlist", { method: "POST", body: item }),
+  setWishlistTarget: (c: ApiClient, id: string, target: number | null) =>
+    c.request(`/wishlist/${encodeURIComponent(id)}`, { method: "PATCH", body: { target_price_cents: target } }),
+  deleteWishlist: (c: ApiClient, id: string) => c.request(`/wishlist/${encodeURIComponent(id)}`, { method: "DELETE" }),
   myBadges: (c: ApiClient) => c.request("/me/badges", { schema: myBadgesSchema }),
   friendBadges: (c: ApiClient, id: string) =>
     c.request(`/social/friends/${encodeURIComponent(id)}/badges`, { schema: friendBadgesSchema }),
@@ -229,6 +239,8 @@ export const queryKeys = {
   roadmap: (gameId: string) => ["ai-guide", "roadmap", gameId] as const,
   hunt: (gameId: string) => ["game", gameId, "hunt"] as const,
   myBadges: ["badges", "me"] as const,
+  wishlist: ["wishlist"] as const,
+  catalog: (q: string) => ["catalog", q] as const,
   friendBadges: (id: string) => ["social", "friend", id, "badges"] as const,
   chat: (gameId: string) => ["ai-chat", gameId] as const,
   unlocks: ["unlocks", "unseen"] as const,

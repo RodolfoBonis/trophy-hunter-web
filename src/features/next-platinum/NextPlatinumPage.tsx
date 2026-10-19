@@ -1,6 +1,7 @@
 import { sectionIdx } from "@/layout/nav";
+import { BacklogPanel } from "@/features/backlog/BacklogPanel";
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import type { NextItem, RemainingTrophy } from "@/api/schemas";
 import { GameCover } from "@/design-system/components/GameCover";
 import { PlatformBadge } from "@/design-system/components/PlatformBadge";
@@ -155,7 +156,8 @@ function RankRow({ item, pos }: { item: NextItem; pos: number }) {
 }
 
 /** Próxima Platina — fila ranqueada com a explicação de cada posição. */
-export default function NextPlatinumPage() {
+/** Aba "Na biblioteca": a fila de jogos começados mais perto de fechar. */
+function LibraryQueue() {
   const next = useNext();
   const alerts = useAlerts();
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
@@ -164,12 +166,7 @@ export default function NextPlatinumPage() {
   const maxHours = TIME_FILTERS.find((f) => f.key === timeFilter)!.max;
   const shown = timeFilter === "all" ? items : items.filter((it) => it.hours_left != null && it.hours_left < maxHours);
   return (
-    <section className="flex flex-col gap-6">
-      <SectionHead
-        idx={sectionIdx("/next")}
-        title="Próxima Platina"
-        subtitle="Jogos começados mais perto de virar platina (PSN) ou 100% (Steam): % concluído, quantos faltam e a raridade do que falta."
-      />
+    <div className="flex flex-col gap-6">
       {next.isPending && <div className="skel chamfer-md h-64" aria-busy="true" />}
       {next.isError && (
         <p role="alert" className="text-sm text-danger">
@@ -217,6 +214,37 @@ export default function NextPlatinumPage() {
           ))}
         </ol>
       )}
+    </div>
+  );
+}
+
+type Tab = "library" | "buy";
+
+/** Próxima Platina: o que fechar da biblioteca, ou o que comprar para platinar (backlog com preço). */
+export default function NextPlatinumPage() {
+  const [params, setParams] = useSearchParams();
+  const tab: Tab = params.get("tab") === "comprar" ? "buy" : "library";
+  const select = (t: Tab) => setParams(t === "buy" ? { tab: "comprar" } : {}, { replace: true });
+  return (
+    <section className="flex flex-col gap-6">
+      <SectionHead
+        idx={sectionIdx("/next")}
+        title="Próxima Platina"
+        subtitle={
+          tab === "library"
+            ? "Jogos começados mais perto de virar platina (PSN) ou 100% (Steam): % concluído, quantos faltam e a raridade do que falta."
+            : "Jogos que você ainda não tem: preço no Brasil, menor preço já visto e quanto tempo leva para platinar."
+        }
+      />
+      <div className="seg self-start" role="tablist" aria-label="Próxima platina">
+        <button type="button" role="tab" aria-selected={tab === "library"} aria-pressed={tab === "library"} onClick={() => select("library")}>
+          Na biblioteca
+        </button>
+        <button type="button" role="tab" aria-selected={tab === "buy"} aria-pressed={tab === "buy"} onClick={() => select("buy")}>
+          Para comprar
+        </button>
+      </div>
+      {tab === "library" ? <LibraryQueue /> : <BacklogPanel />}
     </section>
   );
 }

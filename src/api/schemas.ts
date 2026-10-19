@@ -117,6 +117,44 @@ export const myBadgesSchema = z.object({
 export type MyBadges = z.infer<typeof myBadgesSchema>;
 export const friendBadgesSchema = z.object({ earned: z.array(badgeSchema) });
 
+/** Backlog: busca nas lojas (Steam e PS Store BR). Preços em centavos (BRL). */
+export const catalogItemSchema = z.object({
+  platform: platformSchema,
+  store_id: z.string(),
+  title: z.string(),
+  cover: z.string(),
+  price_cents: z.number().int().nullable(),
+  regular_cents: z.number().int().nullable(),
+  cut: z.number().int(),
+  owned: z.boolean(),
+});
+export type CatalogItem = z.infer<typeof catalogItemSchema>;
+export const catalogSchema = z.object({ items: z.array(catalogItemSchema), unavailable: z.array(platformSchema) });
+export type Catalog = z.infer<typeof catalogSchema>;
+
+export const wishlistItemSchema = z.object({
+  id: z.string(),
+  platform: platformSchema,
+  store_id: z.string(),
+  title: z.string(),
+  cover: z.string(),
+  target_price_cents: z.number().int().nullable(),
+  added_at: z.string().nullish(),
+  price_status: z.enum(["none", "ok", "not_found", "error"]),
+  price_cents: z.number().int().nullable(),
+  regular_cents: z.number().int().nullable(),
+  cut: z.number().int(),
+  /** Menor preço histórico (ITAD; só PC). */
+  low_cents: z.number().int().nullable(),
+  shop: z.string(),
+  url: z.string(),
+  price_fetched_at: z.string().nullish(),
+  completionist_h: z.number().nullable(),
+  main_h: z.number().nullable(),
+});
+export type WishlistItem = z.infer<typeof wishlistItemSchema>;
+export const wishlistSchema = z.object({ items: z.array(wishlistItemSchema) });
+
 /**
  * Export dos dados (LGPD). O conteúdo das seções vai para o arquivo como veio; aqui só se confere o
  * formato e o perfil (passthrough mantém o resto).
@@ -705,6 +743,7 @@ export const notificationPreferencesSchema = z.object({
   /** Resumo semanal da IA — opt-in (liga a geração e o aviso). */
   weekly_recap: z.boolean().default(false),
   badges: z.boolean().default(true),
+  deals: z.boolean().default(true),
 });
 export type NotificationPreferences = z.infer<typeof notificationPreferencesSchema>;
 

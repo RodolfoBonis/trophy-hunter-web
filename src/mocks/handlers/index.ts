@@ -14,6 +14,7 @@ import { aiHandlers } from "./ai";
 import { accountHandlers, memberHandlers } from "./members";
 import { huntHandlers, markGameSyncing } from "./hunt";
 import { badgeHandlers } from "./badges";
+import { backlogHandlers } from "./backlog";
 import { recapHandlers } from "./recap";
 import { makeSocialHandlers } from "./social";
 import { pushHandlers, unlockHandlers } from "./unlocks";
@@ -377,6 +378,7 @@ function mockAlerts() {
 export const handlers: HttpHandler[] = [
   ...huntHandlers,
   ...badgeHandlers,
+  ...backlogHandlers,
   ...accountHandlers,
   ...memberHandlers,
   ...recapHandlers,

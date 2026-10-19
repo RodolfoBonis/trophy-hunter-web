@@ -125,6 +125,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/catalog/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Busca jogos nas lojas (Steam e PS Store do Brasil) com preço e se você já tem. */
+        get: operations["searchCatalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/client-errors": {
         parameters: {
             query?: never;
@@ -932,6 +949,42 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/wishlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista de desejos com preço atual, menor histórico e horas para platinar. */
+        get: operations["listWishlist"];
+        put?: never;
+        /** Adiciona um jogo da loja (já busca o preço). */
+        post: operations["addWishlist"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/wishlist/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Tira o jogo da lista de desejos. */
+        delete: operations["deleteWishlist"];
+        options?: never;
+        head?: never;
+        /** Define (ou tira, com null) o preço-alvo do aviso de promoção. */
+        patch: operations["patchWishlist"];
         trace?: never;
     };
 }
@@ -1883,6 +1936,31 @@ export interface components {
                 why: string;
             }[];
         };
+        WishlistItem: {
+            /** Format: date-time */
+            added_at?: string | null;
+            completionist_h: number | null;
+            cover: string;
+            cut: number;
+            /** Format: uuid */
+            id: string;
+            /** @description Menor preço histórico (ITAD, só PC) */
+            low_cents: number | null;
+            main_h: number | null;
+            /** @enum {string} */
+            platform: "steam" | "psn";
+            price_cents: number | null;
+            /** Format: date-time */
+            price_fetched_at?: string | null;
+            /** @enum {string} */
+            price_status: "none" | "ok" | "not_found" | "error";
+            regular_cents: number | null;
+            shop: string;
+            store_id: string;
+            target_price_cents: number | null;
+            title: string;
+            url: string;
+        };
     };
     responses: {
         /** @description Erro no formato application/problem+json (RFC 7807). */
@@ -2094,6 +2172,42 @@ export interface operations {
                 };
             };
             401: components["responses"]["Problem"];
+        };
+    };
+    searchCatalog: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: {
+                            cover: string;
+                            cut: number;
+                            owned: boolean;
+                            /** @enum {string} */
+                            platform: "steam" | "psn";
+                            price_cents: number | null;
+                            regular_cents: number | null;
+                            store_id: string;
+                            title: string;
+                        }[];
+                        unavailable: ("steam" | "psn")[];
+                    };
+                };
+            };
+            400: components["responses"]["Problem"];
         };
     };
     reportClientError: {
@@ -3581,6 +3695,106 @@ export interface operations {
             401: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
             503: components["responses"]["Problem"];
+        };
+    };
+    listWishlist: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["WishlistItem"][];
+                    };
+                };
+            };
+        };
+    };
+    addWishlist: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    cover?: string;
+                    /** @enum {string} */
+                    platform: "steam" | "psn";
+                    store_id: string;
+                    target_price_cents?: number | null;
+                    title: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            422: components["responses"]["Problem"];
+        };
+    };
+    deleteWishlist: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removido */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problem"];
+        };
+    };
+    patchWishlist: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    target_price_cents?: number | null;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problem"];
         };
     };
 }

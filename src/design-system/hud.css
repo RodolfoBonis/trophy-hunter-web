@@ -829,3 +829,10 @@ h3.sub{font-family:var(--font-display);font-weight:600;font-size:var(--text-h4);
 .medal.locked .medal-hex{background:rgb(255 255 255 / .07);color:var(--color-text-3)}
 .medal-bar{display:block;height:4px;background:rgb(255 255 255 / .08);overflow:hidden}
 .medal-bar>span{display:block;height:100%;background:var(--color-neon-cyan)}
+
+/* ============================== backlog (para comprar) ============================== */
+.backlog-row{display:flex;align-items:center;gap:12px}
+.backlog-row:not(.panel){padding:8px;background:rgb(255 255 255 / .02)}
+.backlog-cover{flex:none;width:52px;aspect-ratio:2/3;overflow:hidden;background:var(--color-bg-1)}
+.backlog-row.deal{--panel-bg:linear-gradient(180deg, rgb(52 211 153 / .08), rgb(12 14 22 / .96))}
+.chip[aria-pressed="true"]{color:var(--color-neon-cyan);border-color:var(--color-neon-cyan)}
