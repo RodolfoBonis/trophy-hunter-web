@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import type { FeedItem, GameFriend, LeaderboardItem, SocialUser } from "@/api/schemas";
+import type { ChallengeDetail, ChallengeStanding, CompareTrophy, FeedItem, GameFriend, LeaderboardItem, SocialUser } from "@/api/schemas";
 import { db } from "../data/db";
 import { API, ago, apiError, DAY, HOUR } from "../http";
 import { hasScenario } from "../scenario";
@@ -17,12 +17,66 @@ export function isSharing(): boolean {
 
 export function resetSocial(): void {
   sharing = null;
+  challenges = seedChallenges();
 }
 
 const ME: SocialUser = { id: "00000000-0000-0000-0000-000000000001", name: "Rodolfo de Bonis", is_me: true };
 const ANA: SocialUser = { id: "aaaaaaaa-0000-0000-0000-000000000001", name: "Ana Souza", is_me: false };
 const BRUNO: SocialUser = { id: "bbbbbbbb-0000-0000-0000-000000000002", name: "Bruno Lima", is_me: false };
 const FRIENDS = [ANA, BRUNO];
+
+/* ── Desafios ─────────────────────────────────────────────────────────────────────────── */
+
+function standing(user: SocialUser, state: ChallengeStanding["state"], extra: Partial<ChallengeStanding> = {}): ChallengeStanding {
+  return { user, state, score: 0, has_game: true, earned: 20, total: 42, completion_pct: 20 / 42, completed_at: null, ...extra };
+}
+
+function seedChallenges(): ChallengeDetail[] {
+  return [
+    {
+      id: "c-1",
+      kind: "first_to_complete",
+      title: "Quem pega os 100% de ELDEN RING primeiro",
+      status: "open",
+      starts_at: ago(3 * DAY),
+      ends_at: null,
+      my_state: "accepted",
+      is_creator: true,
+      accepted_count: 2,
+      winner_name: null,
+      game: { title: "ELDEN RING", platform: "steam", external_id: "1245620", cover: "" },
+      finished_at: null,
+      winner: null,
+      standings: [
+        standing(ANA, "accepted", { earned: 35, completion_pct: 35 / 42 }),
+        standing(ME, "accepted", { earned: 28, completion_pct: 28 / 42 }),
+      ],
+    },
+    {
+      id: "c-2",
+      kind: "most_rare",
+      title: "Mais troféus raros em 14 dias",
+      status: "open",
+      starts_at: ago(DAY),
+      ends_at: new Date(Date.now() + 13 * DAY).toISOString(),
+      my_state: "invited",
+      is_creator: false,
+      accepted_count: 1,
+      winner_name: null,
+      game: null,
+      finished_at: null,
+      winner: null,
+      standings: [standing(BRUNO, "accepted", { score: 3, has_game: false }), standing(ME, "invited", { has_game: false })],
+    },
+  ];
+}
+
+let challenges: ChallengeDetail[] = seedChallenges();
+
+const summary = (c: ChallengeDetail) => {
+  const { finished_at: _f, winner: _w, standings: _s, ...rest } = c;
+  return rest;
+};
 
 const denied = () =>
   isSharing() ? undefined : apiError(403, "sharing_disabled", "ligue \"compartilhar meu progresso\" para ver o progresso dos amigos");
@@ -84,6 +138,91 @@ export const makeSocialHandlers = ({ mockStats, toListItem }: SocialDeps) => [
     if (!FRIENDS.some((x) => x.id === params.id)) return apiError(404, "not_found", "Not found");
     const items = db.games.slice(0, 4).map((row) => toListItem(row));
     return HttpResponse.json({ items, total: items.length, limit: 50, offset: 0 });
+  }),
+  http.get(`${API}/social/challenges`, () => denied() ?? HttpResponse.json(challenges.map(summary))),
+  http.get(`${API}/social/challenges/:id`, ({ params }) => {
+    const d = denied();
+    if (d) return d;
+    const c = challenges.find((x) => x.id === params.id);
+    return c ? HttpResponse.json(c) : apiError(404, "not_found", "desafio não encontrado");
+  }),
+  http.post(`${API}/social/challenges`, async ({ request }) => {
+    const d = denied();
+    if (d) return d;
+    const body = (await request.json()) as { kind: ChallengeDetail["kind"]; friend_ids: string[]; game_id?: string; days?: number };
+    if (!body.friend_ids?.length) return apiError(400, "bad_request", "convide de 1 a 5 amigos");
+    const game = body.game_id ? db.games.find((g) => g.id === body.game_id) : undefined;
+    if (body.kind === "first_to_complete" && !game) return apiError(400, "bad_request", "escolha o jogo do desafio");
+    const days = body.days || (body.kind === "first_to_complete" ? 0 : 7);
+    const friends = FRIENDS.filter((f) => body.friend_ids.includes(f.id));
+    const c: ChallengeDetail = {
+      id: `c-${challenges.length + 1}-${Date.now()}`,
+      kind: body.kind,
+      title:
+        body.kind === "first_to_complete"
+          ? `Quem pega ${game!.platform === "psn" ? "a platina" : "os 100%"} de ${game!.title} primeiro`
+          : `Mais ${body.kind === "most_rare" ? "troféus raros" : "troféus"} em ${days} dias`,
+      status: "open",
+      starts_at: new Date().toISOString(),
+      ends_at: days ? new Date(Date.now() + days * DAY).toISOString() : null,
+      my_state: "accepted",
+      is_creator: true,
+      accepted_count: 1,
+      winner_name: null,
+      game: game ? { title: game.title, platform: game.platform, external_id: game.external_id, cover: game.cover ?? "" } : null,
+      finished_at: null,
+      winner: null,
+      standings: [standing(ME, "accepted"), ...friends.map((f) => standing(f, "invited"))],
+    };
+    challenges = [c, ...challenges];
+    return HttpResponse.json(c, { status: 201 });
+  }),
+  http.post(`${API}/social/challenges/:id/:action`, ({ params }) => {
+    const c = challenges.find((x) => x.id === params.id);
+    if (!c) return apiError(404, "not_found", "desafio não encontrado");
+    const action = String(params.action);
+    if (action === "cancel") {
+      if (!c.is_creator) return apiError(409, "conflict", "só quem criou cancela");
+      c.status = "canceled";
+    } else {
+      if (c.my_state !== "invited") return apiError(409, "conflict", "esse convite não está mais pendente");
+      c.my_state = action === "accept" ? "accepted" : "declined";
+      for (const st of c.standings) if (st.user.is_me) st.state = c.my_state;
+    }
+    return HttpResponse.json(c);
+  }),
+  http.get(`${API}/games/:id/compare/:friendId`, ({ params }) => {
+    const d = denied();
+    if (d) return d;
+    const game = db.games.find((g) => g.id === params.id);
+    const friend = FRIENDS.find((f) => f.id === params.friendId);
+    if (!game || !friend) return apiError(404, "not_found", "esse amigo não tem este jogo");
+    const trophies: CompareTrophy[] = game.groups
+      .flatMap((g) => g.trophies)
+      .map((t, i) => ({
+        trophy_id: t.id,
+        name: t.name,
+        description: t.hidden && !t.earned ? null : (t.description ?? null),
+        type: t.type,
+        hidden: t.hidden,
+        icon: t.icon ?? "",
+        rarity_pct: t.rarity_pct ?? null,
+        mine: t.earned,
+        mine_earned_at: t.earned_at ?? null,
+        friend: i % 3 !== 2,
+        friend_earned_at: i % 3 !== 2 ? ago((i + 1) * DAY) : null,
+        matched: true,
+      }));
+    const fe = trophies.filter((t) => t.friend).length;
+    return HttpResponse.json({
+      friend,
+      same_platform: true,
+      friend_platform: game.platform,
+      friend_earned: fe,
+      friend_total: trophies.length,
+      friend_completion_pct: trophies.length ? fe / trophies.length : 0,
+      trophies,
+    });
   }),
   http.get(`${API}/games/:id/friends`, ({ params }) =>
     HttpResponse.json({ sharing: isSharing(), items: isSharing() ? gameFriends(String(params.id)) : [] }),

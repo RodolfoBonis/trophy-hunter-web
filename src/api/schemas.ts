@@ -631,6 +631,7 @@ export const notificationPreferencesSchema = z.object({
   completions: z.boolean(),
   reconnect: z.boolean(),
   ai_ready: z.boolean(),
+  challenges: z.boolean().default(true),
 });
 export type NotificationPreferences = z.infer<typeof notificationPreferencesSchema>;
 
@@ -730,3 +731,86 @@ export const gameFriendSchema = z.object({
 export type GameFriend = z.infer<typeof gameFriendSchema>;
 export const gameFriendsSchema = z.object({ sharing: z.boolean(), items: z.array(gameFriendSchema) });
 export type GameFriends = z.infer<typeof gameFriendsSchema>;
+
+/* ── Desafios e comparação ──────────────────────────────────────────────────────────────── */
+
+export const challengeKindSchema = z.enum(["first_to_complete", "most_trophies", "most_rare"]);
+export type ChallengeKind = z.infer<typeof challengeKindSchema>;
+export const participantStateSchema = z.enum(["invited", "accepted", "declined"]);
+
+export const challengeGameSchema = z.object({
+  title: z.string(),
+  platform: platformSchema,
+  external_id: z.string(),
+  cover: z.string(),
+});
+export type ChallengeGame = z.infer<typeof challengeGameSchema>;
+
+export const challengeSummarySchema = z.object({
+  id: z.string(),
+  kind: challengeKindSchema,
+  title: z.string(),
+  status: z.enum(["open", "finished", "canceled"]),
+  starts_at: z.string().nullable(),
+  ends_at: z.string().nullable(),
+  my_state: participantStateSchema,
+  is_creator: z.boolean(),
+  accepted_count: z.number(),
+  winner_name: z.string().nullable(),
+  game: challengeGameSchema.nullable(),
+});
+export type ChallengeSummary = z.infer<typeof challengeSummarySchema>;
+
+export const challengeStandingSchema = z.object({
+  user: socialUserSchema,
+  state: participantStateSchema,
+  score: z.number(),
+  has_game: z.boolean(),
+  earned: z.number(),
+  total: z.number(),
+  completion_pct: z.number(),
+  completed_at: z.string().nullable(),
+});
+export type ChallengeStanding = z.infer<typeof challengeStandingSchema>;
+
+export const challengeDetailSchema = challengeSummarySchema.extend({
+  finished_at: z.string().nullable(),
+  winner: socialUserSchema.nullable(),
+  standings: z.array(challengeStandingSchema),
+});
+export type ChallengeDetail = z.infer<typeof challengeDetailSchema>;
+
+export interface CreateChallengeRequest {
+  kind: ChallengeKind;
+  friend_ids: string[];
+  game_id?: string;
+  days?: number;
+  title?: string;
+}
+
+export const compareTrophySchema = z.object({
+  trophy_id: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+  type: trophyTypeSchema,
+  hidden: z.boolean(),
+  icon: z.string(),
+  rarity_pct: z.number().nullable(),
+  mine: z.boolean(),
+  mine_earned_at: z.string().nullable(),
+  friend: z.boolean(),
+  friend_earned_at: z.string().nullable(),
+  matched: z.boolean(),
+});
+export type CompareTrophy = z.infer<typeof compareTrophySchema>;
+
+export const gameCompareSchema = z.object({
+  friend: socialUserSchema,
+  same_platform: z.boolean(),
+  friend_platform: platformSchema,
+  friend_earned: z.number(),
+  friend_total: z.number(),
+  friend_completion_pct: z.number(),
+  trophies: z.array(compareTrophySchema),
+});
+export type GameCompare = z.infer<typeof gameCompareSchema>;

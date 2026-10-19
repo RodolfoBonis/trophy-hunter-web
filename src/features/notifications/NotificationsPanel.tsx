@@ -21,6 +21,7 @@ const PREFS: [keyof NotificationPreferences, string, string][] = [
   ["completions", "Platina e 100%", "Quando um jogo fechar."],
   ["reconnect", "Conta precisa de você", "Ex.: reautenticar a PSN ou deixar o perfil Steam público."],
   ["ai_ready", "Guia pronto", "Quando um guia ou roadmap de IA terminar."],
+  ["challenges", "Desafios", "Convites, quando um amigo avança e o resultado."],
 ];
 
 const UNSUPPORTED_TEXT = {

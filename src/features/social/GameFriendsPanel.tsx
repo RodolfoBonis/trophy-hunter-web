@@ -20,7 +20,12 @@ export function GameFriendsPanel({ gameId }: { gameId: string }) {
   if (q.data.items.length === 0) return null;
   return (
     <Panel sm className="flex flex-col gap-3">
-      <h3 className="sub !mb-0">Amigos neste jogo</h3>
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="sub !mb-0">Amigos neste jogo</h3>
+        <Link to={`/friends/challenges/new?game=${gameId}`} className="label no-underline hover:!text-text-1">
+          Desafiar →
+        </Link>
+      </div>
       <ul className="m-0 flex list-none flex-col gap-3 p-0">
         {q.data.items.map((f) => (
           <li key={`${f.user.id}-${f.platform}`} className="flex items-center gap-3">

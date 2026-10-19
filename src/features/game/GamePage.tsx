@@ -15,6 +15,7 @@ import { TrophyIcon } from "@/design-system/components/TrophyIcon";
 import { cn } from "@/lib/utils";
 import { ChatPanel } from "@/features/ai/ChatPanel";
 import { RoadmapPanel, TrophyGuidePanel } from "@/features/ai/AIGuides";
+import { ComparePanel } from "@/features/social/ComparePanel";
 import { GameFriendsPanel } from "@/features/social/GameFriendsPanel";
 import { CrossPlatform } from "./CrossPlatform";
 import { GameEstimatePanel } from "./GameEstimate";
@@ -378,11 +379,12 @@ function StatLine({ game }: { game: GameDetail }) {
   );
 }
 
-type Tab = "trophies" | "roadmap" | "chat";
+type Tab = "trophies" | "roadmap" | "chat" | "compare";
 const TABS: [Tab, string][] = [
   ["trophies", "Troféus"],
   ["roadmap", "Roadmap IA"],
   ["chat", "Chat IA"],
+  ["compare", "Comparar"],
 ];
 
 const SHOW: [Show, string][] = [
@@ -579,6 +581,7 @@ export default function GamePage() {
         <RoadmapPanel gameId={game.id} platform={game.platform} />
       )}
       {tab === "chat" && <ChatPanel gameId={game.id} />}
+      {tab === "compare" && <ComparePanel gameId={game.id} />}
 
       {tab === "trophies" && (
         <>

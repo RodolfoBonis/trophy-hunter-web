@@ -100,9 +100,14 @@ export default function FriendPage() {
         title={friend.data?.user.name ?? "Amigo"}
         subtitle="Progresso compartilhado — só leitura."
         actions={
-          <Link to="/friends" className="label no-underline hover:!text-text-1">
-            ← Amigos
-          </Link>
+          <span className="flex items-center gap-4">
+            <Link to={`/friends/challenges/new?friend=${id}`} className="label no-underline hover:!text-text-1">
+              Desafiar
+            </Link>
+            <Link to="/friends" className="label no-underline hover:!text-text-1">
+              ← Amigos
+            </Link>
+          </span>
         }
       />
       {friend.isPending && <div className="skel chamfer-md h-72" aria-busy="true" />}

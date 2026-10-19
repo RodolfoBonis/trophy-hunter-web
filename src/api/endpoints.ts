@@ -32,6 +32,10 @@ import {
   feedPageSchema,
   friendProfileSchema,
   gameFriendsSchema,
+  challengeSummarySchema,
+  challengeDetailSchema,
+  gameCompareSchema,
+  type CreateChallengeRequest,
   type LeaderboardPeriod,
   type ConnectSteamRequest,
   type GameStatus,
@@ -68,6 +72,14 @@ export const api = {
   friendGames: (c: ApiClient, id: string, params: GamesQuery = {}, signal?: AbortSignal) =>
     c.request(`/social/friends/${encodeURIComponent(id)}/games`, { query: { ...params }, schema: gameListPageSchema, signal }),
   gameFriends: (c: ApiClient, gameId: string) => c.request(`/games/${encodeURIComponent(gameId)}/friends`, { schema: gameFriendsSchema }),
+  challenges: (c: ApiClient) => c.request("/social/challenges", { schema: challengeSummarySchema.array() }),
+  challenge: (c: ApiClient, id: string) => c.request(`/social/challenges/${encodeURIComponent(id)}`, { schema: challengeDetailSchema }),
+  createChallenge: (c: ApiClient, body: CreateChallengeRequest) =>
+    c.request("/social/challenges", { method: "POST", body, schema: challengeDetailSchema }),
+  challengeAction: (c: ApiClient, id: string, action: "accept" | "decline" | "cancel") =>
+    c.request(`/social/challenges/${encodeURIComponent(id)}/${action}`, { method: "POST", schema: challengeDetailSchema }),
+  compareGame: (c: ApiClient, gameId: string, friendId: string) =>
+    c.request(`/games/${encodeURIComponent(gameId)}/compare/${encodeURIComponent(friendId)}`, { schema: gameCompareSchema }),
 
   /* Administração (só o dono) */
   invites: (c: ApiClient) => c.request("/admin/invites", { schema: inviteListSchema }),
@@ -179,6 +191,9 @@ export const queryKeys = {
   friend: (id: string) => ["social", "friend", id] as const,
   friendGames: (id: string, params: object) => ["social", "friend", id, "games", params] as const,
   gameFriends: (gameId: string) => ["social", "game", gameId] as const,
+  challenges: ["social", "challenges"] as const,
+  challenge: (id: string) => ["social", "challenges", id] as const,
+  compare: (gameId: string, friendId: string) => ["social", "compare", gameId, friendId] as const,
   games: (params: object) => ["games", params] as const,
   game: (id: string) => ["game", id] as const,
   integrations: ["integrations"] as const,

@@ -5,6 +5,7 @@ import { LoadMore } from "@/components/LoadMore";
 import { Panel } from "@/design-system/components/Panel";
 import { SectionHead } from "@/design-system/components/SectionHead";
 import { cn } from "@/lib/utils";
+import { ChallengesPanel } from "./Challenges";
 import { useFeed, useLeaderboard, useSharing } from "./queries";
 import { Avatar, FeedRow, PersonName, SharingOptIn, SharingToggle } from "./SocialBits";
 
@@ -127,6 +128,7 @@ export default function FriendsPage() {
       ) : (
         <>
           <FriendsList />
+          <ChallengesPanel />
           <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
             <Leaderboard />
             <Feed />

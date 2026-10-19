@@ -233,6 +233,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/games/{id}/compare/{friendId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Seus troféus deste jogo contra os de um amigo que compartilha. */
+        get: operations["compareGame"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/games/{id}/friends": {
         parameters: {
             query?: never;
@@ -590,6 +607,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/social/challenges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Desafios de que você participa (abertos primeiro). */
+        get: operations["listChallenges"];
+        put?: never;
+        /** Cria um desafio e convida amigos que compartilham (push para os convidados). */
+        post: operations["createChallenge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social/challenges/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Desafio com o placar ao vivo (só participantes). */
+        get: operations["getChallenge"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social/challenges/{id}/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** accept/decline (convidado) ou cancel (quem criou, só aberto). */
+        post: operations["actChallenge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/social/feed": {
         parameters: {
             query?: never;
@@ -793,6 +862,53 @@ export interface components {
             server_shutdown_risk?: boolean;
             tags?: components["schemas"]["TrophyTag"][];
         };
+        ChallengeDetail: components["schemas"]["ChallengeSummary"] & {
+            /** Format: date-time */
+            finished_at: string | null;
+            standings: components["schemas"]["ChallengeStanding"][];
+            winner: components["schemas"]["SocialUser"] | null;
+        };
+        ChallengeGame: {
+            cover: string;
+            external_id: string;
+            platform: components["schemas"]["Platform"];
+            title: string;
+        };
+        ChallengeStanding: {
+            /** Format: date-time */
+            completed_at: string | null;
+            completion_pct: number;
+            earned: number;
+            has_game: boolean;
+            /** @description most_*: troféus (ou raros) obtidos na janela. */
+            score: number;
+            /** @enum {string} */
+            state: "invited" | "accepted" | "declined";
+            total: number;
+            user: components["schemas"]["SocialUser"];
+        };
+        ChallengeSummary: {
+            accepted_count: number;
+            /**
+             * Format: date-time
+             * @description null = sem prazo (só first_to_complete).
+             */
+            ends_at: string | null;
+            game: components["schemas"]["ChallengeGame"] | null;
+            /** Format: uuid */
+            id: string;
+            is_creator: boolean;
+            /** @enum {string} */
+            kind: "first_to_complete" | "most_trophies" | "most_rare";
+            /** @enum {string} */
+            my_state: "invited" | "accepted" | "declined";
+            /** Format: date-time */
+            starts_at: string | null;
+            /** @enum {string} */
+            status: "open" | "finished" | "canceled";
+            title: string;
+            winner_name: string | null;
+        };
         ChatMessage: {
             content: string;
             /** Format: date-time */
@@ -808,6 +924,24 @@ export interface components {
         ChatThread: {
             messages: components["schemas"]["ChatMessage"][];
         };
+        CompareTrophy: {
+            description: string | null;
+            friend: boolean;
+            /** Format: date-time */
+            friend_earned_at: string | null;
+            hidden: boolean;
+            icon: string;
+            /** @description O troféu existe na versão do amigo (Steam × PSN casam pelo nome). */
+            matched: boolean;
+            mine: boolean;
+            /** Format: date-time */
+            mine_earned_at: string | null;
+            name: string;
+            rarity_pct: number | null;
+            /** Format: uuid */
+            trophy_id: string;
+            type: components["schemas"]["TrophyType"];
+        };
         ConnectPSNRequest: {
             /** @description Apelido; vazio → online ID. */
             label?: string;
@@ -821,6 +955,19 @@ export interface components {
             label?: string;
             /** @description SteamID64 (17 dígitos) ou a vanity URL (nome do perfil). */
             steam_id_or_vanity: string;
+        };
+        CreateChallengeRequest: {
+            /** @description most_*: 7, 14 ou 30 (padrão 7). first_to_complete: prazo opcional 7/14/30/60/90. */
+            days?: number;
+            friend_ids: string[];
+            /**
+             * Format: uuid
+             * @description Seu jogo (first_to_complete).
+             */
+            game_id?: string;
+            /** @enum {string} */
+            kind: "first_to_complete" | "most_trophies" | "most_rare";
+            title?: string;
         };
         CrossPlatformGame: {
             /** @description 0–1, pelo critério da plataforma. */
@@ -907,6 +1054,15 @@ export interface components {
             integration_id: string;
             label: string;
             progress: components["schemas"]["ProgressSummary"];
+        };
+        GameCompare: {
+            friend: components["schemas"]["SocialUser"];
+            friend_completion_pct: number;
+            friend_earned: number;
+            friend_platform: components["schemas"]["Platform"];
+            friend_total: number;
+            same_platform: boolean;
+            trophies: components["schemas"]["CompareTrophy"][];
         };
         GameDetail: components["schemas"]["Game"] & {
             account_label: string;
@@ -1087,6 +1243,8 @@ export interface components {
         NotificationPreferences: {
             /** @description Guia/roadmap pronto. */
             ai_ready: boolean;
+            /** @description Desafios entre amigos (convite, avanço, resultado). */
+            challenges: boolean;
             /** @description Platina / 100%. */
             completions: boolean;
             /** @description Conta precisa de ação (reautenticar a PSN, perfil Steam privado). */
@@ -1902,6 +2060,31 @@ export interface operations {
             404: components["responses"]["Problem"];
         };
     };
+    compareGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                friendId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameCompare"];
+                };
+            };
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
     getGameFriends: {
         parameters: {
             query?: never;
@@ -2541,6 +2724,103 @@ export interface operations {
             };
             401: components["responses"]["Problem"];
             422: components["responses"]["Problem"];
+        };
+    };
+    listChallenges: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChallengeSummary"][];
+                };
+            };
+            403: components["responses"]["Problem"];
+        };
+    };
+    createChallenge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateChallengeRequest"];
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChallengeDetail"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+        };
+    };
+    getChallenge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChallengeDetail"];
+                };
+            };
+            404: components["responses"]["Problem"];
+        };
+    };
+    actChallenge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action: "accept" | "decline" | "cancel";
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChallengeDetail"];
+                };
+            };
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
         };
     };
     getFeed: {

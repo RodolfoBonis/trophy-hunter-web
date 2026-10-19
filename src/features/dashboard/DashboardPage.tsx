@@ -8,7 +8,7 @@ import { ProgressBar } from "@/design-system/components/ProgressBar";
 import { RarityBadge } from "@/design-system/components/RarityBadge";
 import { SectionHead } from "@/design-system/components/SectionHead";
 import { TrophyIcon } from "@/design-system/components/TrophyIcon";
-import { useFeed, useSharing } from "@/features/social/queries";
+import { useChallenges, useFeed, useSharing } from "@/features/social/queries";
 import { FeedRow } from "@/features/social/SocialBits";
 import { useAlerts, useNext, useStats } from "./queries";
 
@@ -259,6 +259,30 @@ function Alerts() {
   );
 }
 
+/** Convites de desafio pendentes (só quem compartilha). */
+function ChallengeInvites() {
+  const sharing = useSharing();
+  const q = useChallenges(sharing);
+  const invites = (q.data ?? []).filter((c) => c.status === "open" && c.my_state === "invited");
+  if (!sharing || invites.length === 0) return null;
+  return (
+    <div className="banner" role="status">
+      <span className="ic" aria-hidden>
+        <TrophyIcon type="platinum" size={26} />
+      </span>
+      <div className="min-w-0">
+        <strong>
+          {invites.length === 1 ? "Você foi desafiado" : `${invites.length} desafios esperando você`}
+        </strong>
+        <span>{invites.map((c) => c.title).join(" · ")}</span>
+      </div>
+      <Link to={invites.length === 1 ? `/friends/challenges/${invites[0]!.id}` : "/friends"} className="label no-underline">
+        Ver
+      </Link>
+    </div>
+  );
+}
+
 /** Atividade dos amigos (as 4 mais recentes) — só para quem compartilha. */
 function FriendsActivity() {
   const sharing = useSharing();
@@ -302,6 +326,7 @@ export default function DashboardPage() {
       {stats.data && (
         <>
           <Hero stats={stats.data} />
+          <ChallengeInvites />
           <Alerts />
           <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
             <div className="panel flex flex-col gap-3">
