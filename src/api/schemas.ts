@@ -60,6 +60,19 @@ export const userSchema = z.object({
 });
 export type User = z.infer<typeof userSchema>;
 
+/**
+ * Export dos dados (LGPD). O conteúdo das seções vai para o arquivo como veio; aqui só se confere o
+ * formato e o perfil (passthrough mantém o resto).
+ */
+export const accountExportSchema = z
+  .object({
+    format: z.literal("trophy-hunter-export/1"),
+    exported_at: z.string(),
+    profile: z.object({ email: z.string() }).passthrough(),
+  })
+  .passthrough();
+export type AccountExport = z.infer<typeof accountExportSchema>;
+
 /** Link de convite. `url` só vem na criação (a API guarda só o hash do código). */
 export const inviteSchema = z.object({
   id: z.string(),

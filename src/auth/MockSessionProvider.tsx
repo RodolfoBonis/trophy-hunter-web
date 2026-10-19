@@ -24,8 +24,8 @@ export function MockSessionProvider({
         email: "rodolfo@rb.lab",
       },
       getAccessToken: () => "mock-access-token",
-      signOut: async () => {
-        window.location.assign("/");
+      signOut: async (opts?: { redirectTo?: string }) => {
+        window.location.assign(opts?.redirectTo ?? "/");
       },
       handleUnauthorized: async () => false,
       ...overrides,

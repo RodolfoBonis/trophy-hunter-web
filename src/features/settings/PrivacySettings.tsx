@@ -1,4 +1,5 @@
 import { Panel } from "@/design-system/components/Panel";
+import { DeleteAccount, ExportData } from "@/features/account/AccountData";
 import { SharingToggle } from "@/features/social/SocialBits";
 import { SettingsTitle } from "./SettingsLayout";
 
@@ -14,12 +15,13 @@ export default function PrivacySettings() {
         </p>
         <SharingToggle />
       </Panel>
-      <Panel className="flex flex-col gap-2">
+      <Panel className="flex flex-col gap-3">
         <h3 className="sub !mb-0">Seus dados</h3>
         <p className="m-0 text-sm text-text-2">
           Credenciais da Steam e da PSN ficam criptografadas e nunca aparecem na tela. Para apagar uma conta e os jogos
           dela, use Contas conectadas → Remover.
         </p>
+        <ExportData />
         <p className="m-0 flex gap-4 text-sm">
           <a href="/legal/privacidade.html" target="_blank" rel="noopener">
             Política de Privacidade ↗
@@ -29,6 +31,7 @@ export default function PrivacySettings() {
           </a>
         </p>
       </Panel>
+      <DeleteAccount />
     </div>
   );
 }

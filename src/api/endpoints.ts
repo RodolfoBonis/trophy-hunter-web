@@ -25,6 +25,7 @@ import {
   integrationSchema,
   syncRunListSchema,
   userSchema,
+  accountExportSchema,
   inviteSchema,
   inviteListSchema,
   memberListSchema,
@@ -65,6 +66,9 @@ export const api = {
     c.request(`/invites/${encodeURIComponent(code)}/accept`, { method: "POST", schema: userSchema }),
 
   /* Social (opt-in e recíproco) */
+  /** Seus dados (LGPD): o JSON completo para baixar (sem credenciais). */
+  exportMe: (c: ApiClient) => c.request("/me/export", { schema: accountExportSchema }),
+  deleteMe: (c: ApiClient) => c.request("/me", { method: "DELETE", body: { confirm: "EXCLUIR" } }),
   setSharing: (c: ApiClient, share: boolean) =>
     c.request("/me/sharing", { method: "PUT", body: { share_progress: share }, schema: userSchema }),
   leaderboard: (c: ApiClient, period: LeaderboardPeriod) => c.request("/social/leaderboard", { query: { period }, schema: leaderboardSchema }),

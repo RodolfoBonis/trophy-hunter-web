@@ -11,7 +11,7 @@ import type { MockGameRow } from "../data/fixtures";
 import { API, apiError, scenarioGate } from "../http";
 import { hasScenario } from "../scenario";
 import { aiHandlers } from "./ai";
-import { memberHandlers } from "./members";
+import { accountHandlers, memberHandlers } from "./members";
 import { recapHandlers } from "./recap";
 import { makeSocialHandlers } from "./social";
 import { pushHandlers, unlockHandlers } from "./unlocks";
@@ -373,6 +373,7 @@ function mockAlerts() {
 }
 
 export const handlers: HttpHandler[] = [
+  ...accountHandlers,
   ...memberHandlers,
   ...recapHandlers,
   ...makeSocialHandlers({ mockStats, toListItem: (row) => toListItem(row) }),

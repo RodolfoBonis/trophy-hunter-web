@@ -114,3 +114,29 @@ export const memberHandlers = [
   http.post(`${API}/games/:id/roadmap`, aiLimit),
   http.post(`${API}/games/:id/chat`, aiLimit),
 ];
+
+/** Seus dados (LGPD): export e exclusão da própria conta. */
+export const accountHandlers = [
+  http.get(`${API}/me/export`, () =>
+    HttpResponse.json(
+      {
+        format: "trophy-hunter-export/1",
+        exported_at: new Date().toISOString(),
+        profile: { email: me().email, name: me().name, role: me().role, share_progress: me().share_progress },
+        accounts: [],
+        games: [],
+        trophies: [],
+        ai: { roadmaps: [], edits: [], weekly_recaps: [] },
+        chats: [],
+        challenges: [],
+      },
+      { headers: { "Content-Disposition": 'attachment; filename="trophy-hunter-dados.json"' } },
+    ),
+  ),
+  http.delete(`${API}/me`, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as { confirm?: string };
+    if (body.confirm !== "EXCLUIR") return apiError(400, "bad_request", 'confirme com {"confirm":"EXCLUIR"}');
+    if (me().role === "owner") return apiError(403, "owner_cannot_delete", "o dono não pode excluir a própria conta");
+    return new HttpResponse(null, { status: 204 });
+  }),
+];

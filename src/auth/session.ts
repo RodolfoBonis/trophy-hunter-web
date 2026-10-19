@@ -14,7 +14,11 @@ export type Session =
       user: SessionUser;
       /** Access token atual (renovado em silêncio pelo provider). */
       getAccessToken: () => string | undefined;
-      signOut: () => Promise<void>;
+      /**
+       * Sai do app. `local`: só apaga a sessão deste navegador e vai para `redirectTo` (conta já
+       * excluída — o Keycloak não tem mais o usuário, então não passa pelo logout de lá).
+       */
+      signOut: (opts?: { local?: boolean; redirectTo?: string }) => Promise<void>;
       /**
        * 401 da API: tenta renovar o token em silêncio (uma vez, deduplicado). `true` = pode
        * repetir a requisição; `false` = vai para o login (ou tela de erro, se em loop).

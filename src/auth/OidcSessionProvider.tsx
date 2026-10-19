@@ -182,8 +182,13 @@ function OidcSessionBridge({ userManager, children }: { userManager: UserManager
       status: "authenticated",
       user,
       getAccessToken: () => tokenRef.current,
-      signOut: async () => {
+      signOut: async (opts) => {
         clearLoginRedirectMark();
+        if (opts?.local) {
+          await userManager.removeUser();
+          window.location.assign(opts.redirectTo ?? "/");
+          return;
+        }
         try {
           await userManager.signoutRedirect({ id_token_hint: idToken });
         } catch {

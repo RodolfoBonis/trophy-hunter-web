@@ -477,6 +477,24 @@ export interface paths {
         get: operations["getMe"];
         put?: never;
         post?: never;
+        /** Exclui a sua conta e todos os dados, na hora (também no Keycloak). O dono não pode. */
+        delete: operations["deleteMe"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Exporta todos os seus dados (LGPD) em JSON. Sem credenciais. Um a cada 10 min. */
+        get: operations["exportMe"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -852,6 +870,44 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AccountExport: {
+            accounts: {
+                [key: string]: unknown;
+            }[];
+            ai: {
+                [key: string]: unknown;
+            };
+            challenges: {
+                [key: string]: unknown;
+            }[];
+            chats: {
+                [key: string]: unknown;
+            }[];
+            /** Format: date-time */
+            exported_at: string;
+            /** @example trophy-hunter-export/1 */
+            format: string;
+            games: {
+                [key: string]: unknown;
+            }[];
+            notification_preferences?: {
+                [key: string]: unknown;
+            };
+            profile: {
+                /** Format: date-time */
+                created_at?: string | null;
+                email?: string;
+                /** Format: date-time */
+                last_seen_at?: string | null;
+                name?: string;
+                role?: string;
+                share_progress?: boolean;
+            };
+            push_devices?: number;
+            trophies: {
+                [key: string]: unknown;
+            }[];
+        };
         /** @description Guia de IA. content = gerado (validado pelo schema do escopo); edited_content = correção do usuário (a UI mostra a editada quando existe). status pending/running = gerando. */
         AIGuide: {
             /** @description TrophyGuideContent (scope trophy) ou RoadmapContent (scope roadmap). */
@@ -2626,6 +2682,56 @@ export interface operations {
                 };
             };
             401: components["responses"]["Problem"];
+        };
+    };
+    deleteMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    confirm: "EXCLUIR";
+                };
+            };
+        };
+        responses: {
+            /** @description Conta excluída */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    exportMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Arquivo JSON (Content-Disposition attachment) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountExport"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            429: components["responses"]["Problem"];
         };
     };
     putSharing: {
