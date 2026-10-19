@@ -19,7 +19,8 @@ export const PAGES = [
 /** Prepara a página para prints estáveis: relógio fixo e sem imagens externas (capas viram placeholder). */
 export async function stabilize(page: Page): Promise<void> {
   await page.clock.setFixedTime(FIXED_NOW);
-  await page.route(/^https?:\/\/(?!localhost|127\.0\.0\.1)/, (route) => route.abort());
+  // No contexto (não na página): as requisições passam pelo service worker do MSW, que a página não vê.
+  await page.context().route(/^https?:\/\/(?!localhost|127\.0\.0\.1)/, (route) => route.abort());
 }
 
 export async function open(page: Page, path: string, heading: string): Promise<void> {
