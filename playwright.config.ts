@@ -20,7 +20,14 @@ export default defineConfig({
     colorScheme: "dark",
     trace: "retain-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 1024 } } }],
+  expect: { toHaveScreenshot: { threshold: 0.2 } },
+  // Prints de referência sem sufixo de SO: só existem os do Linux (CI), ver tests/e2e/visual.spec.ts.
+  snapshotPathTemplate: "{testDir}/__screenshots__/{projectName}/{arg}{ext}",
+  projects: [
+    { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 1024 } } },
+    // iPhone 13 no Chromium (o padrão do device é WebKit): mesmo motor dos prints, viewport/toque de celular.
+    { name: "mobile", use: { ...devices["iPhone 13"], browserName: "chromium" } },
+  ],
   webServer: {
     command: `pnpm build:e2e && pnpm exec vite preview --outDir dist-e2e --port ${PORT} --strictPort`,
     url: `http://localhost:${PORT}`,

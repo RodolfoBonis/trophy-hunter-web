@@ -773,3 +773,9 @@ h3.sub{font-family:var(--font-display);font-weight:600;font-size:var(--text-h4);
     .settings-tab.on { box-shadow: none; border-color: color-mix(in oklab, var(--color-neon-cyan) 50%, transparent); }
   }
 }
+
+/* Item de grid não cresce com o conteúdo (nomes longos de jogo/troféu): sem isso, a coluna implícita
+   "auto" estica até o texto inteiro e a página vaza para a direita no celular. */
+.grid > * {
+  min-width: 0;
+}

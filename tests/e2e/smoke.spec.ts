@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
 
+// Navegação por teclado é do desktop: no celular a navegação principal vira a tab bar.
+test.skip(({ isMobile }) => isMobile, "teclado só no desktop");
+
 /**
  * Smoke em modo mock (MSW + sessão fake): o app carrega a biblioteca com dados realistas e a
  * navegação é alcançável por teclado (acessibilidade básica).

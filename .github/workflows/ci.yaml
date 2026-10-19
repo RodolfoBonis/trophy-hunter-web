@@ -38,6 +38,9 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    # Mesma imagem que gera os prints de referência (visual-snapshots.yaml): fonte/render idênticos.
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
@@ -47,8 +50,6 @@ jobs:
           cache: pnpm
       - name: Instala dependências
         run: pnpm install --frozen-lockfile
-      - name: Instala o Chromium do Playwright
-        run: pnpm exec playwright install --with-deps chromium
       - name: Playwright (API mockada com MSW)
         run: pnpm test:e2e
         env:
