@@ -14,7 +14,7 @@ server {
     # CDNs de Steam/PSN em img-src E connect-src (o service worker busca as imagens com fetch(), que obedece
     # ao connect-src — sem isso o cache de capas bloqueia todas as imagens). Lista em CSP_IMAGE_HOSTS.
     # CDNs de Steam/PSN; data:/blob: p/ capas em cache do SW. frame-ancestors none (não embutível).
-    set $csp "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: ${CSP_IMAGE_HOSTS}; font-src 'self' data:; connect-src ${CSP_CONNECT_SRC}; frame-src ${CSP_FRAME_SRC}; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' ${CSP_FRAME_SRC}; object-src 'none'";
+    set $csp "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: ${CSP_IMAGE_HOSTS}; font-src 'self' data:; connect-src ${CSP_CONNECT_SRC}; frame-src 'self' ${CSP_FRAME_SRC}; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' ${CSP_FRAME_SRC}; object-src 'none'";
 
     location = /healthz {
         access_log off;
@@ -36,6 +36,17 @@ server {
         try_files $uri =404;
         default_type application/manifest+json;
         add_header Cache-Control "no-cache" always;
+    }
+
+    # Retorno do login silencioso: carregado num iframe DO PRÓPRIO app (restaura a sessão ao recarregar
+    # sem sair da página) — único caminho com frame-ancestors 'self' em vez de 'none'.
+    location ~ ^/silent-callback\.(html|js)$ {
+        try_files $uri =404;
+        add_header Cache-Control "no-cache" always;
+        add_header Content-Security-Policy "default-src 'none'; script-src 'self'; frame-ancestors 'self'; base-uri 'none'" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "no-referrer" always;
     }
 
     # Assets com hash no nome: cache longo e imutável.

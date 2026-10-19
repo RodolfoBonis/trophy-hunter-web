@@ -24,7 +24,10 @@ cleanupOutdatedCaches();
 clientsClaim();
 
 // Configuração de runtime: sempre da rede (o nginx serve com no-store).
-registerRoute(({ url }) => url.origin === sw.location.origin && url.pathname === "/config.js", new NetworkOnly());
+registerRoute(
+  ({ url }) => url.origin === sw.location.origin && (url.pathname === "/config.js" || url.pathname.startsWith("/silent-callback.")),
+  new NetworkOnly(),
+);
 
 // A API nunca é cacheada (inclui SSE). Deixa passar direto para a rede. Ela vive em outra origem
 // (rota do gateway, ex. api.rodolfodebonis.com.br/trophy/v1/...) ou em /api/v1 no dev local.
