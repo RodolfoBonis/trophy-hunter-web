@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link } from "react-router";
 import type { Stats } from "@/api/schemas";
 import { EvolutionChart } from "@/components/EvolutionChart";
@@ -7,6 +8,8 @@ import { ProgressBar } from "@/design-system/components/ProgressBar";
 import { RarityBadge } from "@/design-system/components/RarityBadge";
 import { SectionHead } from "@/design-system/components/SectionHead";
 import { TrophyIcon } from "@/design-system/components/TrophyIcon";
+import { useFeed, useSharing } from "@/features/social/queries";
+import { FeedRow } from "@/features/social/SocialBits";
 import { useAlerts, useNext, useStats } from "./queries";
 
 const nf = new Intl.NumberFormat("pt-BR");
@@ -17,7 +20,7 @@ function shortDate(iso?: string | null): string {
 }
 
 /** Hero do tile: kicker + título com contorno neon + painel hero-stat com o número grande. */
-function Hero({ stats }: { stats: Stats }) {
+export function Hero({ stats, kicker = "Resumo · todas as contas" }: { stats: Stats; kicker?: string }) {
   const t = stats.trophies;
   const g = stats.games;
   const pct = t.total > 0 ? Math.round((t.earned / t.total) * 100) : 0;
@@ -26,7 +29,7 @@ function Hero({ stats }: { stats: Stats }) {
     <div className="hero !pt-0">
       <div className="hero-grid">
         <div>
-          <span className="kicker label">Resumo · todas as contas</span>
+          <span className="kicker label">{kicker}</span>
           <h1>
             {nf.format(g.completed)} <span className="outline">{g.completed === 1 ? "jogo" : "jogos"}</span>
             <br />
@@ -145,8 +148,8 @@ function NextTeaser() {
   );
 }
 
-/** Conquistas mais raras já ganhas. */
-function Rarest({ stats }: { stats: Stats }) {
+/** Conquistas mais raras já ganhas. `linkGames=false` no perfil de amigo (o jogo não é seu). */
+export function Rarest({ stats, linkGames = true }: { stats: Stats; linkGames?: boolean }) {
   return (
     <div className="panel flex flex-col gap-3">
       <h3 className="sub !mb-0">Mais raras</h3>
@@ -159,9 +162,13 @@ function Rarest({ stats }: { stats: Stats }) {
             </div>
             <div className="min-w-0">
               <div className="tt truncate">{r.name}</div>
-              <Link to={`/games/${r.game_id}`} className="td block truncate no-underline hover:text-neon-cyan">
-                {r.game_title}
-              </Link>
+              {linkGames ? (
+                <Link to={`/games/${r.game_id}`} className="td block truncate no-underline hover:text-neon-cyan">
+                  {r.game_title}
+                </Link>
+              ) : (
+                <span className="td block truncate">{r.game_title}</span>
+              )}
             </div>
             <div className="right">
               <RarityBadge pct={r.rarity_pct} mini />
@@ -174,7 +181,7 @@ function Rarest({ stats }: { stats: Stats }) {
 }
 
 /** Momentos: jogos completados (platina/100%), mais recentes primeiro. */
-function Moments({ stats }: { stats: Stats }) {
+export function Moments({ stats, linkGames = true }: { stats: Stats; linkGames?: boolean }) {
   if (stats.completions.length === 0) return null;
   return (
     <div className="flex flex-col gap-3">
@@ -182,7 +189,7 @@ function Moments({ stats }: { stats: Stats }) {
       <ul className="m-0 grid list-none gap-4 p-0 [grid-template-columns:repeat(auto-fill,minmax(220px,1fr))]">
         {stats.completions.map((c) => (
           <li key={c.game_id}>
-            <Link to={`/games/${c.game_id}`} className="gcard is-plat no-underline">
+            <MaybeLink to={linkGames ? `/games/${c.game_id}` : undefined} className="gcard is-plat no-underline">
               <div className="halo" aria-hidden />
               <div className="edge" aria-hidden />
               <div className="frame">
@@ -203,11 +210,21 @@ function Moments({ stats }: { stats: Stats }) {
                   </span>
                 </div>
               </div>
-            </Link>
+            </MaybeLink>
           </li>
         ))}
       </ul>
     </div>
+  );
+}
+
+function MaybeLink({ to, className, children }: { to?: string; className: string; children: ReactNode }) {
+  return to ? (
+    <Link to={to} className={className}>
+      {children}
+    </Link>
+  ) : (
+    <div className={className}>{children}</div>
   );
 }
 
@@ -238,6 +255,29 @@ function Alerts() {
       <Link to="/next" className="label no-underline">
         Ver
       </Link>
+    </div>
+  );
+}
+
+/** Atividade dos amigos (as 4 mais recentes) — só para quem compartilha. */
+function FriendsActivity() {
+  const sharing = useSharing();
+  const feed = useFeed(sharing, 4);
+  const items = (feed.data?.pages[0]?.items ?? []).filter((i) => !i.user.is_me);
+  if (!sharing || items.length === 0) return null;
+  return (
+    <div className="panel flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <h3 className="sub !mb-0">Atividade dos amigos</h3>
+        <Link to="/friends" className="label no-underline hover:!text-text-1">
+          Ver amigos →
+        </Link>
+      </div>
+      <ul className="m-0 list-none p-0">
+        {items.map((it) => (
+          <FeedRow key={`${it.user.id}-${it.trophy_id}`} item={it} />
+        ))}
+      </ul>
     </div>
   );
 }
@@ -274,6 +314,7 @@ export default function DashboardPage() {
             <Rarest stats={stats.data} />
             <Moments stats={stats.data} />
           </div>
+          <FriendsActivity />
         </>
       )}
     </section>

@@ -55,6 +55,8 @@ export const userSchema = z.object({
   name: z.string().optional(),
   role: userRoleSchema,
   status: userStatusSchema,
+  /** Compartilha o progresso com os amigos (e vê o deles). Opt-in. */
+  share_progress: z.boolean(),
 });
 export type User = z.infer<typeof userSchema>;
 
@@ -653,3 +655,62 @@ export const searchResultSchema = z.object({
     .transform((a) => a ?? []),
 });
 export type SearchResult = z.infer<typeof searchResultSchema>;
+
+/* ── Social (opt-in, recíproco) ─────────────────────────────────────────────────────────── */
+
+export const socialUserSchema = z.object({ id: z.string(), name: z.string(), is_me: z.boolean() });
+export type SocialUser = z.infer<typeof socialUserSchema>;
+
+export const leaderboardPeriodSchema = z.enum(["month", "year", "all"]);
+export type LeaderboardPeriod = z.infer<typeof leaderboardPeriodSchema>;
+
+export const leaderboardItemSchema = z.object({
+  user: socialUserSchema,
+  platinum: z.number(),
+  earned: z.number(),
+  rare: z.number(),
+  psn_points: z.number(),
+  completed: z.number(),
+  last_unlock_at: z.string().nullable(),
+});
+export type LeaderboardItem = z.infer<typeof leaderboardItemSchema>;
+export const leaderboardSchema = z.object({ period: leaderboardPeriodSchema, items: z.array(leaderboardItemSchema) });
+export type Leaderboard = z.infer<typeof leaderboardSchema>;
+
+export const feedItemSchema = z.object({
+  user: socialUserSchema,
+  kind: z.enum(["platinum", "completion", "rare"]),
+  trophy_id: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+  type: trophyTypeSchema,
+  hidden: z.boolean(),
+  icon: z.string(),
+  rarity_pct: z.number().nullable(),
+  earned_at: z.string().nullable(),
+  game_title: z.string(),
+  platform: platformSchema,
+  external_id: z.string(),
+  cover: z.string(),
+  hero: z.string(),
+  completes_game: z.boolean(),
+});
+export type FeedItem = z.infer<typeof feedItemSchema>;
+export const feedPageSchema = z.object({ items: z.array(feedItemSchema), next_cursor: z.string().nullable() });
+export type FeedPage = z.infer<typeof feedPageSchema>;
+
+export const friendProfileSchema = z.object({ user: socialUserSchema, stats: statsSchema });
+export type FriendProfile = z.infer<typeof friendProfileSchema>;
+
+export const gameFriendSchema = z.object({
+  user: socialUserSchema,
+  platform: platformSchema,
+  earned: z.number(),
+  total: z.number(),
+  completion_pct: z.number(),
+  has_platinum: z.boolean(),
+  last_unlock_at: z.string().nullable(),
+});
+export type GameFriend = z.infer<typeof gameFriendSchema>;
+export const gameFriendsSchema = z.object({ sharing: z.boolean(), items: z.array(gameFriendSchema) });
+export type GameFriends = z.infer<typeof gameFriendsSchema>;

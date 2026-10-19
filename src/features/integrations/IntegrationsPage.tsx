@@ -5,6 +5,7 @@ import type { Integration, IntegrationStatus, SyncRun } from "@/api/schemas";
 import { Banner } from "@/design-system/components/Banner";
 import { SectionHead } from "@/design-system/components/SectionHead";
 import { NotificationsPanel } from "@/features/notifications/NotificationsPanel";
+import { SharingToggle } from "@/features/social/SocialBits";
 import { Panel } from "@/design-system/components/Panel";
 import { PlatformBadge } from "@/design-system/components/PlatformBadge";
 import { ProgressBar } from "@/design-system/components/ProgressBar";
@@ -442,6 +443,14 @@ export default function IntegrationsPage() {
         </div>
       )}
       <NotificationsPanel />
+      <Panel className="flex flex-col gap-3">
+        <h2 className="font-display text-h4 font-bold uppercase tracking-[0.02em] text-text-1">Amigos</h2>
+        <p className="m-0 text-sm text-text-2">
+          Ligado, os membros que também compartilham veem sua biblioteca, platinas e troféus raros, e você entra no
+          ranking. Contas, notas e conversas com a IA nunca são compartilhadas.
+        </p>
+        <SharingToggle />
+      </Panel>
     </section>
   );
 }

@@ -12,6 +12,7 @@ import { API, apiError, scenarioGate } from "../http";
 import { hasScenario } from "../scenario";
 import { aiHandlers } from "./ai";
 import { memberHandlers } from "./members";
+import { makeSocialHandlers } from "./social";
 import { pushHandlers, unlockHandlers } from "./unlocks";
 
 /* Espelha a API: o mesmo jogo (platform + external_id) em várias contas vira UM item, representado
@@ -138,7 +139,26 @@ function bestRows(): MockGameRow[] {
   return [...best.values()];
 }
 
-function mockStats() {
+/** Item da biblioteca (GET /games) a partir de uma linha do mock. */
+export function toListItem(row: MockGameRow, only?: string | null) {
+  const {
+    groups: _g,
+    integration_id: _i,
+    account_label: _l,
+    unified_id: _u,
+    unify_locked: _k,
+    ...rest
+  } = row;
+  return {
+    ...rest,
+    cross_platform: crossOf(row).length > 0,
+    counts: countsOf(row),
+    last_unlock_at: lastUnlockOf(row),
+    accounts: accountsOf(row, only),
+  };
+}
+
+export function mockStats() {
   const rows = bestRows();
   const trophies = rows.flatMap((r) => r.groups.flatMap((g) => g.trophies));
   const by = (type: string) => ({
@@ -348,6 +368,7 @@ function mockAlerts() {
 
 export const handlers: HttpHandler[] = [
   ...memberHandlers,
+  ...makeSocialHandlers({ mockStats, toListItem: (row) => toListItem(row) }),
   ...aiHandlers,
   ...unlockHandlers,
   ...pushHandlers,
@@ -417,23 +438,7 @@ export const handlers: HttpHandler[] = [
       const key = row.unified_id ?? gameKey(row);
       if (!best.has(key)) best.set(key, row);
     }
-    let items = [...best.values()].map((row) => {
-      const {
-        groups: _g,
-        integration_id: _i,
-        account_label: _l,
-        unified_id: _u,
-        unify_locked: _k,
-        ...rest
-      } = row;
-      return {
-        ...rest,
-        cross_platform: crossOf(row).length > 0,
-        counts: countsOf(row),
-        last_unlock_at: lastUnlockOf(row),
-        accounts: accountsOf(row, only),
-      };
-    });
+    let items = [...best.values()].map((row) => toListItem(row, only));
     if (q) items = items.filter((g) => g.title.toLowerCase().includes(q));
     const total = items.length;
     return HttpResponse.json({

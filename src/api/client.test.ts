@@ -31,7 +31,7 @@ describe("ApiClient", () => {
     server.use(
       http.get("*/api/v1/me", ({ request }) =>
         request.headers.get("Authorization") === "Bearer new"
-          ? HttpResponse.json({ id: "id1", subject: "u1", name: "Rodolfo", email: "r@rb.lab", role: "owner", status: "active" })
+          ? HttpResponse.json({ id: "id1", subject: "u1", name: "Rodolfo", email: "r@rb.lab", role: "owner", status: "active", share_progress: false })
           : problem(401, "unauthorized"),
       ),
     );

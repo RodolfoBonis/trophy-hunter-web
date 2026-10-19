@@ -15,7 +15,9 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/library", label: "Biblioteca", short: "Jogos", icon: "i-lib", mobile: true },
   { to: "/next", label: "Próxima Platina", short: "Próxima", icon: "t-plat", mobile: true },
   { to: "/timeline", label: "Linha do tempo", short: "Tempo", icon: "i-play", mobile: true },
-  { to: "/settings/integrations", label: "Contas", short: "Contas", icon: "i-key", mobile: true },
+  { to: "/friends", label: "Amigos", short: "Amigos", icon: "i-user", mobile: true },
+  // No celular, Contas fica no menu da conta (a tab bar comporta 5).
+  { to: "/settings/integrations", label: "Contas", short: "Contas", icon: "i-key", mobile: false },
   { to: "/sync", label: "Sync", short: "Sync", icon: "i-sync", mobile: false },
 ];
 

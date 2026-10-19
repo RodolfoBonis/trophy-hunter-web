@@ -15,6 +15,7 @@ import { TrophyIcon } from "@/design-system/components/TrophyIcon";
 import { cn } from "@/lib/utils";
 import { ChatPanel } from "@/features/ai/ChatPanel";
 import { RoadmapPanel, TrophyGuidePanel } from "@/features/ai/AIGuides";
+import { GameFriendsPanel } from "@/features/social/GameFriendsPanel";
 import { CrossPlatform } from "./CrossPlatform";
 import { GameAnnotations, TAG_LABEL, TrophyMarks } from "./GameAnnotations";
 import { useGame } from "./queries";
@@ -549,6 +550,7 @@ export default function GamePage() {
       />
 
       <CrossPlatform game={game} />
+      <GameFriendsPanel gameId={game.id} />
 
       <GameAnnotations game={game} />
 

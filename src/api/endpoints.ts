@@ -28,6 +28,11 @@ import {
   inviteSchema,
   inviteListSchema,
   memberListSchema,
+  leaderboardSchema,
+  feedPageSchema,
+  friendProfileSchema,
+  gameFriendsSchema,
+  type LeaderboardPeriod,
   type ConnectSteamRequest,
   type GameStatus,
   type Platform,
@@ -52,6 +57,17 @@ export const api = {
   /** Aceita um link de convite (uso único); devolve o usuário já ativo. */
   acceptInvite: (c: ApiClient, code: string) =>
     c.request(`/invites/${encodeURIComponent(code)}/accept`, { method: "POST", schema: userSchema }),
+
+  /* Social (opt-in e recíproco) */
+  setSharing: (c: ApiClient, share: boolean) =>
+    c.request("/me/sharing", { method: "PUT", body: { share_progress: share }, schema: userSchema }),
+  leaderboard: (c: ApiClient, period: LeaderboardPeriod) => c.request("/social/leaderboard", { query: { period }, schema: leaderboardSchema }),
+  feed: (c: ApiClient, params: { cursor?: string; limit?: number } = {}, signal?: AbortSignal) =>
+    c.request("/social/feed", { query: params, schema: feedPageSchema, signal }),
+  friend: (c: ApiClient, id: string) => c.request(`/social/friends/${encodeURIComponent(id)}`, { schema: friendProfileSchema }),
+  friendGames: (c: ApiClient, id: string, params: GamesQuery = {}, signal?: AbortSignal) =>
+    c.request(`/social/friends/${encodeURIComponent(id)}/games`, { query: { ...params }, schema: gameListPageSchema, signal }),
+  gameFriends: (c: ApiClient, gameId: string) => c.request(`/games/${encodeURIComponent(gameId)}/friends`, { schema: gameFriendsSchema }),
 
   /* Administração (só o dono) */
   invites: (c: ApiClient) => c.request("/admin/invites", { schema: inviteListSchema }),
@@ -158,6 +174,11 @@ export const queryKeys = {
   me: ["me"] as const,
   invites: ["admin", "invites"] as const,
   members: ["admin", "members"] as const,
+  leaderboard: (period: string) => ["social", "leaderboard", period] as const,
+  feed: ["social", "feed"] as const,
+  friend: (id: string) => ["social", "friend", id] as const,
+  friendGames: (id: string, params: object) => ["social", "friend", id, "games", params] as const,
+  gameFriends: (gameId: string) => ["social", "game", gameId] as const,
   games: (params: object) => ["games", params] as const,
   game: (id: string) => ["game", id] as const,
   integrations: ["integrations"] as const,

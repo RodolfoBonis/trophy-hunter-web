@@ -8,6 +8,7 @@ import { dashboardRoutes } from "@/features/dashboard/routes";
 import { gameRoutes } from "@/features/game/routes";
 import { integrationsRoutes } from "@/features/integrations/routes";
 import { membersRoutes } from "@/features/members/routes";
+import { socialRoutes } from "@/features/social/routes";
 import { useMe } from "@/features/members/queries";
 import { libraryRoutes } from "@/features/library/routes";
 import { nextPlatinumRoutes } from "@/features/next-platinum/routes";
@@ -84,6 +85,7 @@ export const appRoutes: RouteObject[] = [
                   ...integrationsRoutes,
                   ...syncLogRoutes,
                   ...membersRoutes,
+              ...socialRoutes,
                   { path: "*", element: <NotFoundScreen /> },
                 ],
               },

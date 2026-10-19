@@ -216,6 +216,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/games/{id}/friends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Progresso dos amigos (que compartilham) no mesmo jogo — Steam × PSN pelo título. */
+        get: operations["getGameFriends"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/games/{id}/link": {
         parameters: {
             query?: never;
@@ -432,6 +449,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/sharing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Liga/desliga "compartilhar meu progresso com os amigos" (opt-in). */
+        put: operations["putSharing"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/next": {
         parameters: {
             query?: never;
@@ -531,6 +565,74 @@ export interface paths {
          * @description Só a conta mais avançada de cada jogo. Troféus ocultos ainda não obtidos não aparecem.
          */
         get: operations["search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social/feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Platinas, jogos fechados e troféus raros (< 5%) dos membros que compartilham. */
+        get: operations["getFeed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social/friends/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Perfil de um membro que compartilha (resumo igual ao /stats). */
+        get: operations["getFriend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social/friends/{id}/games": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Biblioteca de um membro que compartilha (só leitura; mesmos filtros do GET /games). */
+        get: operations["listFriendGames"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Placar entre os membros que compartilham (inclui você). */
+        get: operations["getLeaderboard"];
         put?: never;
         post?: never;
         delete?: never;
@@ -724,6 +826,36 @@ export interface components {
             /** Format: uuid */
             job_id?: string | null;
         };
+        FeedItem: {
+            completes_game: boolean;
+            cover: string;
+            /** @description null em troféu oculto (spoiler). */
+            description: string | null;
+            /** Format: date-time */
+            earned_at: string | null;
+            external_id: string;
+            game_title: string;
+            hero: string;
+            hidden: boolean;
+            icon: string;
+            /** @enum {string} */
+            kind: "platinum" | "completion" | "rare";
+            name: string;
+            platform: components["schemas"]["Platform"];
+            rarity_pct: number | null;
+            /** Format: uuid */
+            trophy_id: string;
+            type: components["schemas"]["TrophyType"];
+            user: components["schemas"]["SocialUser"];
+        };
+        FeedPage: {
+            items: components["schemas"]["FeedItem"][];
+            next_cursor: string | null;
+        };
+        FriendProfile: {
+            stats: components["schemas"]["Stats"];
+            user: components["schemas"]["SocialUser"];
+        };
         Game: {
             abandoned?: boolean;
             cover?: string;
@@ -775,6 +907,21 @@ export interface components {
             /** @description Vínculo decidido manualmente (a unificação automática não mexe). */
             unify_locked: boolean;
         };
+        GameFriend: {
+            completion_pct: number;
+            earned: number;
+            has_platinum: boolean;
+            /** Format: date-time */
+            last_unlock_at: string | null;
+            platform: components["schemas"]["Platform"];
+            total: number;
+            user: components["schemas"]["SocialUser"];
+        };
+        GameFriends: {
+            items: components["schemas"]["GameFriend"][];
+            /** @description false = quem pede não compartilha (items vazio). */
+            sharing: boolean;
+        };
         /** @description Um item por jogo: o jogo unificado (Steam + PSN, cross_platform = true) ou, sem vínculo, platform + external_id. Game/progress são da conta MAIS AVANÇADA — entre plataformas, quando unificado (id = game_id dela); accounts lista as contas da plataforma desse item, mais avançada primeiro. Com filtro de plataforma, aparece a versão daquela plataforma. */
         GameListItem: components["schemas"]["Game"] & {
             accounts: components["schemas"]["GameAccount"][];
@@ -823,6 +970,25 @@ export interface components {
             /** @description Link do convite — só na criação (o código não fica guardado). */
             url?: string;
             used_count: number;
+        };
+        Leaderboard: {
+            items: components["schemas"]["LeaderboardItem"][];
+            /** @enum {string} */
+            period: "month" | "year" | "all";
+        };
+        LeaderboardItem: {
+            /** @description Jogos fechados (platina/100%) no período. */
+            completed: number;
+            /** @description Troféus/conquistas obtidos no período. */
+            earned: number;
+            /** Format: date-time */
+            last_unlock_at: string | null;
+            platinum: number;
+            /** @description Pontos PSN (15/30/90/300) no período. */
+            psn_points: number;
+            /** @description Obtidos com raridade < 5%. */
+            rare: number;
+            user: components["schemas"]["SocialUser"];
         };
         LinkGameRequest: {
             /**
@@ -1010,6 +1176,12 @@ export interface components {
                 rarity_pct: number | null;
                 type: components["schemas"]["TrophyType"];
             }[];
+        };
+        SocialUser: {
+            /** Format: uuid */
+            id: string;
+            is_me: boolean;
+            name: string;
         };
         Stats: {
             completions: {
@@ -1220,6 +1392,8 @@ export interface components {
             name: string;
             /** @enum {string} */
             role: "owner" | "member";
+            /** @description Compartilha o progresso com os outros membros (e vê o deles). Opt-in, começa false. */
+            share_progress: boolean;
             /** @enum {string} */
             status: "pending" | "active" | "removed";
             subject: string;
@@ -1652,6 +1826,29 @@ export interface operations {
             404: components["responses"]["Problem"];
         };
     };
+    getGameFriends: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameFriends"];
+                };
+            };
+            404: components["responses"]["Problem"];
+        };
+    };
     linkGame: {
         parameters: {
             query?: never;
@@ -2052,6 +2249,34 @@ export interface operations {
             401: components["responses"]["Problem"];
         };
     };
+    putSharing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    share_progress: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Usuário atualizado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+        };
+    };
     getNext: {
         parameters: {
             query?: never;
@@ -2240,6 +2465,109 @@ export interface operations {
             };
             401: components["responses"]["Problem"];
             422: components["responses"]["Problem"];
+        };
+    };
+    getFeed: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedPage"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    getFriend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendProfile"];
+                };
+            };
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    listFriendGames: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                q?: string;
+                sort?: "completion" | "remaining" | "last_played" | "title" | "rarity";
+                status?: components["schemas"]["GameStatus"];
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameListPage"];
+                };
+            };
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    getLeaderboard: {
+        parameters: {
+            query?: {
+                period?: "month" | "year" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Leaderboard"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
         };
     };
     getStats: {

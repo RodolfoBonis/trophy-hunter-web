@@ -242,7 +242,7 @@ export default function MembersPage() {
   return (
     <section className="flex flex-col gap-6">
       <SectionHead
-        idx="06"
+        idx="07"
         title="Membros e convites"
         subtitle="Cada pessoa conecta as próprias contas; os dados ficam separados. Guias de troféu são compartilhados."
       />

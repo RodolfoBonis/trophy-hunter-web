@@ -2,6 +2,7 @@ import { http, HttpResponse } from "msw";
 import type { Invite, Member, User } from "@/api/schemas";
 import { API, ago, apiError, DAY } from "../http";
 import { hasScenario } from "../scenario";
+import { isSharing } from "./social";
 
 /**
  * Usuário, convites e membros. Cenários: `no-access` (entrou sem convite → pending),
@@ -48,7 +49,7 @@ export function resetMembers(): void {
 resetMembers();
 
 function me(): User {
-  const base = { subject: "mock-user", name: "Rodolfo de Bonis", email: "rodolfo@rb.lab" };
+  const base = { subject: "mock-user", name: "Rodolfo de Bonis", email: "rodolfo@rb.lab", share_progress: isSharing() };
   if (hasScenario("member-removed")) return { ...base, id: "u-removed", role: "member", status: "removed" };
   if (hasScenario("no-access") && !accepted) return { ...base, id: "u-pending", role: "member", status: "pending" };
   if (hasScenario("member") || hasScenario("no-access")) return { ...base, id: "u-member", role: "member", status: "active" };
