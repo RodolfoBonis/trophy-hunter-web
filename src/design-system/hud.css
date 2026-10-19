@@ -779,3 +779,16 @@ h3.sub{font-family:var(--font-display);font-weight:600;font-size:var(--text-h4);
 .grid > * {
   min-width: 0;
 }
+
+/* Aviso de sem conexão (fixo no topo, abaixo da barra). */
+.offline-banner {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: 8px 16px;
+  text-align: center;
+  font-size: var(--text-caption);
+  color: var(--color-text-1);
+  background: rgb(255 176 32 / 0.16);
+  border-bottom: 1px solid rgb(255 176 32 / 0.45);
+}

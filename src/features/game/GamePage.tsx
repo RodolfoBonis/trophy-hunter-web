@@ -483,6 +483,7 @@ export default function GamePage() {
             (topo no celular, direita no desktop). Fica acima do ::before do painel e abaixo do texto. */}
         <div className="game-hero-art" aria-hidden>
           <GameCover
+            priority
             variant="hero"
             cover={game.cover}
             hero={game.hero}
@@ -500,6 +501,7 @@ export default function GamePage() {
             }}
           >
             <GameCover
+              priority
               variant="hero"
               cover={game.cover}
               hero={game.hero}

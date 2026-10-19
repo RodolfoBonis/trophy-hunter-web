@@ -35,6 +35,8 @@ jobs:
         run: pnpm test
       - name: Build
         run: pnpm build
+      - name: Orçamento do carregamento inicial (JS/CSS gzip e fontes)
+        run: pnpm check:bundle
 
   e2e:
     runs-on: ubuntu-latest
@@ -63,6 +65,29 @@ jobs:
             playwright-report
             test-results
           retention-days: 7
+
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Instala dependências
+        run: pnpm install --frozen-lockfile
+      - name: Build (modo mock)
+        run: pnpm build:e2e
+      - name: Lighthouse (celular, CLS barra; LCP/nota como aviso — ver lighthouserc.cjs)
+        run: npx -y @lhci/cli@0.15.1 autorun --config=lighthouserc.cjs
+      - name: Relatório do Lighthouse
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: lighthouse-report
+          retention-days: 14
 
   image:
     runs-on: ubuntu-latest

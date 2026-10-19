@@ -54,6 +54,7 @@ export function GameCover({
   platform,
   externalId,
   className,
+  priority = false,
 }: {
   cover?: string | null;
   hero?: string | null;
@@ -62,6 +63,8 @@ export function GameCover({
   platform: Platform;
   externalId?: string;
   className?: string;
+  /** Imagem principal acima da dobra (LCP): baixa já e com prioridade alta, sem lazy. */
+  priority?: boolean;
 }) {
   const sources = useMemo(() => {
     const ordered = variant === "hero" ? [hero, cover] : [cover, hero];
@@ -78,7 +81,8 @@ export function GameCover({
     <img
       src={src}
       alt=""
-      loading="lazy"
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : "auto"}
       decoding="async"
       className={cn("h-full w-full object-cover", className)}
       onError={() => setIdx((i) => i + 1)}

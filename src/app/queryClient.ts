@@ -2,6 +2,7 @@ import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/api/endpoints";
 import { API_ERROR, CLIENT_ERROR, isApiError } from "@/api/errors";
 import { addBreadcrumb, reportError } from "@/lib/observability";
+import { PERSIST_MAX_AGE } from "./queryCache";
 
 /**
  * Observabilidade das queries/mutações num ponto só: o ApiClient já reporta 5xx e respostas fora do
@@ -47,6 +48,8 @@ export function createQueryClient(): QueryClient {
     defaultOptions: {
       queries: {
         staleTime: 15_000,
+        // Vive o mesmo tanto que o cache salvo (queryCache.ts), senão some antes de ser persistida.
+        gcTime: PERSIST_MAX_AGE,
         refetchOnWindowFocus: true,
         retry: (failureCount, error) => {
           if (isApiError(error) && error.status >= 400 && error.status < 500) return false;

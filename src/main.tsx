@@ -2,6 +2,7 @@ import "./styles.css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./app/App";
+import { preloadRoute } from "./app/preloadRoute";
 import { BootError } from "./app/BootError";
 import { registerPwa } from "./app/pwa";
 import { getConfig } from "./config/env";
@@ -17,6 +18,7 @@ async function enableApiMocks(): Promise<void> {
 
 async function boot(): Promise<void> {
   installStaleChunkGuard();
+  preloadRoute(window.location.pathname);
   const root = createRoot(document.getElementById("root")!);
   let config;
   try {

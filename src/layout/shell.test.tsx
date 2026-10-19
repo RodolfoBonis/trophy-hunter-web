@@ -70,3 +70,21 @@ describe("Configurações", () => {
     expect(await screen.findByRole("heading", { name: "Sincronização" }, T)).toBeInTheDocument();
   });
 });
+
+describe("sem conexão", () => {
+  it("mostra o aviso quando a rede cai e some quando volta", async () => {
+    const { act } = await import("@testing-library/react");
+    const { vi } = await import("vitest");
+    const onLine = vi.spyOn(navigator, "onLine", "get");
+    renderRoutes({ routes: appRoutes, path: "/" });
+    await screen.findByRole("navigation", { name: "Navegação principal" }, T);
+    expect(screen.queryByText(/Sem conexão/)).not.toBeInTheDocument();
+    onLine.mockReturnValue(false);
+    act(() => void window.dispatchEvent(new Event("offline")));
+    expect(screen.getByRole("status")).toHaveTextContent(/Sem conexão/);
+    onLine.mockReturnValue(true);
+    act(() => void window.dispatchEvent(new Event("online")));
+    expect(screen.queryByText(/Sem conexão/)).not.toBeInTheDocument();
+    onLine.mockRestore();
+  });
+});

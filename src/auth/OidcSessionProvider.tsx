@@ -12,6 +12,7 @@ import {
 } from "./redirectGuard";
 import { currentReturnTo, loginPromptFor, safeReturnTo } from "./returnTo";
 import { SessionContext, firstNameOf, type Session } from "./session";
+import { clearPersistedQueries } from "@/app/queryCache";
 
 /**
  * Volta para a rota pedida antes do login (só mesmo origin) e limpa ?code&state da URL. O router já
@@ -184,6 +185,7 @@ function OidcSessionBridge({ userManager, children }: { userManager: UserManager
       getAccessToken: () => tokenRef.current,
       signOut: async (opts) => {
         clearLoginRedirectMark();
+        await clearPersistedQueries();
         if (opts?.local) {
           await userManager.removeUser();
           window.location.assign(opts.redirectTo ?? "/");

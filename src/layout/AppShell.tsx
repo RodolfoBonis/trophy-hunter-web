@@ -1,10 +1,7 @@
-import {
-  CommandPalette,
-  PALETTE_SHORTCUT,
-} from "@/features/command-palette/CommandPalette";
+import { PALETTE_SHORTCUT, usePaletteHotkey } from "@/features/command-palette/hotkey";
 import { setSoundOn, useSoundOn } from "@/features/unlocks/sound";
 import { UnlockNotices } from "@/features/unlocks/UnlockNotices";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { useAuthenticatedSession } from "@/auth/session";
 import { cn } from "@/lib/utils";
@@ -12,6 +9,11 @@ import { useIsOwner } from "@/features/members/queries";
 import { MenuItemContent, MenuPanel } from "@/design-system/components/MenuPanel";
 import { NotificationBell } from "@/features/notifications/NotificationBell";
 import { NAV_ITEMS, SETTINGS_ITEMS, isNavActive } from "./nav";
+import { OfflineBanner } from "./OfflineBanner";
+
+const CommandPalette = lazy(() =>
+  import("@/features/command-palette/CommandPalette").then((m) => ({ default: m.CommandPalette })),
+);
 
 function Glyph({ id, size = 18 }: { id: string; size?: number }) {
   return (
@@ -125,7 +127,14 @@ function UserMenu() {
  */
 export function AppShell() {
   const { pathname } = useLocation();
-  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [paletteOpen, setPaletteOpenState] = useState(false);
+  const [paletteLoaded, setPaletteLoaded] = useState(false);
+  const setPaletteOpen = useCallback((open: boolean) => {
+    if (open) setPaletteLoaded(true);
+    setPaletteOpenState(open);
+  }, []);
+  const openPalette = useCallback(() => setPaletteOpen(true), [setPaletteOpen]);
+  usePaletteHotkey(openPalette);
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -183,6 +192,7 @@ export function AppShell() {
           </div>
         </div>
       </header>
+      <OfflineBanner />
 
       <main
         id="conteudo"
@@ -195,7 +205,12 @@ export function AppShell() {
       </main>
 
       <UnlockNotices />
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      {/* Sob demanda: cmdk/radix só baixam na primeira vez que a paleta abre. */}
+      {paletteLoaded && (
+        <Suspense fallback={null}>
+          <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+        </Suspense>
+      )}
 
       <nav aria-label="Navegação" className="tabbar">
         {NAV_ITEMS.filter((i) => i.mobile).map((item) => {

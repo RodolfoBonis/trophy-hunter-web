@@ -43,5 +43,20 @@ export default defineConfig(() => {
       strictPort: true,
     },
     preview: { port: 4173, strictPort: true },
+    build: {
+      rolldownOptions: {
+        output: {
+          // Bibliotecas em chunks próprios e estáveis: um deploy que só mexe no app não invalida
+          // react/router/zod/oidc no cache do navegador (nem no precache do PWA).
+          codeSplitting: {
+            groups: [
+              { name: "vendor-react", test: /[\\/]node_modules[\\/](react|react-dom|scheduler|react-router)[\\/]/, priority: 30 },
+              { name: "vendor-data", test: /[\\/]node_modules[\\/](@tanstack|zod)[\\/]/, priority: 20 },
+              { name: "vendor-auth", test: /[\\/]node_modules[\\/](oidc-client-ts|react-oidc-context)[\\/]/, priority: 20 },
+            ],
+          },
+        },
+      },
+    },
   };
 });

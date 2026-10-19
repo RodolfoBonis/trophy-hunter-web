@@ -5,10 +5,12 @@ import { useLocation } from "react-router";
 import { describe, expect, it } from "vitest";
 import { renderRoutes } from "@/test/render";
 import { CommandPalette } from "./CommandPalette";
+import { usePaletteHotkey } from "./hotkey";
 
 function Harness() {
   const [open, setOpen] = useState(false);
   const loc = useLocation();
+  usePaletteHotkey(() => setOpen(true));
   return (
     <>
       <p data-testid="where">{loc.pathname + loc.hash}</p>

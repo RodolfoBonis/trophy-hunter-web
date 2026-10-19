@@ -1,14 +1,5 @@
 /* Fontes self-hosted (sem CDN — app LAN-only, CSP estrita). */
-@import "@fontsource/chakra-petch/400.css";
-@import "@fontsource/chakra-petch/500.css";
-@import "@fontsource/chakra-petch/600.css";
-@import "@fontsource/chakra-petch/700.css";
-@import "@fontsource/rajdhani/500.css";
-@import "@fontsource/rajdhani/600.css";
-@import "@fontsource/rajdhani/700.css";
-@import "@fontsource-variable/inter";
-@import "@fontsource/jetbrains-mono/400.css";
-@import "@fontsource/jetbrains-mono/500.css";
+@import "./design-system/fonts.css"; /* só latin + latin-ext, woff2 (pnpm gen:fonts) */
 
 @import "tailwindcss";
 @import "./design-system/tokens.css";

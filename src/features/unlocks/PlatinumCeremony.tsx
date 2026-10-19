@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router";
-import confetti from "canvas-confetti";
+import type confetti from "canvas-confetti";
 import type { UnlockEvent } from "@/api/schemas";
 import { GameCover } from "@/design-system/components/GameCover";
 import { RarityBadge } from "@/design-system/components/RarityBadge";
@@ -34,33 +34,32 @@ export function PlatinumCeremony({
 
   useEffect(() => {
     if (reduced) return;
-    const fire = (ratio: number, opts: confetti.Options) =>
-      void confetti({
-        ...opts,
-        particleCount: Math.floor(220 * ratio),
-        colors: PLATINUM_COLORS,
-        zIndex: 1300,
-        disableForReducedMotion: true,
-      });
-    fire(0.3, { spread: 30, startVelocity: 55, origin: { y: 0.7 } });
-    fire(0.25, { spread: 70, origin: { y: 0.7 } });
-    const t = window.setTimeout(() => {
-      fire(0.35, {
-        spread: 110,
-        decay: 0.92,
-        scalar: 0.9,
-        origin: { x: 0.2, y: 0.6 },
-      });
-      fire(0.35, {
-        spread: 110,
-        decay: 0.92,
-        scalar: 0.9,
-        origin: { x: 0.8, y: 0.6 },
-      });
-    }, 450);
+    // canvas-confetti sob demanda: só quem ganha uma platina baixa a lib.
+    let cancelled = false;
+    let lib: typeof confetti | undefined;
+    let t: number | undefined;
+    void import("canvas-confetti").then(({ default: confettiLib }) => {
+      if (cancelled) return;
+      lib = confettiLib;
+      const fire = (ratio: number, opts: confetti.Options) =>
+        void confettiLib({
+          ...opts,
+          particleCount: Math.floor(220 * ratio),
+          colors: PLATINUM_COLORS,
+          zIndex: 1300,
+          disableForReducedMotion: true,
+        });
+      fire(0.3, { spread: 30, startVelocity: 55, origin: { y: 0.7 } });
+      fire(0.25, { spread: 70, origin: { y: 0.7 } });
+      t = window.setTimeout(() => {
+        fire(0.35, { spread: 110, decay: 0.92, scalar: 0.9, origin: { x: 0.2, y: 0.6 } });
+        fire(0.35, { spread: 110, decay: 0.92, scalar: 0.9, origin: { x: 0.8, y: 0.6 } });
+      }, 450);
+    });
     return () => {
+      cancelled = true;
       window.clearTimeout(t);
-      confetti.reset();
+      lib?.reset();
     };
   }, [reduced]);
 

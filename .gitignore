@@ -16,3 +16,5 @@ dev-dist
 .vscode
 *.tsbuildinfo
 .pnpm-store
+lighthouse-report
+.lighthouseci
