@@ -10,8 +10,9 @@ import type {
 import { GameCover } from "@/design-system/components/GameCover";
 import { PlatformBadge } from "@/design-system/components/PlatformBadge";
 import { ProgressRing } from "@/design-system/components/ProgressRing";
+import { buttonClasses } from "@/design-system/components/ui/button";
 import { RarityBadge } from "@/design-system/components/RarityBadge";
-import { TrophyIcon } from "@/design-system/components/TrophyIcon";
+import { TrophyArt } from "./TrophyArt";
 import { cn } from "@/lib/utils";
 import { ChatPanel } from "@/features/ai/ChatPanel";
 import { RoadmapPanel, TrophyGuidePanel } from "@/features/ai/AIGuides";
@@ -58,49 +59,6 @@ function unlockedAt(iso: string): string {
   return `${date} · ${time}`;
 }
 
-/**
- * Ícone da linha (`.ticon` do tile): o ícone REAL da conquista/troféu com o glifo do tipo no canto;
- * bloqueado → ícone de bloqueio da plataforma (ou o ícone dessaturado) + cadeado; sem ícone → glifo.
- */
-function TrophyArt({ trophy, spoiler }: { trophy: Trophy; spoiler: boolean }) {
-  const [broken, setBroken] = useState(false);
-  const src = trophy.earned ? trophy.icon : trophy.icon_locked || trophy.icon;
-  const showImg = Boolean(src) && !broken;
-  return (
-    <div className="ticon">
-      {showImg ? (
-        <>
-          <img
-            src={src}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            onError={() => setBroken(true)}
-            className={cn(
-              "ticon-img",
-              !trophy.earned && !trophy.icon_locked && "dim",
-              spoiler && "spoiled",
-            )}
-          />
-          <span className="ticon-type">
-            <TrophyIcon type={trophy.type} size={14} />
-          </span>
-        </>
-      ) : (
-        <TrophyIcon type={trophy.type} size={34} />
-      )}
-      {!trophy.earned && (
-        <svg
-          className="lock"
-          style={{ color: "var(--color-text-2)" }}
-          aria-hidden
-        >
-          <use href="#i-lock" />
-        </svg>
-      )}
-    </div>
-  );
-}
 
 /** Linha de troféu do style tile (`.trow`): obtido / bloqueado / oculto (spoiler guard). */
 function TrophyRow({ trophy }: { trophy: Trophy }) {
@@ -471,12 +429,19 @@ export default function GamePage() {
 
   return (
     <section className="flex flex-col gap-6">
-      <Link
-        to="/library"
-        className="label inline-flex w-fit items-center gap-2 no-underline hover:!text-text-1"
-      >
-        ← Biblioteca
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link
+          to="/library"
+          className="label inline-flex w-fit items-center gap-2 no-underline hover:!text-text-1"
+        >
+          ← Biblioteca
+        </Link>
+        {!complete && (
+          <Link to={`/games/${game.id}/hunt`} className={buttonClasses("primary", "sm")}>
+            Modo caçada
+          </Link>
+        )}
+      </div>
 
       <div className="panel hero-stat game-hero !p-0">
         {/* Arte do jogo como fundo do card: nítida, com pouca opacidade e esmaecendo em gradiente

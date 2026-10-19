@@ -41,14 +41,14 @@ const MOCK_ROADMAP: RoadmapContent = {
     {
       title: "Campanha",
       description: "Jogue a história explorando cada área.",
-      trophies: ["Primeiros passos"],
+      trophies: ["Lorde Éldero"],
       missables: ["Diário do capitão (capítulo 3)"],
     },
     {
       title: "Pós-jogo",
       description: "Limpe colecionáveis e desafios restantes.",
-      trophies: ["Colecionador"],
-      missables: [],
+      trophies: ["Mestre das Grandes Runas (perdível)", "Colecionador"],
+      missables: ["Grandes Runas antes de enfrentar o chefe final"],
     },
   ],
   missables_overview: ["Diário do capitão (capítulo 3)"],

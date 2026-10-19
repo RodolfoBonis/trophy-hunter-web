@@ -7,6 +7,7 @@ const ROUTES: [RegExp, () => Promise<unknown>[]][] = [
   [/^\/$/, () => [import("@/features/dashboard/DashboardPage")]],
   [/^\/library\/?$/, () => [import("@/features/library/LibraryPage")]],
   [/^\/games\/[^/]+\/?$/, () => [import("@/features/game/GamePage")]],
+  [/^\/games\/[^/]+\/hunt\/?$/, () => [import("@/features/hunt/HuntPage")]],
   [/^\/next\/?$/, () => [import("@/features/next-platinum/NextPlatinumPage")]],
   [/^\/timeline\/?$/, () => [import("@/features/timeline/TimelinePage")]],
   [/^\/recap\/?$/, () => [import("@/features/recap/RecapPage")]],

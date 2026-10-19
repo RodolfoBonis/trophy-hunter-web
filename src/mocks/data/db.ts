@@ -3,6 +3,7 @@ import { resetMembers } from "../handlers/members";
 import { resetSocial } from "../handlers/social";
 import { resetRecap } from "../handlers/recap";
 import { resetPush, resetUnlocks } from "../handlers/unlocks";
+import { resetHunt } from "../handlers/hunt";
 import { mockGames, mockIntegrations, mockSyncRuns, type MockGameRow } from "./fixtures";
 
 /** Estado mutável do modo mock: connectSteam/syncNow alteram e os testes resetam entre casos. */
@@ -35,6 +36,7 @@ export function resetMockDb(): void {
   resetMembers();
   resetSocial();
   resetRecap();
+  resetHunt();
   const fresh = seed();
   db.integrations = fresh.integrations;
   db.games = fresh.games;

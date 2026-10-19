@@ -267,6 +267,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/games/{id}/hunt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Modo caçada — etapas do roadmap ligadas aos troféus reais, marcas da pessoa e se há sync rodando. */
+        get: operations["getHunt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games/{id}/hunt/stages/{idx}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Marca/desmarca uma etapa do modo caçada como feita. */
+        put: operations["putHuntStage"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/games/{id}/link": {
         parameters: {
             query?: never;
@@ -1220,6 +1254,23 @@ export interface components {
         };
         /** @enum {string} */
         GameStatus: "completed" | "platinum" | "almost" | "in_progress" | "not_started" | "abandoned";
+        Hunt: {
+            missables_overview: string[];
+            /** @enum {string} */
+            roadmap: "none" | "pending" | "running" | "ready" | "error";
+            stages: {
+                complete: boolean;
+                description: string;
+                done: boolean;
+                earned: number;
+                index: number;
+                missables: string[];
+                title: string;
+                trophy_ids: string[];
+                unmatched: string[];
+            }[];
+            syncing: boolean;
+        };
         Integration: {
             account_id?: string;
             avatar?: string;
@@ -2281,6 +2332,58 @@ export interface operations {
                     "application/json": components["schemas"]["GameFriends"];
                 };
             };
+            404: components["responses"]["Problem"];
+        };
+    };
+    getHunt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Hunt"];
+                };
+            };
+            404: components["responses"]["Problem"];
+        };
+    };
+    putHuntStage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                idx: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    done: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
         };
     };

@@ -25,6 +25,7 @@ import {
   integrationSchema,
   syncRunListSchema,
   userSchema,
+  huntSchema,
   accountExportSchema,
   inviteSchema,
   inviteListSchema,
@@ -166,6 +167,9 @@ export const api = {
       body: scope ? { scope } : undefined,
       schema: enqueueResponseSchema,
     }),
+  hunt: (c: ApiClient, gameId: string) => c.request(`/games/${encodeURIComponent(gameId)}/hunt`, { schema: huntSchema }),
+  setHuntStage: (c: ApiClient, gameId: string, idx: number, done: boolean) =>
+    c.request(`/games/${encodeURIComponent(gameId)}/hunt/stages/${idx}`, { method: "PUT", body: { done } }),
   syncGame: (c: ApiClient, id: string) =>
     c.request(`/games/${encodeURIComponent(id)}/sync`, { method: "POST", schema: enqueueResponseSchema }),
 
@@ -218,6 +222,7 @@ export const queryKeys = {
   linkCandidates: (id: string, q: string) => ["link-candidates", id, q] as const,
   trophyGuide: (trophyId: string) => ["ai-guide", "trophy", trophyId] as const,
   roadmap: (gameId: string) => ["ai-guide", "roadmap", gameId] as const,
+  hunt: (gameId: string) => ["game", gameId, "hunt"] as const,
   chat: (gameId: string) => ["ai-chat", gameId] as const,
   unlocks: ["unlocks", "unseen"] as const,
   pushStatus: ["push", "status"] as const,

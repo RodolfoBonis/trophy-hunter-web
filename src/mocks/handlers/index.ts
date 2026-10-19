@@ -12,6 +12,7 @@ import { API, apiError, scenarioGate } from "../http";
 import { hasScenario } from "../scenario";
 import { aiHandlers } from "./ai";
 import { accountHandlers, memberHandlers } from "./members";
+import { huntHandlers, markGameSyncing } from "./hunt";
 import { recapHandlers } from "./recap";
 import { makeSocialHandlers } from "./social";
 import { pushHandlers, unlockHandlers } from "./unlocks";
@@ -373,6 +374,7 @@ function mockAlerts() {
 }
 
 export const handlers: HttpHandler[] = [
+  ...huntHandlers,
   ...accountHandlers,
   ...memberHandlers,
   ...recapHandlers,
@@ -521,6 +523,7 @@ export const handlers: HttpHandler[] = [
   http.post(`${API}/games/:id/sync`, ({ params }) => {
     const game = db.games.find((g) => g.id === params.id);
     if (!game) return apiError(404, "not_found", "Jogo não encontrado.");
+    markGameSyncing();
     const body: EnqueueResponse = {
       enqueued: true,
       job_id: `job-${Date.now()}`,

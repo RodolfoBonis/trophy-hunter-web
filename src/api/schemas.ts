@@ -60,6 +60,30 @@ export const userSchema = z.object({
 });
 export type User = z.infer<typeof userSchema>;
 
+/** Modo caçada: etapas do roadmap ligadas aos troféus reais da conta aberta. */
+export const huntStageSchema = z.object({
+  index: z.number().int(),
+  title: z.string(),
+  description: z.string(),
+  missables: z.array(z.string()),
+  trophy_ids: z.array(z.string()),
+  /** Citados pela IA que não casaram com nenhum troféu (mostrados como texto). */
+  unmatched: z.array(z.string()),
+  earned: z.number().int(),
+  /** A pessoa marcou a etapa. */
+  done: z.boolean(),
+  /** Todos os troféus casados da etapa já foram obtidos. */
+  complete: z.boolean(),
+});
+export type HuntStage = z.infer<typeof huntStageSchema>;
+export const huntSchema = z.object({
+  roadmap: z.enum(["none", "pending", "running", "ready", "error"]),
+  syncing: z.boolean(),
+  missables_overview: z.array(z.string()),
+  stages: z.array(huntStageSchema),
+});
+export type Hunt = z.infer<typeof huntSchema>;
+
 /**
  * Export dos dados (LGPD). O conteúdo das seções vai para o arquivo como veio; aqui só se confere o
  * formato e o perfil (passthrough mantém o resto).
