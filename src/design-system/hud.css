@@ -779,3 +779,5 @@ h3.sub{font-family:var(--font-display);font-weight:600;font-size:var(--text-h4);
 .grid > * {
   min-width: 0;
 }
+
+.caption{color:#ff3b3b}
