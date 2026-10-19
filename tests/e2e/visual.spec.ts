@@ -8,7 +8,7 @@ import { open, PAGES, stabilize } from "./helpers";
 test.skip(process.platform !== "linux", "prints de referência são do Linux (CI)");
 test.beforeEach(async ({ page }) => stabilize(page));
 
-const shot = { fullPage: true, animations: "disabled", caret: "hide", maxDiffPixelRatio: 0.01 } as const;
+const shot = { fullPage: true, animations: "disabled", caret: "hide", maxDiffPixels: 100 } as const;
 
 for (const p of PAGES) {
   test(`${p.name}`, async ({ page }) => {
