@@ -29,6 +29,7 @@ import {
   myBadgesSchema,
   catalogSchema,
   wishlistSchema,
+  adminHealthSchema,
   friendBadgesSchema,
   accountExportSchema,
   inviteSchema,
@@ -179,6 +180,10 @@ export const api = {
   setWishlistTarget: (c: ApiClient, id: string, target: number | null) =>
     c.request(`/wishlist/${encodeURIComponent(id)}`, { method: "PATCH", body: { target_price_cents: target } }),
   deleteWishlist: (c: ApiClient, id: string) => c.request(`/wishlist/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  adminHealth: (c: ApiClient) => c.request("/admin/health", { schema: adminHealthSchema }),
+  retryJob: (c: ApiClient, id: string) => c.request(`/admin/jobs/${encodeURIComponent(id)}/retry`, { method: "POST" }),
+  adminSyncIntegration: (c: ApiClient, id: string) =>
+    c.request(`/admin/integrations/${encodeURIComponent(id)}/sync`, { method: "POST" }),
   myBadges: (c: ApiClient) => c.request("/me/badges", { schema: myBadgesSchema }),
   friendBadges: (c: ApiClient, id: string) =>
     c.request(`/social/friends/${encodeURIComponent(id)}/badges`, { schema: friendBadgesSchema }),
@@ -240,6 +245,7 @@ export const queryKeys = {
   hunt: (gameId: string) => ["game", gameId, "hunt"] as const,
   myBadges: ["badges", "me"] as const,
   wishlist: ["wishlist"] as const,
+  adminHealth: ["admin", "health"] as const,
   catalog: (q: string) => ["catalog", q] as const,
   friendBadges: (id: string) => ["social", "friend", id, "badges"] as const,
   chat: (gameId: string) => ["ai-chat", gameId] as const,

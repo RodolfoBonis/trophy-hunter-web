@@ -42,6 +42,7 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
   { to: "/settings/privacy", label: "Privacidade", icon: "i-shield", description: "O que os amigos veem e seus dados." },
   { to: "/settings/sync", label: "Sincronização", icon: "i-sync", description: "Histórico do que foi buscado na Steam e na PSN." },
   { to: "/settings/members", label: "Membros e convites", icon: "i-user", description: "Quem usa o Trophy Hunter e links de convite.", ownerOnly: true },
+  { to: "/settings/health", label: "Saúde", icon: "i-pulse", description: "Alertas, contas, fila, IA e fontes externas.", ownerOnly: true },
 ];
 
 export function isNavActive(to: string, pathname: string): boolean {

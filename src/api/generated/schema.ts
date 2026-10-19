@@ -2,6 +2,40 @@
 /** Gerado por `pnpm gen:api` a partir de /Users/rodolfodebonis/Documents/projects/trophy-hunter-api/api/openapi.yaml. Não edite à mão. */
 
 export interface paths {
+    "/admin/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Painel do dono — contas, syncs 24 h, fila (com dead recentes), uso de IA e, do Prometheus, alertas, erros do front, fontes externas e Web Vitals. */
+        get: operations["getAdminHealth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/integrations/{id}/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sincroniza a conta de qualquer membro. */
+        post: operations["adminSyncIntegration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/invites": {
         parameters: {
             query?: never;
@@ -32,6 +66,23 @@ export interface paths {
         post?: never;
         /** Revoga um convite. Só o dono. */
         delete: operations["revokeInvite"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/jobs/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Devolve um job dead para a fila (tentativas zeradas). */
+        post: operations["retryJob"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -153,6 +204,23 @@ export interface paths {
         put?: never;
         /** Erro do app no navegador (aberto, sem token; limite por origem). Vira log e métrica. */
         post: operations["reportClientError"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client-vitals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Web Vitals do navegador (aberto, sem token; sendBeacon text/plain; limite por origem). Só vira métrica. */
+        post: operations["reportClientVitals"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1983,6 +2051,50 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getAdminHealth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK (prometheus.available=false quando o Prometheus não responde) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            404: components["responses"]["Problem"];
+        };
+    };
+    adminSyncIntegration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Enfileirado */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problem"];
+        };
+    };
     listInvites: {
         parameters: {
             query?: never;
@@ -2047,6 +2159,28 @@ export interface operations {
             };
             401: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
+        };
+    };
+    retryJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reenfileirado */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
         };
     };
     listMembers: {
@@ -2241,6 +2375,52 @@ export interface operations {
                 content?: never;
             };
             400: components["responses"]["Problem"];
+            /** @description Limite por origem excedido */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reportClientVitals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "text/plain": {
+                    /** @enum {string} */
+                    device?: "mobile" | "desktop";
+                    items: {
+                        /** @enum {string} */
+                        name: "LCP" | "INP" | "CLS" | "FCP" | "TTFB";
+                        route: string;
+                        /** @description ms (CLS sem unidade) */
+                        value: number;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description Registrado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Corpo inválido */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Limite por origem excedido */
             429: {
                 headers: {

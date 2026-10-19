@@ -155,6 +155,36 @@ export const wishlistItemSchema = z.object({
 export type WishlistItem = z.infer<typeof wishlistItemSchema>;
 export const wishlistSchema = z.object({ items: z.array(wishlistItemSchema) });
 
+/** Painel do dono (GET /admin/health). */
+export const adminHealthSchema = z.object({
+  generated_at: z.string(),
+  accounts: z.array(
+    z.object({
+      id: z.string(),
+      user: z.string(),
+      platform: platformSchema,
+      display_name: z.string(),
+      label: z.string(),
+      status: z.string(),
+      last_synced_at: z.string().nullable(),
+      last_error: z.string(),
+    }),
+  ),
+  syncs_24h: z.record(z.string(), z.number()),
+  queue: z.array(z.object({ kind: z.string(), status: z.string(), count: z.number() })),
+  recent_dead: z.array(z.object({ id: z.string(), kind: z.string(), attempts: z.number(), error: z.string(), updated_at: z.string().nullable() })),
+  ai_usage: z.array(z.object({ user: z.string(), owner: z.boolean(), last_7d: z.number(), last_24h: z.number(), day_limit: z.number() })),
+  totals: z.record(z.string(), z.number()),
+  prometheus: z.object({
+    available: z.boolean(),
+    alerts: z.array(z.object({ name: z.string(), severity: z.string() })),
+    client_errors_24h: z.array(z.object({ label: z.string(), value: z.number() })),
+    providers: z.array(z.object({ provider: z.string(), calls_24h: z.number(), error_ratio_1h: z.number() })),
+    vitals: z.array(z.object({ route: z.string(), device: z.string(), lcp_p75_s: z.number() })),
+  }),
+});
+export type AdminHealth = z.infer<typeof adminHealthSchema>;
+
 /**
  * Export dos dados (LGPD). O conteúdo das seções vai para o arquivo como veio; aqui só se confere o
  * formato e o perfil (passthrough mantém o resto).

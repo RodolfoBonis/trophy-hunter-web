@@ -15,6 +15,7 @@ import { accountHandlers, memberHandlers } from "./members";
 import { huntHandlers, markGameSyncing } from "./hunt";
 import { badgeHandlers } from "./badges";
 import { backlogHandlers } from "./backlog";
+import { adminHandlers } from "./admin";
 import { recapHandlers } from "./recap";
 import { makeSocialHandlers } from "./social";
 import { pushHandlers, unlockHandlers } from "./unlocks";
@@ -379,6 +380,7 @@ export const handlers: HttpHandler[] = [
   ...huntHandlers,
   ...badgeHandlers,
   ...backlogHandlers,
+  ...adminHandlers,
   ...accountHandlers,
   ...memberHandlers,
   ...recapHandlers,

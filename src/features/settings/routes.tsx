@@ -7,6 +7,7 @@ const NotificationsSettings = lazy(() => import("./NotificationsSettings"));
 const PrivacySettings = lazy(() => import("./PrivacySettings"));
 const SyncLogPage = lazy(() => import("@/features/sync-log/SyncLogPage"));
 const MembersPage = lazy(() => import("@/features/members/MembersPage"));
+const HealthPage = lazy(() => import("@/features/admin/HealthPage"));
 
 export const settingsRoutes: RouteObject[] = [
   {
@@ -19,6 +20,7 @@ export const settingsRoutes: RouteObject[] = [
       { path: "privacy", element: <PrivacySettings /> },
       { path: "sync", element: <SyncLogPage /> },
       { path: "members", element: <MembersPage /> },
+      { path: "health", element: <HealthPage /> },
     ],
   },
   // Endereço antigo do log de sync.

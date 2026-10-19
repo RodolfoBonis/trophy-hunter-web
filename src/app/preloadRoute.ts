@@ -20,6 +20,7 @@ const ROUTES: [RegExp, () => Promise<unknown>[]][] = [
   [/^\/settings\/notifications\/?$/, () => [import("@/features/settings/SettingsLayout"), import("@/features/settings/NotificationsSettings")]],
   [/^\/settings\/privacy\/?$/, () => [import("@/features/settings/SettingsLayout"), import("@/features/settings/PrivacySettings")]],
   [/^\/settings\/sync\/?$/, () => [import("@/features/settings/SettingsLayout"), import("@/features/sync-log/SyncLogPage")]],
+  [/^\/settings\/health\/?$/, () => [import("@/features/settings/SettingsLayout"), import("@/features/admin/HealthPage")]],
   [/^\/settings\/members\/?$/, () => [import("@/features/settings/SettingsLayout"), import("@/features/members/MembersPage")]],
 ];
 
