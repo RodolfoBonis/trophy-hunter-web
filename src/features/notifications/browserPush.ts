@@ -40,12 +40,21 @@ export function permission(): NotificationPermission {
   return "Notification" in window ? Notification.permission : "denied";
 }
 
+/**
+ * O service worker ainda não está ativo (primeira visita, atualização esperando, Safari). Não é bug:
+ * o estado do push fica "desconhecido" por enquanto.
+ */
+export class ServiceWorkerUnavailableError extends Error {
+  constructor() {
+    super("service worker indisponível");
+    this.name = "ServiceWorkerUnavailableError";
+  }
+}
+
 async function registration(): Promise<ServiceWorkerRegistration> {
   const reg = await Promise.race([
     navigator.serviceWorker.ready,
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("service worker indisponível")), 8000),
-    ),
+    new Promise<never>((_, reject) => setTimeout(() => reject(new ServiceWorkerUnavailableError()), 8000)),
   ]);
   return reg;
 }

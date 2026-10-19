@@ -110,3 +110,20 @@ describe("Notificações", () => {
     ]);
   });
 });
+
+describe("service worker ainda não ativo", () => {
+  it("useLocalSubscription devolve null (desconhecido), não erro", async () => {
+    const { renderHook } = await import("@testing-library/react");
+    const { QueryClientProvider } = await import("@tanstack/react-query");
+    const { createTestQueryClient } = await import("@/test/render");
+    const { useLocalSubscription } = await import("./queries");
+    vi.mocked(browserPush.currentSubscription).mockRejectedValueOnce(new browserPush.ServiceWorkerUnavailableError());
+    const client = createTestQueryClient();
+    const { result } = renderHook(() => useLocalSubscription(true), {
+      wrapper: ({ children }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>,
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toBeNull();
+    expect(result.current.isError).toBe(false);
+  });
+});

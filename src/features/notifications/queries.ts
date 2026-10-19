@@ -12,11 +12,21 @@ export function usePushStatus() {
   });
 }
 
-/** Este navegador está inscrito? (consulta o pushManager local). */
+/**
+ * Este navegador está inscrito? (consulta o pushManager local). null = não deu para saber agora
+ * (service worker ainda não ativo) — tratado como "não inscrito" e sem virar erro reportado.
+ */
 export function useLocalSubscription(enabled: boolean) {
   return useQuery({
     queryKey: ["push", "local"],
-    queryFn: async () => (await browserPush.currentSubscription()) !== null,
+    queryFn: async (): Promise<boolean | null> => {
+      try {
+        return (await browserPush.currentSubscription()) !== null;
+      } catch (e) {
+        if (e instanceof browserPush.ServiceWorkerUnavailableError) return null;
+        throw e;
+      }
+    },
     enabled,
     retry: false,
   });
