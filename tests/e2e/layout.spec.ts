@@ -14,3 +14,15 @@ for (const p of PAGES) {
     expect(overflow, `vazou ${overflow}px: ${culprits.join(" | ")}`).toBeLessThanOrEqual(0);
   });
 }
+
+for (const p of PAGES) {
+  test(`${p.name}: todo botão (inclusive link com cara de botão) tem o fundo do tile`, async ({ page }) => {
+    await open(page, p.path, p.heading);
+    const bare = await page.evaluate(() =>
+      Array.from(document.querySelectorAll(".btn"))
+        .filter((el) => !el.querySelector(":scope > .s"))
+        .map((el) => `${el.tagName.toLowerCase()} "${(el.textContent ?? "").trim().slice(0, 40)}"`),
+    );
+    expect(bare, `botões sem <span class="s">: ${bare.join(", ")}`).toEqual([]);
+  });
+}

@@ -437,7 +437,9 @@ export default function GamePage() {
           ← Biblioteca
         </Link>
         {!complete && (
-          <Link to={`/games/${game.id}/hunt`} className={buttonClasses("primary", "sm")}>
+          <Link to={`/games/${game.id}/hunt`} className={cn(buttonClasses("primary", "sm"), "no-underline")}>
+            <span className="s" aria-hidden />
+            <span className="gl" aria-hidden />
             Modo caçada
           </Link>
         )}

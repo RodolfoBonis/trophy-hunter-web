@@ -56,6 +56,9 @@ describe("Modo caçada", () => {
 
   it("página do jogo tem o atalho para o modo caçada", async () => {
     renderRoutes({ routes: gameRoutes, path: ELDEN });
-    expect(await screen.findByRole("link", { name: "Modo caçada" }, T)).toHaveAttribute("href", `${ELDEN}/hunt`);
+    const link = await screen.findByRole("link", { name: "Modo caçada" }, T);
+    expect(link).toHaveAttribute("href", `${ELDEN}/hunt`);
+    // Link com cara de botão precisa do fundo (.s) — sem ele o texto escuro some no fundo escuro.
+    expect(link.querySelector(":scope > span.s")).not.toBeNull();
   });
 });
