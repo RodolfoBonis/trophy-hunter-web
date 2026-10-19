@@ -1,3 +1,4 @@
+import { sectionIdx } from "@/layout/nav";
 import { useQuery } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router";
@@ -79,7 +80,7 @@ export default function NewChallengePage() {
   if (!sharing) {
     return (
       <section className="flex flex-col gap-6">
-        <SectionHead idx="06" title="Novo desafio" />
+        <SectionHead idx={sectionIdx("/friends")} title="Novo desafio" />
         <SharingOptIn />
       </section>
     );
@@ -102,7 +103,7 @@ export default function NewChallengePage() {
 
   return (
     <section className="flex flex-col gap-6">
-      <SectionHead idx="06" title="Novo desafio" subtitle="Chame amigos que compartilham o progresso." />
+      <SectionHead idx={sectionIdx("/friends")} title="Novo desafio" subtitle="Chame amigos que compartilham o progresso." />
       <form onSubmit={onSubmit} className="flex flex-col gap-6">
         <Panel className="flex flex-col gap-4">
           <span className="label">Tipo</span>

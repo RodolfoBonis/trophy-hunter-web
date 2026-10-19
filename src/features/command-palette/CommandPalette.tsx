@@ -9,7 +9,7 @@ import { RarityBadge } from "@/design-system/components/RarityBadge";
 import { TrophyIcon } from "@/design-system/components/TrophyIcon";
 import { useIntegrations, useSyncNow } from "@/features/integrations/queries";
 import { setSoundOn, useSoundOn } from "@/features/unlocks/sound";
-import { NAV_ITEMS } from "@/layout/nav";
+import { NAV_ITEMS, SETTINGS_ITEMS } from "@/layout/nav";
 import { useIsOwner } from "@/features/members/queries";
 
 function Glyph({ id }: { id: string }) {
@@ -91,7 +91,10 @@ export function CommandPalette({
   };
   const match = (label: string) =>
     !term || label.toLowerCase().includes(term.toLowerCase());
-  const screens = NAV_ITEMS.filter((n) => match(n.label));
+  const screens = [
+    ...NAV_ITEMS,
+    ...SETTINGS_ITEMS.filter((st) => !st.ownerOnly || isOwner).map((st) => ({ ...st, label: `Configurações · ${st.label}` })),
+  ].filter((n) => match(n.label));
   const accounts = integrations.data ?? [];
   const actions = [
     {
@@ -100,13 +103,6 @@ export function CommandPalette({
       icon: "i-sync",
       run: () => accounts.forEach((a) => syncNow.mutate(a.id)),
       hidden: accounts.length === 0,
-    },
-    {
-      id: "members",
-      label: "Membros e convites",
-      icon: "i-key",
-      run: () => go("/settings/members"),
-      hidden: !isOwner,
     },
     {
       id: "sound",

@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+import { sectionIdx } from "@/layout/nav";
 import { useState, type ReactNode } from "react";
 import type { GamesQuery } from "@/api/endpoints";
 import type { GameStatus, Platform } from "@/api/schemas";
@@ -66,6 +68,8 @@ export default function LibraryPage() {
   const [sort, setSort] = useState<Sort>("last_played");
   const [account, setAccount] = useState("");
   const [withoutAch, setWithoutAch] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const activeFilters = [platform, status, account || undefined, withoutAch || undefined, sort !== "last_played" || undefined].filter(Boolean).length;
   const integrations = useIntegrations();
   const accounts = integrations.data ?? [];
 
@@ -83,7 +87,7 @@ export default function LibraryPage() {
   return (
     <section className="flex flex-col gap-6">
       <SectionHead
-        idx="02"
+        idx={sectionIdx("/library")}
         title="Biblioteca"
         subtitle={
           total === undefined ? "Seus jogos, conquistas e troféus." : `${total} ${total === 1 ? "jogo" : "jogos"}`
@@ -91,8 +95,8 @@ export default function LibraryPage() {
       />
 
       <div className="panel sm flex flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="input min-w-[220px] flex-1">
+        <div className="flex items-center gap-3">
+          <div className="input min-w-0 flex-1">
             <svg aria-hidden>
               <use href="#i-target" />
             </svg>
@@ -104,32 +108,48 @@ export default function LibraryPage() {
               aria-label="Buscar jogo"
             />
           </div>
-          <Seg label="Plataforma" options={PLATFORMS} value={platform} onChange={setPlatform} />
-          {accounts.length > 1 && (
-            <label className="seg items-center">
-              <span className="seg-l">Conta</span>
-              <select
-                value={account}
-                onChange={(e) => setAccount(e.target.value)}
-                className="h-full cursor-pointer bg-transparent py-[7px] pl-1 pr-2 font-display text-[11px] font-semibold uppercase tracking-[0.1em] text-neon-cyan outline-none"
-              >
-                <option value="">Todas</option>
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+          {/* Celular: os filtros ficam recolhidos atrás deste botão (ocupavam a primeira tela inteira). */}
+          <button
+            type="button"
+            className="btn btn-secondary sm sm:hidden"
+            aria-expanded={filtersOpen}
+            aria-controls="library-filters"
+            onClick={() => setFiltersOpen((o) => !o)}
+          >
+            <span className="s" aria-hidden />
+            <span className="gl" aria-hidden />
+            Filtros{activeFilters > 0 ? ` · ${activeFilters}` : ""}
+          </button>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Seg label="Status" options={STATUS} value={status} onChange={setStatus} />
-          <Seg label="Ordenar" options={SORTS} value={sort} onChange={setSort} />
-          <label className="switch ml-auto">
-            <input type="checkbox" checked={withoutAch} onChange={(e) => setWithoutAch(e.target.checked)} />
-            Mostrar jogos sem conquistas
-          </label>
+        <div id="library-filters" className={cn("flex flex-col gap-4", !filtersOpen && "max-sm:hidden")}>
+          <div className="flex flex-wrap items-center gap-3">
+            <Seg label="Plataforma" options={PLATFORMS} value={platform} onChange={setPlatform} />
+            {accounts.length > 1 && (
+              <label className="seg items-center">
+                <span className="seg-l">Conta</span>
+                <select
+                  value={account}
+                  onChange={(e) => setAccount(e.target.value)}
+                  className="h-full cursor-pointer bg-transparent py-[7px] pl-1 pr-2 font-display text-[11px] font-semibold uppercase tracking-[0.1em] text-neon-cyan outline-none"
+                >
+                  <option value="">Todas</option>
+                  {accounts.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Seg label="Status" options={STATUS} value={status} onChange={setStatus} />
+            <Seg label="Ordenar" options={SORTS} value={sort} onChange={setSort} />
+            <label className="switch sm:ml-auto">
+              <input type="checkbox" checked={withoutAch} onChange={(e) => setWithoutAch(e.target.checked)} />
+              Mostrar jogos sem conquistas
+            </label>
+          </div>
         </div>
       </div>
 

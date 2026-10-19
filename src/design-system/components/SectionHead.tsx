@@ -10,16 +10,19 @@ export function SectionHead({
   subtitle,
   actions,
 }: {
-  idx: string;
+  /** Número da seção principal (01–06); sem ele (ex.: Configurações), não aparece. */
+  idx?: string;
   title: ReactNode;
   subtitle?: ReactNode;
   actions?: ReactNode;
 }) {
   return (
     <div className="sec-head !mb-0">
-      <span className="idx" aria-hidden>
-        {idx}
-      </span>
+      {idx && (
+        <span className="idx" aria-hidden>
+          {idx}
+        </span>
+      )}
       <div className="min-w-0">
         <h2>{title}</h2>
         {subtitle && <p>{subtitle}</p>}

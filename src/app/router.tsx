@@ -6,14 +6,12 @@ import { useSession } from "@/auth/session";
 import { AppShell } from "@/layout/AppShell";
 import { dashboardRoutes } from "@/features/dashboard/routes";
 import { gameRoutes } from "@/features/game/routes";
-import { integrationsRoutes } from "@/features/integrations/routes";
-import { membersRoutes } from "@/features/members/routes";
 import { socialRoutes } from "@/features/social/routes";
 import { recapRoutes } from "@/features/recap/routes";
+import { settingsRoutes } from "@/features/settings/routes";
 import { useMe } from "@/features/members/queries";
 import { libraryRoutes } from "@/features/library/routes";
 import { nextPlatinumRoutes } from "@/features/next-platinum/routes";
-import { syncLogRoutes } from "@/features/sync-log/routes";
 import { timelineRoutes } from "@/features/timeline/routes";
 import {
   NotFoundScreen,
@@ -27,7 +25,10 @@ import {
 const InviteScreen = lazy(() => import("@/features/members/InviteScreen"));
 
 /** `/convite/:code` — dentro do AuthGate (precisa de login) e fora do MemberGate (ainda sem acesso). */
-export const inviteRoute: RouteObject = { path: "convite/:code", element: <InviteScreen /> };
+export const inviteRoute: RouteObject = {
+  path: "convite/:code",
+  element: <InviteScreen />,
+};
 
 /** Guard 1: sessão do Keycloak. Só então monta a API (o `/convite/:code` fica logo abaixo). */
 export function AuthGate() {
@@ -57,10 +58,16 @@ export function MemberGate() {
     if (me.data.status !== "active") return <NoAccessScreen />;
     return <Outlet />;
   }
-  if (me.isPending) return <SessionLoadingScreen message="Carregando o seu perfil" />;
-  if (isApiError(err) && err.code === API_ERROR.memberRemoved) return <RemovedScreen />;
+  if (me.isPending)
+    return <SessionLoadingScreen message="Carregando o seu perfil" />;
+  if (isApiError(err) && err.code === API_ERROR.memberRemoved)
+    return <RemovedScreen />;
   if (isApiError(err) && err.status === 403) return <NoAccessScreen />;
-  return <SessionErrorScreen error={err ?? new Error("Não foi possível carregar o seu perfil.")} />;
+  return (
+    <SessionErrorScreen
+      error={err ?? new Error("Não foi possível carregar o seu perfil.")}
+    />
+  );
 }
 
 export const appRoutes: RouteObject[] = [
@@ -83,11 +90,9 @@ export const appRoutes: RouteObject[] = [
                   ...gameRoutes,
                   ...nextPlatinumRoutes,
                   ...timelineRoutes,
-                  ...integrationsRoutes,
-                  ...syncLogRoutes,
-                  ...membersRoutes,
-              ...socialRoutes,
-              ...recapRoutes,
+                  ...socialRoutes,
+                  ...recapRoutes,
+                  ...settingsRoutes,
                   { path: "*", element: <NotFoundScreen /> },
                 ],
               },

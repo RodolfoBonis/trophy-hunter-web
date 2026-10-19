@@ -1,3 +1,4 @@
+import { sectionIdx } from "@/layout/nav";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import type { Stats } from "@/api/schemas";
@@ -312,7 +313,7 @@ export default function DashboardPage() {
   const stats = useStats();
   return (
     <section className="flex flex-col gap-8">
-      <SectionHead idx="01" title="Início" subtitle="Seu progresso em um relance." />
+      <SectionHead idx={sectionIdx("/")} title="Início" subtitle="Seu progresso em um relance." />
       {stats.isPending && (
         <div className="grid gap-6 md:grid-cols-2" aria-busy="true">
           <div className="skel chamfer-md h-72" />

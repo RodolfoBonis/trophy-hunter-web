@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import type { NotificationPreferences } from "@/api/schemas";
 import { Button } from "@/design-system/components/ui/button";
 import { setSoundOn, useSoundOn } from "@/features/unlocks/sound";
@@ -35,7 +36,7 @@ const UNSUPPORTED_TEXT = {
 /**
  * Notificações: ativar web push neste aparelho, testar, escolher os tipos e o som dos avisos no app.
  */
-export function NotificationsPanel() {
+export function NotificationsPanel({ bare = false }: { bare?: boolean }) {
   const support = pushSupport();
   const status = usePushStatus();
   const local = useLocalSubscription(
@@ -57,7 +58,7 @@ export function NotificationsPanel() {
       aria-labelledby="notif-title"
       className="panel flex flex-col gap-5"
     >
-      <div className="flex flex-col gap-1">
+      <div className={cn("flex flex-col gap-1", bare && "sr-only")}>
         <h3 id="notif-title" className="sub !mb-0">
           Notificações
         </h3>

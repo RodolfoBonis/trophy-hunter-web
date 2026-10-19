@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { Invite, Member } from "@/api/schemas";
 import { NotFoundScreen } from "@/app/screens";
 import { Panel } from "@/design-system/components/Panel";
-import { SectionHead } from "@/design-system/components/SectionHead";
+import { SettingsTitle } from "@/features/settings/SettingsLayout";
 import { Button } from "@/design-system/components/ui/button";
 import { Input } from "@/design-system/components/ui/input";
 import { Label } from "@/design-system/components/ui/label";
@@ -241,11 +241,7 @@ export default function MembersPage() {
   if (!isOwner) return <NotFoundScreen />;
   return (
     <section className="flex flex-col gap-6">
-      <SectionHead
-        idx="07"
-        title="Membros e convites"
-        subtitle="Cada pessoa conecta as próprias contas; os dados ficam separados. Guias de troféu são compartilhados."
-      />
+      <SettingsTitle title="Membros e convites" subtitle="Cada pessoa conecta as próprias contas; os dados ficam separados. Guias de troféu são compartilhados." />
       <div className="grid gap-6 lg:grid-cols-2">
         <InvitesPanel />
         <MembersPanel />

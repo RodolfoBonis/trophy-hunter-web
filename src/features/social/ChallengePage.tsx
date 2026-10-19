@@ -1,3 +1,4 @@
+import { sectionIdx } from "@/layout/nav";
 import { Link, useParams } from "react-router";
 import { isApiError } from "@/api/errors";
 import type { ChallengeDetail, ChallengeStanding } from "@/api/schemas";
@@ -66,7 +67,7 @@ export default function ChallengePage() {
   if (!sharing) {
     return (
       <section className="flex flex-col gap-6">
-        <SectionHead idx="06" title="Desafio" />
+        <SectionHead idx={sectionIdx("/friends")} title="Desafio" />
         <SharingOptIn />
       </section>
     );
@@ -74,7 +75,7 @@ export default function ChallengePage() {
   if (q.isError) {
     return (
       <section className="flex flex-col gap-4">
-        <SectionHead idx="06" title="Desafio" />
+        <SectionHead idx={sectionIdx("/friends")} title="Desafio" />
         <p className="text-sm text-text-2">{isApiError(q.error) && q.error.isNotFound ? "Desafio não encontrado." : "Não foi possível carregar o desafio."}</p>
         <Link to="/friends" className="label no-underline">
           ← Amigos
@@ -86,7 +87,7 @@ export default function ChallengePage() {
   return (
     <section className="flex flex-col gap-6">
       <SectionHead
-        idx="06"
+        idx={sectionIdx("/friends")}
         title={c?.title ?? "Desafio"}
         subtitle={c ? `${KIND_LABEL[c.kind]} · ${deadlineText(c)}` : undefined}
         actions={

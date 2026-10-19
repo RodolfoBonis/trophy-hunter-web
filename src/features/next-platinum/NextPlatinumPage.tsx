@@ -1,3 +1,4 @@
+import { sectionIdx } from "@/layout/nav";
 import { useState } from "react";
 import { Link } from "react-router";
 import type { NextItem, RemainingTrophy } from "@/api/schemas";
@@ -165,7 +166,7 @@ export default function NextPlatinumPage() {
   return (
     <section className="flex flex-col gap-6">
       <SectionHead
-        idx="03"
+        idx={sectionIdx("/next")}
         title="Próxima Platina"
         subtitle="Jogos começados mais perto de virar platina (PSN) ou 100% (Steam): % concluído, quantos faltam e a raridade do que falta."
       />

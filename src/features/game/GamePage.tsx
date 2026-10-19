@@ -250,12 +250,12 @@ function AccountSwitcher({
       <span className="label">
         Contas ({accounts.length}) · mais avançada primeiro
       </span>
-      <ul className="m-0 flex list-none gap-3 overflow-x-auto p-0 pb-1">
+      <ul className="m-0 grid list-none gap-3 p-0 pb-1 sm:flex sm:overflow-x-auto">
         {accounts.map((a, i) => {
           const current = a.game_id === currentGameId;
           const pct = Math.round(a.progress.completion_pct * 100);
           return (
-            <li key={a.integration_id} className="shrink-0">
+            <li key={a.integration_id} className="sm:shrink-0">
               <Link
                 to={`/games/${a.game_id}`}
                 replace

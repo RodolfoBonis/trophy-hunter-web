@@ -129,6 +129,10 @@ export function Sprite() {
         <symbol id="i-sync" viewBox="0 0 16 16"><path d="M13 6.5A5 5 0 003.5 5M3 9.5A5 5 0 0012.5 11" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M3 2v3.5h3.5M13 14v-3.5H9.5" fill="none" stroke="currentColor" strokeWidth="1.6"/></symbol>
         <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.8"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" strokeWidth="1.8"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></symbol>
         <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" strokeWidth="1.8"/><path d="M4 21c1.5-4 4.4-6 8-6s6.5 2 8 6" fill="none" stroke="currentColor" strokeWidth="1.8"/></symbol>
+        <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></symbol>
+        <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></symbol>
+        <symbol id="i-sound" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4zM15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></symbol>
+        <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></symbol>
         <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 2.5l10 18H2z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><path d="M12 9.5v5" stroke="currentColor" strokeWidth="2.2"/><circle cx="12" cy="17.6" r="1.3" fill="currentColor"/></symbol>
     </svg>
   );

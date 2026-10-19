@@ -46,3 +46,6 @@ class ResizeObserverStub {
 }
 globalThis.ResizeObserver ??= ResizeObserverStub as unknown as typeof ResizeObserver;
 Element.prototype.scrollIntoView ??= function scrollIntoView() {};
+
+// jsdom não implementa window.scrollTo (o AppShell rola para o topo a cada troca de rota).
+window.scrollTo = (() => {}) as typeof window.scrollTo;

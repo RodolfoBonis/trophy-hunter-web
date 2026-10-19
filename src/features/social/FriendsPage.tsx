@@ -1,3 +1,4 @@
+import { sectionIdx } from "@/layout/nav";
 import { useState } from "react";
 import { Link } from "react-router";
 import type { LeaderboardItem, LeaderboardPeriod } from "@/api/schemas";
@@ -122,7 +123,7 @@ export default function FriendsPage() {
   const sharing = useSharing();
   return (
     <section className="flex flex-col gap-6">
-      <SectionHead idx="06" title="Amigos" subtitle="Ranking, platinas e troféus raros de quem compartilha o progresso." actions={sharing ? <SharingToggle /> : undefined} />
+      <SectionHead idx={sectionIdx("/friends")} title="Amigos" subtitle="Ranking, platinas e troféus raros de quem compartilha o progresso." actions={sharing ? <SharingToggle /> : undefined} />
       {!sharing ? (
         <SharingOptIn />
       ) : (

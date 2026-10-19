@@ -1,5 +1,5 @@
 import type { SyncRun } from "@/api/schemas";
-import { SectionHead } from "@/design-system/components/SectionHead";
+import { SettingsTitle } from "@/features/settings/SettingsLayout";
 import { ProgressBar } from "@/design-system/components/ProgressBar";
 import { Badge, type BadgeProps } from "@/design-system/components/ui/badge";
 import { Skeleton } from "@/design-system/components/ui/skeleton";
@@ -51,7 +51,7 @@ export default function SyncLogPage() {
   const query = useSyncRuns();
   return (
     <section className="flex flex-col gap-6">
-      <SectionHead idx="06" title="Sync" subtitle="Execuções de sincronização: quando rodaram, o que mudou e o que falhou." />
+      <SettingsTitle title="Sincronização" subtitle="Execuções de sincronização: quando rodaram, o que mudou e o que falhou." />
       <SyncTable query={query} />
     </section>
   );

@@ -3,9 +3,7 @@ import { useState, type FormEvent } from "react";
 import { isApiError } from "@/api/errors";
 import type { Integration, IntegrationStatus, SyncRun } from "@/api/schemas";
 import { Banner } from "@/design-system/components/Banner";
-import { SectionHead } from "@/design-system/components/SectionHead";
-import { NotificationsPanel } from "@/features/notifications/NotificationsPanel";
-import { SharingToggle } from "@/features/social/SocialBits";
+import { SettingsTitle } from "@/features/settings/SettingsLayout";
 import { Panel } from "@/design-system/components/Panel";
 import { PlatformBadge } from "@/design-system/components/PlatformBadge";
 import { ProgressBar } from "@/design-system/components/ProgressBar";
@@ -416,11 +414,7 @@ export default function IntegrationsPage() {
     query.data?.some((i) => i.platform === "steam") ?? false;
   return (
     <section className="flex flex-col gap-6">
-      <SectionHead
-        idx="05"
-        title="Contas"
-        subtitle="Contas da Steam e da PSN conectadas ao Trophy Hunter."
-      />
+      <SettingsTitle title="Contas conectadas" subtitle="Contas da Steam e da PSN conectadas ao Trophy Hunter." />
       {query.isPending && <Skeleton className="h-40 w-full" />}
       {query.isError && (
         <p role="alert" className="text-sm text-danger">
@@ -442,15 +436,6 @@ export default function IntegrationsPage() {
           <ConnectPSNForm />
         </div>
       )}
-      <NotificationsPanel />
-      <Panel className="flex flex-col gap-3">
-        <h2 className="font-display text-h4 font-bold uppercase tracking-[0.02em] text-text-1">Amigos</h2>
-        <p className="m-0 text-sm text-text-2">
-          Ligado, os membros que também compartilham veem sua biblioteca, platinas e troféus raros, e você entra no
-          ranking. Contas, notas e conversas com a IA nunca são compartilhadas.
-        </p>
-        <SharingToggle />
-      </Panel>
     </section>
   );
 }

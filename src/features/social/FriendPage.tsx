@@ -1,3 +1,4 @@
+import { sectionIdx } from "@/layout/nav";
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { isApiError } from "@/api/errors";
@@ -73,7 +74,7 @@ export default function FriendPage() {
   if (!sharing) {
     return (
       <section className="flex flex-col gap-6">
-        <SectionHead idx="06" title="Amigo" />
+        <SectionHead idx={sectionIdx("/friends")} title="Amigo" />
         <SharingOptIn />
       </section>
     );
@@ -81,7 +82,7 @@ export default function FriendPage() {
   if (friend.isError) {
     return (
       <section className="flex flex-col gap-4">
-        <SectionHead idx="06" title="Amigo" />
+        <SectionHead idx={sectionIdx("/friends")} title="Amigo" />
         <p className="text-sm text-text-2">
           {isApiError(friend.error) && friend.error.isNotFound
             ? "Esse perfil não está disponível — a pessoa pode ter parado de compartilhar."
@@ -96,7 +97,7 @@ export default function FriendPage() {
   return (
     <section className="flex flex-col gap-8">
       <SectionHead
-        idx="06"
+        idx={sectionIdx("/friends")}
         title={friend.data?.user.name ?? "Amigo"}
         subtitle="Progresso compartilhado — só leitura."
         actions={

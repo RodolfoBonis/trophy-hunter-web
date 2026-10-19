@@ -1,3 +1,4 @@
+import { sectionIdx } from "@/layout/nav";
 import { Link } from "react-router";
 import type { TimelineItem } from "@/api/schemas";
 import { LoadMore } from "@/components/LoadMore";
@@ -103,7 +104,7 @@ export default function TimelinePage() {
 
   return (
     <section className="flex flex-col gap-6">
-      <SectionHead idx="04" title="Linha do tempo" subtitle="Suas conquistas por data — cada platina ou 100% vira um momento." />
+      <SectionHead idx={sectionIdx("/timeline")} title="Linha do tempo" subtitle="Suas conquistas por data — cada platina ou 100% vira um momento." />
       {query.isPending && <div className="skel chamfer-md h-64" aria-busy="true" />}
       {query.isError && (
         <p role="alert" className="text-sm text-danger">
