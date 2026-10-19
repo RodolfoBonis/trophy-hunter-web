@@ -46,6 +46,10 @@ export default defineConfig(() => {
     build: {
       rolldownOptions: {
         output: {
+          // Ordem de execução garantida mesmo com os chunks separados: sem isto, um ciclo vendor ↔ app
+          // (o runtime do bundler cai num chunk do app) fez o React inicializar antes do helper existir
+          // ("e is not a function" no boot da 0.25.0, só no build de produção).
+          strictExecutionOrder: true,
           // Bibliotecas em chunks próprios e estáveis: um deploy que só mexe no app não invalida
           // react/router/zod/oidc no cache do navegador (nem no precache do PWA).
           codeSplitting: {

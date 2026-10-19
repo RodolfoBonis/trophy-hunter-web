@@ -119,3 +119,21 @@ jobs:
           curl -fsS http://localhost:8080/config.js | grep -q 'apiBase: "https://api.rodolfodebonis.com.br/trophy"'
           curl -fsSI http://localhost:8080/ | grep -i 'content-security-policy' | grep -q 'connect-src .*https://api.rodolfodebonis.com.br '
           docker rm -f web
+      # O e2e roda em modo mock; aqui o build de PRODUÇÃO precisa bootar de verdade num navegador
+      # (incidente 0.25.0: ordem dos chunks quebrou o boot só em produção).
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Instala dependências e o Chromium
+        run: pnpm install --frozen-lockfile && pnpm exec playwright install --with-deps chromium
+      - name: Boot do build de produção no navegador (sem erro de JS, chega no login e na API pública)
+        run: |
+          docker run -d --name boot -p 8081:8080 --read-only --tmpfs /tmp \
+            -e OIDC_AUTHORITY=https://auth.example.test/realms/smoke \
+            -e API_BASE_URL=https://api.example.test/trophy \
+            trophy-hunter-web:ci
+          for i in $(seq 1 20); do curl -fsS http://localhost:8081/healthz && break; sleep 1; done
+          node tests/smoke/boot-prod.mjs http://localhost:8081 https://auth.example.test https://api.example.test/trophy
+          docker rm -f boot
