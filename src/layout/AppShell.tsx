@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useIsOwner } from "@/features/members/queries";
 import { MenuItemContent, MenuPanel } from "@/design-system/components/MenuPanel";
 import { NotificationBell } from "@/features/notifications/NotificationBell";
-import { NAV_ITEMS, SETTINGS_ITEMS, isNavActive } from "./nav";
+import { ACCOUNT_ITEMS, NAV_ITEMS, SETTINGS_ITEMS, isNavActive } from "./nav";
 import { OfflineBanner } from "./OfflineBanner";
 
 const CommandPalette = lazy(() =>
@@ -94,6 +94,14 @@ function UserMenu() {
             ))}
           </div>
         )}
+
+        <div className="menu-group">
+          {ACCOUNT_ITEMS.map((i) => (
+            <Link key={i.to} to={i.to} className="menu-item" onClick={close} aria-current={pathname === i.to ? "page" : undefined}>
+              <MenuItemContent icon={i.icon} label={i.label} />
+            </Link>
+          ))}
+        </div>
 
         <div className="menu-group">
           <span className="label">Configurações</span>

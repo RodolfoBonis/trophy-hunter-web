@@ -8,6 +8,7 @@ import { dashboardRoutes } from "@/features/dashboard/routes";
 import { gameRoutes } from "@/features/game/routes";
 import { socialRoutes } from "@/features/social/routes";
 import { recapRoutes } from "@/features/recap/routes";
+import { badgesRoutes } from "@/features/badges/routes";
 import { settingsRoutes } from "@/features/settings/routes";
 import { useMe } from "@/features/members/queries";
 import { libraryRoutes } from "@/features/library/routes";
@@ -92,6 +93,7 @@ export const appRoutes: RouteObject[] = [
                   ...timelineRoutes,
                   ...socialRoutes,
                   ...recapRoutes,
+                  ...badgesRoutes,
                   ...settingsRoutes,
                   { path: "*", element: <NotFoundScreen /> },
                 ],

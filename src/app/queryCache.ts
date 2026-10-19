@@ -14,7 +14,7 @@ export const PERSIST_MAX_AGE = 24 * 60 * 60 * 1000;
 
 /** Raízes de queryKey que valem a pena guardar (telas). Busca, chat, avisos e admin ficam de fora. */
 const PERSISTED_ROOTS = new Set([
-  "me", "games", "game", "stats", "next", "timeline", "alerts", "recap", "social", "integrations", "sync-runs", "ai-guide",
+  "me", "games", "game", "stats", "next", "timeline", "alerts", "recap", "social", "integrations", "sync-runs", "ai-guide", "badges",
 ]);
 
 export function shouldPersistQuery(query: Query): boolean {

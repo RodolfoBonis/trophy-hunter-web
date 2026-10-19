@@ -50,3 +50,6 @@ export function isNavActive(to: string, pathname: string): boolean {
   if (to === "/library" && pathname.startsWith("/games/")) return true;
   return pathname === to || pathname.startsWith(`${to}/`);
 }
+
+/** Itens da conta (menu do usuário, fora de Configurações). */
+export const ACCOUNT_ITEMS = [{ to: "/badges", label: "Medalhas", icon: "i-medal", description: "Medalhas do app e a temporada do mês." }] as const;

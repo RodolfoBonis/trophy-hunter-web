@@ -9,7 +9,7 @@ import { RarityBadge } from "@/design-system/components/RarityBadge";
 import { TrophyIcon } from "@/design-system/components/TrophyIcon";
 import { useIntegrations, useSyncNow } from "@/features/integrations/queries";
 import { setSoundOn, useSoundOn } from "@/features/unlocks/sound";
-import { NAV_ITEMS, SETTINGS_ITEMS } from "@/layout/nav";
+import { ACCOUNT_ITEMS, NAV_ITEMS, SETTINGS_ITEMS } from "@/layout/nav";
 import { useIsOwner } from "@/features/members/queries";
 
 function Glyph({ id }: { id: string }) {
@@ -62,6 +62,7 @@ export function CommandPalette({
     !term || label.toLowerCase().includes(term.toLowerCase());
   const screens = [
     ...NAV_ITEMS,
+    ...ACCOUNT_ITEMS,
     ...SETTINGS_ITEMS.filter((st) => !st.ownerOnly || isOwner).map((st) => ({ ...st, label: `Configurações · ${st.label}` })),
   ].filter((n) => match(n.label));
   const accounts = integrations.data ?? [];

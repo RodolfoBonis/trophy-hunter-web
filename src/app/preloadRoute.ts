@@ -11,6 +11,7 @@ const ROUTES: [RegExp, () => Promise<unknown>[]][] = [
   [/^\/next\/?$/, () => [import("@/features/next-platinum/NextPlatinumPage")]],
   [/^\/timeline\/?$/, () => [import("@/features/timeline/TimelinePage")]],
   [/^\/recap\/?$/, () => [import("@/features/recap/RecapPage")]],
+  [/^\/badges\/?$/, () => [import("@/features/badges/BadgesPage")]],
   [/^\/friends\/?$/, () => [import("@/features/social/FriendsPage")]],
   [/^\/friends\/challenges\/new\/?$/, () => [import("@/features/social/NewChallengePage")]],
   [/^\/friends\/challenges\/[^/]+\/?$/, () => [import("@/features/social/ChallengePage")]],

@@ -815,3 +815,17 @@ h3.sub{font-family:var(--font-display);font-weight:600;font-size:var(--text-h4);
 .hunt-trophy .ticon .ticon-type{position:absolute;left:2px;top:2px;display:grid;place-items:center;padding:1px;background:rgb(7 8 13 / .8);border-radius:2px}
 .hunt-trophy .ticon .ticon-type svg{width:11px;height:11px;opacity:1;filter:none}
 .hunt-trophy .ticon .lock{z-index:1}
+
+/* ============================== medalhas do app ============================== */
+.medal-grid{display:grid;gap:12px;margin:0;padding:0;list-style:none;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.medal{display:flex;align-items:center;gap:12px;padding:10px 12px;background:rgb(255 255 255 / .02);border:1px solid var(--color-border-subtle)}
+.medal.sm{padding:6px 8px;gap:8px}
+.medal-hex{--tier:var(--color-text-3);flex:none;display:grid;place-items:center;width:52px;height:58px;color:#07080D;background:linear-gradient(160deg,color-mix(in srgb,var(--tier) 100%,white 25%),var(--tier));clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+.medal.sm .medal-hex{width:36px;height:40px}
+.medal.tier-bronze .medal-hex{--tier:#c8834b}
+.medal.tier-silver .medal-hex{--tier:#b9c4d4}
+.medal.tier-gold .medal-hex{--tier:var(--color-trophy-gold)}
+.medal.tier-platinum .medal-hex{--tier:#a9c8ff}
+.medal.locked .medal-hex{background:rgb(255 255 255 / .07);color:var(--color-text-3)}
+.medal-bar{display:block;height:4px;background:rgb(255 255 255 / .08);overflow:hidden}
+.medal-bar>span{display:block;height:100%;background:var(--color-neon-cyan)}

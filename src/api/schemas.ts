@@ -84,6 +84,39 @@ export const huntSchema = z.object({
 });
 export type Hunt = z.infer<typeof huntSchema>;
 
+/** Medalhas do app (catálogo na API, internal/badges). */
+export const badgeTierSchema = z.enum(["bronze", "silver", "gold", "platinum"]);
+export type BadgeTier = z.infer<typeof badgeTierSchema>;
+export const badgeSchema = z.object({
+  key: z.string(),
+  name: z.string(),
+  description: z.string(),
+  tier: badgeTierSchema,
+  /** YYYY-MM nas medalhas de temporada. */
+  season: z.string().optional(),
+  earned_at: z.string().optional(),
+  value: z.number().int(),
+  goal: z.number().int(),
+  earned: z.boolean(),
+});
+export type Badge = z.infer<typeof badgeSchema>;
+export const myBadgesSchema = z.object({
+  earned: z.array(badgeSchema),
+  next: z.array(badgeSchema),
+  catalog: z.array(badgeSchema),
+  season: z.object({
+    key: z.string(),
+    label: z.string(),
+    platinums: z.number().int(),
+    rare: z.number().int(),
+    platinum_goal: z.number().int(),
+    rare_goal: z.number().int(),
+    done: z.boolean(),
+  }),
+});
+export type MyBadges = z.infer<typeof myBadgesSchema>;
+export const friendBadgesSchema = z.object({ earned: z.array(badgeSchema) });
+
 /**
  * Export dos dados (LGPD). O conteúdo das seções vai para o arquivo como veio; aqui só se confere o
  * formato e o perfil (passthrough mantém o resto).
@@ -671,6 +704,7 @@ export const notificationPreferencesSchema = z.object({
   challenges: z.boolean().default(true),
   /** Resumo semanal da IA — opt-in (liga a geração e o aviso). */
   weekly_recap: z.boolean().default(false),
+  badges: z.boolean().default(true),
 });
 export type NotificationPreferences = z.infer<typeof notificationPreferencesSchema>;
 
@@ -728,6 +762,8 @@ export const leaderboardItemSchema = z.object({
   psn_points: z.number(),
   completed: z.number(),
   last_unlock_at: z.string().nullable(),
+  /** Medalhas do app ganhas. */
+  badges: z.number().default(0),
 });
 export type LeaderboardItem = z.infer<typeof leaderboardItemSchema>;
 export const leaderboardSchema = z.object({ period: leaderboardPeriodSchema, items: z.array(leaderboardItemSchema) });

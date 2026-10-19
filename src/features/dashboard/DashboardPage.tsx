@@ -13,6 +13,7 @@ import { useChallenges, useFeed, useSharing } from "@/features/social/queries";
 import { FeedRow } from "@/features/social/SocialBits";
 import { WeeklyRecapPanel } from "@/features/recap/WeeklyRecapPanel";
 import { useAlerts, useNext, useStats } from "./queries";
+import { NextBadgeCard } from "@/features/badges/BadgeCards";
 
 const nf = new Intl.NumberFormat("pt-BR");
 
@@ -336,7 +337,10 @@ export default function DashboardPage() {
               <h3 className="sub !mb-0">Evolução</h3>
               <EvolutionChart data={stats.data.evolution} />
             </div>
-            <NextTeaser />
+            <div className="flex flex-col gap-6">
+              <NextTeaser />
+              <NextBadgeCard />
+            </div>
           </div>
           <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
             <Rarest stats={stats.data} />

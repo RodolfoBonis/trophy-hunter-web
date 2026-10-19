@@ -518,6 +518,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/badges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Medalhas do app — ganhas, as próximas, catálogo com andamento e a temporada do mês. */
+        get: operations["getMyBadges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/export": {
         parameters: {
             query?: never;
@@ -780,6 +797,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/social/friends/{id}/badges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Medalhas ganhas de um amigo (só entre quem compartilha; outro caso 403/404). */
+        get: operations["getFriendBadges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/social/friends/{id}/games": {
         parameters: {
             query?: never;
@@ -986,6 +1020,20 @@ export interface components {
             priority?: number;
             server_shutdown_risk?: boolean;
             tags?: components["schemas"]["TrophyTag"][];
+        };
+        Badge: {
+            description: string;
+            earned: boolean;
+            /** Format: date-time */
+            earned_at?: string;
+            goal: number;
+            key: string;
+            name: string;
+            /** @description YYYY-MM nas medalhas de temporada */
+            season?: string;
+            /** @enum {string} */
+            tier: "bronze" | "silver" | "gold" | "platinum";
+            value: number;
         };
         ChallengeDetail: components["schemas"]["ChallengeSummary"] & {
             /** Format: date-time */
@@ -1305,6 +1353,8 @@ export interface components {
             period: "month" | "year" | "all";
         };
         LeaderboardItem: {
+            /** @description Medalhas do app ganhas */
+            badges: number;
             /** @description Jogos fechados (platina/100%) no período. */
             completed: number;
             /** @description Troféus/conquistas obtidos no período. */
@@ -1340,6 +1390,20 @@ export interface components {
             role: "owner" | "member";
             /** @enum {string} */
             status: "pending" | "active" | "removed";
+        };
+        MyBadges: {
+            catalog: components["schemas"]["Badge"][];
+            earned: components["schemas"]["Badge"][];
+            next: components["schemas"]["Badge"][];
+            season: {
+                done: boolean;
+                key: string;
+                label: string;
+                platinum_goal: number;
+                platinums: number;
+                rare: number;
+                rare_goal: number;
+            };
         };
         NextPlatinum: {
             items: {
@@ -2815,6 +2879,26 @@ export interface operations {
             403: components["responses"]["Problem"];
         };
     };
+    getMyBadges: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBadges"];
+                };
+            };
+        };
+    };
     exportMe: {
         parameters: {
             query?: never;
@@ -3264,6 +3348,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FriendProfile"];
+                };
+            };
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    getFriendBadges: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        earned: components["schemas"]["Badge"][];
+                    };
                 };
             };
             403: components["responses"]["Problem"];

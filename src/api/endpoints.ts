@@ -26,6 +26,8 @@ import {
   syncRunListSchema,
   userSchema,
   huntSchema,
+  myBadgesSchema,
+  friendBadgesSchema,
   accountExportSchema,
   inviteSchema,
   inviteListSchema,
@@ -167,6 +169,9 @@ export const api = {
       body: scope ? { scope } : undefined,
       schema: enqueueResponseSchema,
     }),
+  myBadges: (c: ApiClient) => c.request("/me/badges", { schema: myBadgesSchema }),
+  friendBadges: (c: ApiClient, id: string) =>
+    c.request(`/social/friends/${encodeURIComponent(id)}/badges`, { schema: friendBadgesSchema }),
   hunt: (c: ApiClient, gameId: string) => c.request(`/games/${encodeURIComponent(gameId)}/hunt`, { schema: huntSchema }),
   setHuntStage: (c: ApiClient, gameId: string, idx: number, done: boolean) =>
     c.request(`/games/${encodeURIComponent(gameId)}/hunt/stages/${idx}`, { method: "PUT", body: { done } }),
@@ -223,6 +228,8 @@ export const queryKeys = {
   trophyGuide: (trophyId: string) => ["ai-guide", "trophy", trophyId] as const,
   roadmap: (gameId: string) => ["ai-guide", "roadmap", gameId] as const,
   hunt: (gameId: string) => ["game", gameId, "hunt"] as const,
+  myBadges: ["badges", "me"] as const,
+  friendBadges: (id: string) => ["social", "friend", id, "badges"] as const,
   chat: (gameId: string) => ["ai-chat", gameId] as const,
   unlocks: ["unlocks", "unseen"] as const,
   pushStatus: ["push", "status"] as const,

@@ -11,6 +11,7 @@ import { SectionHead } from "@/design-system/components/SectionHead";
 import { Hero, Moments, Rarest } from "@/features/dashboard/DashboardPage";
 import { useFriend, useFriendGames, useSharing } from "./queries";
 import { SharingOptIn } from "./SocialBits";
+import { FriendBadges } from "@/features/badges/BadgeCards";
 
 const STATUSES: { value?: GameStatus; label: string }[] = [
   { label: "Todos" },
@@ -115,6 +116,7 @@ export default function FriendPage() {
       {friend.data && (
         <>
           <Hero stats={friend.data.stats} kicker={`Resumo de ${friend.data.user.name}`} />
+          <FriendBadges id={id} />
           <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
             <Rarest stats={friend.data.stats} linkGames={false} />
             <Moments stats={friend.data.stats} linkGames={false} />

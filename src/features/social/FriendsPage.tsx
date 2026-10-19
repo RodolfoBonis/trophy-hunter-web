@@ -30,6 +30,7 @@ function Rank({ item, pos }: { item: LeaderboardItem; pos: number }) {
           {nf.format(item.earned)} troféus · {nf.format(item.rare)} {item.rare === 1 ? "raro" : "raros"} · {nf.format(item.completed)}{" "}
           {item.completed === 1 ? "jogo fechado" : "jogos fechados"}
           {item.psn_points > 0 && ` · ${nf.format(item.psn_points)} pts PSN`}
+          {item.badges > 0 && ` · ${nf.format(item.badges)} ${item.badges === 1 ? "medalha" : "medalhas"}`}
         </div>
       </div>
       <div className="flex items-center gap-2" title="Platinas">

@@ -3,6 +3,7 @@ import type { ChallengeDetail, ChallengeStanding, CompareTrophy, FeedItem, GameF
 import { db } from "../data/db";
 import { API, ago, apiError, DAY, HOUR } from "../http";
 import { hasScenario } from "../scenario";
+import { mockMyBadges } from "./badges";
 import type { MockGameRow } from "../data/fixtures";
 
 /**
@@ -84,9 +85,9 @@ const denied = () =>
 function leaderboard(period: string): LeaderboardItem[] {
   const f = period === "month" ? 0.15 : period === "year" ? 0.6 : 1;
   const rows: LeaderboardItem[] = [
-    { user: ANA, platinum: Math.round(14 * f), earned: Math.round(1890 * f), rare: Math.round(61 * f), psn_points: Math.round(31200 * f), completed: Math.round(19 * f), last_unlock_at: ago(3 * HOUR) },
-    { user: ME, platinum: Math.round(9 * f), earned: Math.round(1530 * f), rare: Math.round(44 * f), psn_points: Math.round(20100 * f), completed: Math.round(12 * f), last_unlock_at: ago(DAY) },
-    { user: BRUNO, platinum: Math.round(4 * f), earned: Math.round(980 * f), rare: Math.round(20 * f), psn_points: Math.round(8900 * f), completed: Math.round(6 * f), last_unlock_at: ago(5 * DAY) },
+    { user: ANA, platinum: Math.round(14 * f), earned: Math.round(1890 * f), rare: Math.round(61 * f), psn_points: Math.round(31200 * f), completed: Math.round(19 * f), last_unlock_at: ago(3 * HOUR), badges: 11 },
+    { user: ME, platinum: Math.round(9 * f), earned: Math.round(1530 * f), rare: Math.round(44 * f), psn_points: Math.round(20100 * f), completed: Math.round(12 * f), last_unlock_at: ago(DAY), badges: 7 },
+    { user: BRUNO, platinum: Math.round(4 * f), earned: Math.round(980 * f), rare: Math.round(20 * f), psn_points: Math.round(8900 * f), completed: Math.round(6 * f), last_unlock_at: ago(5 * DAY), badges: 3 },
   ];
   return rows.sort((a, b) => b.platinum - a.platinum || b.completed - a.completed || b.earned - a.earned);
 }
@@ -131,6 +132,12 @@ export const makeSocialHandlers = ({ mockStats, toListItem }: SocialDeps) => [
     const f = FRIENDS.find((x) => x.id === params.id);
     if (!f) return apiError(404, "not_found", "Not found");
     return HttpResponse.json({ user: f, stats: mockStats() });
+  }),
+  http.get(`${API}/social/friends/:id/badges`, ({ params }) => {
+    const d = denied();
+    if (d) return d;
+    if (!FRIENDS.some((x) => x.id === params.id)) return apiError(404, "not_found", "Not found");
+    return HttpResponse.json({ earned: mockMyBadges().earned });
   }),
   http.get(`${API}/social/friends/:id/games`, ({ params }) => {
     const d = denied();
