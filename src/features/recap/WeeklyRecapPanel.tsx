@@ -59,7 +59,9 @@ export function WeeklyRecapPanel({ compact = false }: { compact?: boolean }) {
           <Button size="sm" onClick={() => gen.mutate()} disabled={gen.isPending}>
             {gen.isPending ? "Pedindo…" : "Gerar o resumo desta semana"}
           </Button>
-          <span className="caption">Para receber todo domingo, ligue "Resumo semanal da IA" em Contas → Notificações.</span>
+          <span className="caption">Para receber todo domingo, ligue "Resumo semanal da IA" em{" "}
+            <Link to="/settings/notifications">Configurações → Notificações</Link>.
+          </span>
         </div>
       )}
       {gen.isError && (

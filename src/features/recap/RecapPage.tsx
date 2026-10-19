@@ -77,7 +77,7 @@ function Story({ r }: { r: Recap }) {
           Seu dia favorito para caçar foi <b className="text-text-1">{r.favorite_weekday}</b>.
         </p>
       )}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         {top && (
           <Link to={`/games/${top.game_id}`} className="panel hero-stat game-hero !p-0 no-underline">
             <div className="game-hero-art" aria-hidden>
@@ -85,7 +85,7 @@ function Story({ r }: { r: Recap }) {
             </div>
             <div className="relative z-[1] flex flex-col gap-1 p-6">
               <span className="kicker label">Jogo do período</span>
-              <span className="font-display text-h3 font-bold uppercase text-text-1">{top.title}</span>
+              <span className="font-display text-h3 font-bold uppercase text-text-1 [overflow-wrap:anywhere]">{top.title}</span>
               <span className="caption">
                 {top.unlocked} desbloqueios · agora {top.earned}/{top.total}
               </span>
@@ -97,9 +97,9 @@ function Story({ r }: { r: Recap }) {
           {r.completions.length === 0 && <p className="caption">Nenhum jogo fechado (ainda).</p>}
           <ul className="m-0 flex list-none flex-col gap-2 p-0">
             {r.completions.map((c) => (
-              <li key={c.game_id} className="flex items-center gap-2">
+              <li key={c.game_id} className="flex min-w-0 items-center gap-2">
                 <TrophyIcon type={c.platform === "psn" ? "platinum" : "achievement"} size={22} />
-                <Link to={`/games/${c.game_id}`} className="text-sm text-text-1 no-underline hover:text-neon-cyan">
+                <Link to={`/games/${c.game_id}`} className="min-w-0 truncate text-sm text-text-1 no-underline hover:text-neon-cyan">
                   {c.title}
                 </Link>
               </li>
