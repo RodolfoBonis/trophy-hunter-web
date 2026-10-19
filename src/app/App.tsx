@@ -58,7 +58,31 @@ function QueryProvider({ client, persist, children }: { client: QueryClient; per
   );
 }
 
+const PublicProfilePage = lazy(() => import("@/features/public/PublicProfilePage"));
+const PUBLIC_PROFILE = /^\/perfil\/([a-z0-9-]{3,30})\/?$/i;
+
 export function App({ config }: { config: AppConfig }) {
+  // Perfil público: fora do fluxo de sessão (quem abre não tem conta — nada de login/Keycloak).
+  const publicSlug = PUBLIC_PROFILE.exec(window.location.pathname)?.[1]?.toLowerCase();
+  if (publicSlug) return <PublicApp apiBase={config.apiBase} slug={publicSlug} />;
+  return <PrivateApp config={config} />;
+}
+
+function PublicApp({ apiBase, slug }: { apiBase: string; slug: string }) {
+  const [queryClient] = useState(createQueryClient);
+  return (
+    <ErrorBoundary fallback={(reset) => <CrashScreen onRetry={reset} />}>
+      <Sprite />
+      <QueryClientProvider client={queryClient}>
+        <Suspense fallback={null}>
+          <PublicProfilePage apiBase={apiBase} slug={slug} />
+        </Suspense>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+}
+
+function PrivateApp({ config }: { config: AppConfig }) {
   const [queryClient] = useState(createQueryClient);
   const [router] = useState(createAppRouter);
   return (

@@ -637,6 +637,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/public-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Liga/desliga o perfil público (opt-in) e escolhe o link (/u/<slug>) e o apelido. */
+        put: operations["putPublicProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/sharing": {
         parameters: {
             query?: never;
@@ -682,6 +699,57 @@ export interface paths {
         get: operations["getNotificationPreferences"];
         /** Grava as preferências (objeto completo). */
         put: operations["putNotificationPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/profiles/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Vitrine pública (sem login; limite por IP). 404 se não existe ou está desligada. */
+        get: operations["getPublicProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/profiles/{slug}/card.png": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cartão 1200×630 (og:image), com ETag. */
+        get: operations["getPublicCard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/profiles/{slug}/share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** HTML com og:* para pré-visualização (WhatsApp/Discord); redireciona para a página do app. */
+        get: operations["getPublicSharePage"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -1622,6 +1690,37 @@ export interface components {
             status: components["schemas"]["GameStatus"];
             total: number;
         };
+        PublicProfile: {
+            badges: {
+                key: string;
+                name: string;
+                season?: string;
+                tier: string;
+            }[];
+            completed: number;
+            completions: {
+                /** Format: date-time */
+                completed_at: string | null;
+                cover: string;
+                external_id: string;
+                hero: string;
+                platform: string;
+                title: string;
+            }[];
+            name: string;
+            platinums: number;
+            rare: number;
+            rarest: {
+                game_title: string;
+                icon: string;
+                name: string;
+                platform: string;
+                rarity_pct: number;
+                type: string;
+            }[];
+            slug: string;
+            trophies: number;
+        };
         PushStatus: {
             /** @description false = chaves VAPID não configuradas no servidor. */
             enabled: boolean;
@@ -1973,6 +2072,12 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
+            /** @description Perfil público ligado (opt-in). */
+            public_enabled?: boolean;
+            /** @description Apelido mostrado no perfil público. */
+            public_name?: string;
+            /** @description Link /u/<slug> (vazio se nunca escolhido). */
+            public_slug?: string;
             /** @enum {string} */
             role: "owner" | "member";
             /** @description Compartilha o progresso com os outros membros (e vê o deles). Opt-in, começa false. */
@@ -3215,6 +3320,36 @@ export interface operations {
             429: components["responses"]["Problem"];
         };
     };
+    putPublicProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    enabled: boolean;
+                    name?: string;
+                    slug?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Usuário atualizado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            409: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+        };
+    };
     putSharing: {
         parameters: {
             query?: never;
@@ -3309,6 +3444,94 @@ export interface operations {
             };
             400: components["responses"]["Problem"];
             401: components["responses"]["Problem"];
+        };
+    };
+    getPublicProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicProfile"];
+                };
+            };
+            404: components["responses"]["Problem"];
+        };
+    };
+    getPublicCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description PNG */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": unknown;
+                };
+            };
+            /** @description Não mudou */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Não encontrado */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicSharePage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description HTML */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description Não encontrado */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     pushStatus: {

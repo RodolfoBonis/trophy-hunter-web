@@ -11,7 +11,7 @@ import type { MockGameRow } from "../data/fixtures";
 import { API, apiError, scenarioGate } from "../http";
 import { hasScenario } from "../scenario";
 import { aiHandlers } from "./ai";
-import { accountHandlers, memberHandlers } from "./members";
+import { accountHandlers, memberHandlers, publicProfileHandlers } from "./members";
 import { huntHandlers, markGameSyncing } from "./hunt";
 import { badgeHandlers } from "./badges";
 import { backlogHandlers } from "./backlog";
@@ -381,6 +381,7 @@ export const handlers: HttpHandler[] = [
   ...badgeHandlers,
   ...backlogHandlers,
   ...adminHandlers,
+  ...publicProfileHandlers,
   ...accountHandlers,
   ...memberHandlers,
   ...recapHandlers,

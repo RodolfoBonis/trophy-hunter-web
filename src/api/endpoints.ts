@@ -75,6 +75,8 @@ export const api = {
   /** Seus dados (LGPD): o JSON completo para baixar (sem credenciais). */
   exportMe: (c: ApiClient) => c.request("/me/export", { schema: accountExportSchema }),
   deleteMe: (c: ApiClient) => c.request("/me", { method: "DELETE", body: { confirm: "EXCLUIR" } }),
+  setPublicProfile: (c: ApiClient, body: { enabled: boolean; slug: string; name: string }) =>
+    c.request("/me/public-profile", { method: "PUT", body, schema: userSchema }),
   setSharing: (c: ApiClient, share: boolean) =>
     c.request("/me/sharing", { method: "PUT", body: { share_progress: share }, schema: userSchema }),
   leaderboard: (c: ApiClient, period: LeaderboardPeriod) => c.request("/social/leaderboard", { query: { period }, schema: leaderboardSchema }),

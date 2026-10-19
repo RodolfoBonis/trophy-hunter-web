@@ -57,6 +57,10 @@ export const userSchema = z.object({
   status: userStatusSchema,
   /** Compartilha o progresso com os amigos (e vê o deles). Opt-in. */
   share_progress: z.boolean(),
+  /** Perfil público (opt-in): link /u/<public_slug>. */
+  public_enabled: z.boolean().default(false),
+  public_slug: z.string().default(""),
+  public_name: z.string().default(""),
 });
 export type User = z.infer<typeof userSchema>;
 
@@ -184,6 +188,24 @@ export const adminHealthSchema = z.object({
   }),
 });
 export type AdminHealth = z.infer<typeof adminHealthSchema>;
+
+/** Perfil público (sem login): vitrine enxuta. */
+export const publicProfileSchema = z.object({
+  slug: z.string(),
+  name: z.string(),
+  platinums: z.number().int(),
+  trophies: z.number().int(),
+  rare: z.number().int(),
+  completed: z.number().int(),
+  badges: z.array(z.object({ key: z.string(), name: z.string(), tier: badgeTierSchema, season: z.string().optional() })),
+  rarest: z.array(
+    z.object({ name: z.string(), type: trophyTypeSchema, icon: z.string(), rarity_pct: z.number(), game_title: z.string(), platform: platformSchema }),
+  ),
+  completions: z.array(
+    z.object({ title: z.string(), platform: platformSchema, external_id: z.string(), cover: z.string(), hero: z.string(), completed_at: z.string().nullable() }),
+  ),
+});
+export type PublicProfile = z.infer<typeof publicProfileSchema>;
 
 /**
  * Export dos dados (LGPD). O conteúdo das seções vai para o arquivo como veio; aqui só se confere o

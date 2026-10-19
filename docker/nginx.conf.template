@@ -49,6 +49,25 @@ server {
         add_header Referrer-Policy "no-referrer" always;
     }
 
+    # Perfil público: exceção pontual à regra "a API não passa por aqui" — não é chamada de API, é a
+    # página de compartilhamento. Robôs (WhatsApp/Discord/Telegram) não rodam JS, então o HTML com og:*
+    # e o cartão PNG vêm prontos da API; gente é redirecionada para /perfil/<slug> (o app).
+    location ~ "^/u/([a-z0-9-]{3,30})/card\.png$" {
+        resolver ${SHARE_RESOLVER} valid=60s ipv6=off;
+        proxy_pass ${SHARE_API_BASE}/v1/public/profiles/$1/card.png;
+        proxy_ssl_server_name on;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_hide_header Set-Cookie;
+    }
+    location ~ "^/u/([a-z0-9-]{3,30})/?$" {
+        resolver ${SHARE_RESOLVER} valid=60s ipv6=off;
+        proxy_pass ${SHARE_API_BASE}/v1/public/profiles/$1/share;
+        proxy_ssl_server_name on;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_hide_header Set-Cookie;
+        add_header X-Content-Type-Options "nosniff" always;
+    }
+
     # Assets com hash no nome: cache longo e imutável.
     location /assets/ {
         try_files $uri =404;

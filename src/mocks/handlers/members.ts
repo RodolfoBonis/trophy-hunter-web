@@ -41,7 +41,12 @@ function seedMembers(): Member[] {
   ];
 }
 
+/** Perfil público do usuário mock (PUT /me/public-profile). */
+let publicState = { public_enabled: false, public_slug: "", public_name: "" };
+const RESERVED = ["admin", "api", "perfil", "u", "settings"];
+
 export function resetMembers(): void {
+  publicState = { public_enabled: false, public_slug: "", public_name: "" };
   accepted = false;
   invites = [];
   members = seedMembers();
@@ -49,7 +54,7 @@ export function resetMembers(): void {
 resetMembers();
 
 function me(): User {
-  const base = { subject: "mock-user", name: "Rodolfo de Bonis", email: "rodolfo@rb.lab", share_progress: isSharing() };
+  const base = { subject: "mock-user", name: "Rodolfo de Bonis", email: "rodolfo@rb.lab", share_progress: isSharing(), ...publicState };
   if (hasScenario("member-removed")) return { ...base, id: "u-removed", role: "member", status: "removed" };
   if (hasScenario("no-access") && !accepted) return { ...base, id: "u-pending", role: "member", status: "pending" };
   if (hasScenario("member") || hasScenario("no-access")) return { ...base, id: "u-member", role: "member", status: "active" };
@@ -138,5 +143,46 @@ export const accountHandlers = [
     if (body.confirm !== "EXCLUIR") return apiError(400, "bad_request", 'confirme com {"confirm":"EXCLUIR"}');
     if (me().role === "owner") return apiError(403, "owner_cannot_delete", "o dono não pode excluir a própria conta");
     return new HttpResponse(null, { status: 204 });
+  }),
+];
+
+/** Perfil público: configurar (logado) e a vitrine sem login. */
+export const publicProfileHandlers = [
+  http.put(`${API}/me/public-profile`, async ({ request }) => {
+    const b = (await request.json()) as { enabled: boolean; slug: string; name: string };
+    const slug = (b.slug ?? "").trim().toLowerCase();
+    if (slug && (!/^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])$/.test(slug) || RESERVED.includes(slug))) {
+      return apiError(422, "slug_invalid", "link: 3 a 30 letras minúsculas, números ou hífen");
+    }
+    if (b.enabled && !slug) return apiError(422, "slug_invalid", "escolha um link para o perfil público");
+    if (slug === "ocupado") return apiError(409, "slug_taken", "esse link já é de outra pessoa");
+    publicState = { public_enabled: b.enabled, public_slug: slug, public_name: (b.name ?? "").trim() || "Rodolfo" };
+    return HttpResponse.json(me());
+  }),
+  http.get(`${API}/public/profiles/:slug`, ({ params }) => {
+    if (params.slug !== "rodolfo" && !(publicState.public_enabled && params.slug === publicState.public_slug)) {
+      return apiError(404, "not_found", "perfil não encontrado");
+    }
+    return HttpResponse.json({
+      slug: String(params.slug),
+      name: publicState.public_name || "Rodolfo",
+      platinums: 9,
+      trophies: 1530,
+      rare: 44,
+      completed: 12,
+      badges: [
+        { key: "season", name: "Temporada set/2026", tier: "gold", season: "2026-09" },
+        { key: "trophies_1000", name: "Mil troféus", tier: "silver" },
+        { key: "rare_10", name: "Caçador de raros", tier: "bronze" },
+      ],
+      rarest: [
+        { name: "Lorde Éldero", type: "achievement", icon: "", rarity_pct: 0.8, game_title: "ELDEN RING", platform: "steam" },
+        { name: "Platina de Ragnarök", type: "platinum", icon: "", rarity_pct: 4.1, game_title: "God of War Ragnarök", platform: "psn" },
+      ],
+      completions: [
+        { title: "God of War Ragnarök", platform: "psn", external_id: "NPWR21863_00", cover: "", hero: "", completed_at: new Date(Date.now() - 20 * 86_400_000).toISOString() },
+        { title: "Hades", platform: "steam", external_id: "1145360", cover: "", hero: "", completed_at: new Date(Date.now() - 90 * 86_400_000).toISOString() },
+      ],
+    });
   }),
 ];

@@ -18,6 +18,7 @@ export const PAGES = [
   { name: "privacidade", path: "/settings/privacy", heading: "Configurações" },
   { name: "medalhas", path: "/badges", heading: "Medalhas" },
   { name: "saude", path: "/settings/health", heading: "Configurações" },
+  { name: "perfil-publico", path: "/perfil/rodolfo", heading: "Rodolfo" },
 ] as const;
 
 /** Prepara a página para prints estáveis: relógio fixo e sem imagens externas (capas viram placeholder). */

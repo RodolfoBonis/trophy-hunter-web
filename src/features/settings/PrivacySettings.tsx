@@ -1,5 +1,6 @@
 import { Panel } from "@/design-system/components/Panel";
 import { DeleteAccount, ExportData } from "@/features/account/AccountData";
+import { PublicProfileSettings } from "@/features/public/PublicProfileSettings";
 import { SharingToggle } from "@/features/social/SocialBits";
 import { SettingsTitle } from "./SettingsLayout";
 
@@ -15,6 +16,7 @@ export default function PrivacySettings() {
         </p>
         <SharingToggle />
       </Panel>
+      <PublicProfileSettings />
       <Panel className="flex flex-col gap-3">
         <h3 className="sub !mb-0">Seus dados</h3>
         <p className="m-0 text-sm text-text-2">

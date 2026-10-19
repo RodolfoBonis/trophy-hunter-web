@@ -58,4 +58,9 @@ export CSP_IMAGE_HOSTS="https://*.steamstatic.com https://*.steampowered.com htt
 export CSP_CONNECT_SRC="'self' $(origin "$API_BASE_URL") $AUTH_ORIGIN $CSP_IMAGE_HOSTS"
 export CSP_FRAME_SRC="$AUTH_ORIGIN"
 # Só estas variáveis são substituídas no template (o resto, como $uri, fica para o nginx).
-export NGINX_ENVSUBST_FILTER='^CSP_'
+# Perfil público: /u/<slug> (HTML com og:* para os robôs de prévia) e o cartão vêm da API — o nginx
+# encaminha só esses caminhos. Resolver = DNS do pod (proxy_pass com variável resolve em runtime).
+export SHARE_API_BASE="$API_BASE_URL"
+export SHARE_RESOLVER="$(awk '/^nameserver/ { print $2; exit }' /etc/resolv.conf)"
+[ -n "$SHARE_RESOLVER" ] || fail "sem nameserver em /etc/resolv.conf"
+export NGINX_ENVSUBST_FILTER='^(CSP_|SHARE_)'
