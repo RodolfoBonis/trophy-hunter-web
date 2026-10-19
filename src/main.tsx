@@ -33,6 +33,7 @@ async function boot(): Promise<void> {
       endpoint: `${config.apiBase}/v1/client-errors`,
       release: import.meta.env.VITE_APP_RELEASE ?? "dev",
     });
+    void import("./lib/vitals").then(({ startVitals }) => startVitals(`${config.apiBase}/v1/client-vitals`));
   }
   installGlobalErrorHandlers(isStaleChunkError);
   await enableApiMocks();
